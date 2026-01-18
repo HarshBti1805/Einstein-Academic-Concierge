@@ -88,6 +88,28 @@ body {
   background-clip: text;
 }
 
+
+  @keyframes wave {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(20deg); }
+    75% { transform: rotate(-10deg); }
+  }
+  
+  .animate-wave {
+    animation: wave 1.5s ease-in-out infinite;
+    animation-delay: 1s;
+  }
+  
+  .background-animate {
+    background-size: 200% 100%;
+    animation: gradientShift 3s ease infinite;
+  }
+  
+  @keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
 /* Gradient Border */
 .gradient-border {
   position: relative;

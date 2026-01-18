@@ -19,7 +19,15 @@ interface Course {
 
 export default function Dashboard() {
   const router = useRouter();
-  const [studentData, setStudentData] = useState<StudentData | null>(null);
+  
+  // Initialize state with a function to safely access sessionStorage
+  const [studentData, setStudentData] = useState<StudentData | null>(() => {
+    if (typeof window !== "undefined") {
+      const data = sessionStorage.getItem("studentData");
+      return data ? JSON.parse(data) : null;
+    }
+    return null;
+  });
 
   // Sample data - in real app, this would come from API
   const universityName = "State University of Technology";
@@ -36,22 +44,17 @@ export default function Dashboard() {
     { code: "CS303", name: "Software Engineering", credits: 3, grade: "B+", attendance: 82 },
   ];
 
-  const attendanceData = [92, 88, 85, 90, 95, 82];
   const gradePoints: { [key: string]: number } = {
     "A": 4.0, "A-": 3.7, "B+": 3.3, "B": 3.0, "B-": 2.7,
     "C+": 2.3, "C": 2.0, "C-": 1.7, "D": 1.0, "F": 0.0
   };
 
   useEffect(() => {
-    // Get student data from sessionStorage
-    const data = sessionStorage.getItem("studentData");
-    if (data) {
-      setStudentData(JSON.parse(data));
-    } else {
-      // If no data, redirect to login
+    // Redirect if no student data
+    if (!studentData) {
       router.push("/");
     }
-  }, [router]);
+  }, [studentData, router]);
 
   if (!studentData) {
     return (
@@ -211,7 +214,7 @@ export default function Dashboard() {
           <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Attendance Analytics</h2>
             <div className="space-y-4">
-              {courses.map((course, index) => {
+              {courses.map((course) => {
                 const percentage = course.attendance;
                 const color = percentage >= 90 ? "bg-green-500" : percentage >= 80 ? "bg-yellow-500" : "bg-red-500";
                 return (
@@ -332,7 +335,7 @@ export default function Dashboard() {
         <div className="mt-8 bg-white rounded-xl shadow-sm p-6 border border-gray-200">
           <h2 className="text-xl font-bold text-gray-900 mb-6">Performance Trend</h2>
           <div className="h-64 flex items-end justify-between gap-2">
-            {courses.map((course, index) => {
+            {courses.map((course) => {
               const height = (gradePoints[course.grade] / 4.0) * 100;
               const color = gradePoints[course.grade] >= 3.7 ? "bg-green-500" :
                            gradePoints[course.grade] >= 3.0 ? "bg-blue-500" :

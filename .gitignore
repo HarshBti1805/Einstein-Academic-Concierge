@@ -1,0 +1,131 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Next.js (client)
+client/.next/
+client/out/
+client/.swc/
+client/.vercel/
+client/.turbo/
+
+# Python (models)
+models/__pycache__/
+models/*.py[cod]
+models/*$py.class
+models/*.so
+models/.Python
+models/venv/
+models/env/
+models/ENV/
+models/env.bak/
+models/venv.bak/
+models/.venv/
+models/*.egg-info/
+models/dist/
+models/build/
+models/.eggs/
+models/*.egg
+models/.pytest_cache/
+models/.mypy_cache/
+models/.dmypy.json
+models/dmypy.json
+models/.pytype/
+models/cython_debug/
+
+# Server
+server/node_modules/
+server/.env
+server/.env.local
+server/.env.*.local
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+.next/
+out/
+.turbo/
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Misc
+*.cache
+.cache/
+.parcel-cache/
+.next/
+.swc/
+*.pem
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variable files
+.env.development
+.env.production
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts

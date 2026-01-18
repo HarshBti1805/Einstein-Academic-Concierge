@@ -9,6 +9,7 @@ export default function Home() {
     name: "",
     rollNumber: "",
     email: "",
+    university: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,6 +165,43 @@ export default function Home() {
                   required
                   className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-3 pl-12 pr-4 text-gray-900 placeholder-gray-400 transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   placeholder="Enter your email address"
+                />
+              </div>
+            </div>
+
+            {/* University Field */}
+            <div>
+              <label
+                htmlFor="university"
+                className="mb-2 block text-sm font-semibold text-gray-700"
+              >
+                University
+              </label>
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                    />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  id="university"
+                  name="university"
+                  value={formData.university}
+                  onChange={handleChange}
+                  required
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-3 pl-12 pr-4 text-gray-900 placeholder-gray-400 transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="Enter your university name"
                 />
               </div>
             </div>

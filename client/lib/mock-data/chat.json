@@ -1,0 +1,60 @@
+{
+  "initialMessage": {
+    "id": "msg-0",
+    "text": "Hello! I'm your AI-powered course registration assistant. I can help you find and register for courses based on your academic goals, prerequisites, and personal constraints. How can I assist you today?",
+    "sender": "agent",
+    "timestamp": "2024-11-20T10:00:00Z"
+  },
+  "quickActions": [
+    {
+      "id": "qa-1",
+      "text": "Show available courses",
+      "icon": "BookOpen",
+      "category": "browse"
+    },
+    {
+      "id": "qa-2",
+      "text": "Check my prerequisites",
+      "icon": "CheckCircle",
+      "category": "academic"
+    },
+    {
+      "id": "qa-3",
+      "text": "Find courses by schedule",
+      "icon": "Clock",
+      "category": "schedule"
+    },
+    {
+      "id": "qa-4",
+      "text": "Monitor waitlists",
+      "icon": "Eye",
+      "category": "tracking"
+    },
+    {
+      "id": "qa-5",
+      "text": "Get course recommendations",
+      "icon": "Sparkles",
+      "category": "ai"
+    },
+    {
+      "id": "qa-6",
+      "text": "View my registration status",
+      "icon": "ClipboardList",
+      "category": "status"
+    }
+  ],
+  "responses": {
+    "register": "I'd be happy to help you register for courses! Could you tell me:\n\n1. Which courses are you interested in?\n2. What's your preferred schedule (e.g., no classes before 10am)?\n3. Are there any prerequisites I should consider?\n\nBased on your academic history, I can suggest an optimal schedule that fits your requirements.",
+    "schedule": "I can help you find courses that fit your schedule! Here are some options:\n\n• **Morning Classes (8am-12pm)**: CS301, MATH205\n• **Afternoon Classes (12pm-4pm)**: CS302, PHYS201, ENG101\n• **Evening Classes (4pm-8pm)**: CS303\n\nWhat time constraints do you have? I can filter courses accordingly.",
+    "prerequisite": "Let me check your prerequisites:\n\n✅ **CS301** (Data Structures) - Requires: CS201 (Completed)\n✅ **CS302** (Database Systems) - Requires: CS201 (Completed)\n✅ **MATH205** (Calculus II) - Requires: MATH204 (Completed)\n✅ **CS303** (Software Engineering) - Requires: CS301, CS302 (In Progress)\n\nAll prerequisites are satisfied! Would you like me to proceed with registration?",
+    "gpa": "Based on your current GPA of 3.65, you're doing great! Here's my analysis:\n\n📊 **Current Performance**:\n• Strong in CS courses (A, A-)\n• Good performance in Math (B+)\n• Excellent attendance (87.5%)\n\n💡 **Recommendations**:\n• Consider advanced CS courses to maintain your strong performance\n• You're on track for graduation in Spring 2026\n• Would you like me to suggest courses that align with your strengths?",
+    "waitlist": "I can monitor waitlists for you! Here's the current status:\n\n📋 **Course Availability**:\n• CS301: 5 spots available ✅\n• CS302: Waitlist (Position 3) - I'm monitoring this\n• MATH205: 12 spots available ✅\n• CS303: Waitlist (Position 1) - High chance of enrollment\n\nI'll automatically register you when spots open. Would you like me to add you to any waitlists?",
+    "help": "I'm here to help with your course registration! Here's what I can do:\n\n🎯 **My Capabilities**:\n• Find courses based on your goals and constraints\n• Check prerequisites and course availability\n• Monitor waitlists and auto-register when spots open\n• Optimize your schedule to avoid conflicts\n• Answer questions about courses, professors, and requirements\n• Run 'what-if' scenarios to test different schedules\n\nWhat would you like to do?"
+  },
+  "suggestedFollowUps": [
+    "What are the most popular courses this semester?",
+    "Can you help me build a balanced schedule?",
+    "Which professors have the best ratings?",
+    "What's my graduation progress?"
+  ]
+}

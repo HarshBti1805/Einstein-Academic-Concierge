@@ -1,0 +1,120 @@
+{
+  "weeklyActivity": [
+    { "day": "Mon", "attendance": 95, "studyHours": 6 },
+    { "day": "Tue", "attendance": 88, "studyHours": 5 },
+    { "day": "Wed", "attendance": 92, "studyHours": 7 },
+    { "day": "Thu", "attendance": 85, "studyHours": 4 },
+    { "day": "Fri", "attendance": 90, "studyHours": 6 },
+    { "day": "Sat", "attendance": 0, "studyHours": 8 },
+    { "day": "Sun", "attendance": 0, "studyHours": 5 }
+  ],
+  "semesterProgress": [
+    { "semester": "Fall 2022", "gpa": 3.2, "credits": 15 },
+    { "semester": "Spring 2023", "gpa": 3.4, "credits": 16 },
+    { "semester": "Fall 2023", "gpa": 3.5, "credits": 17 },
+    { "semester": "Spring 2024", "gpa": 3.6, "credits": 18 },
+    { "semester": "Fall 2024", "gpa": 3.65, "credits": 18 }
+  ],
+  "upcomingDeadlines": [
+    {
+      "id": 1,
+      "title": "CS301 Assignment 5",
+      "course": "CS301",
+      "dueDate": "2024-11-25",
+      "type": "assignment",
+      "priority": "high"
+    },
+    {
+      "id": 2,
+      "title": "Database Project Milestone",
+      "course": "CS302",
+      "dueDate": "2024-11-28",
+      "type": "project",
+      "priority": "high"
+    },
+    {
+      "id": 3,
+      "title": "Physics Lab Report",
+      "course": "PHYS201",
+      "dueDate": "2024-11-30",
+      "type": "lab",
+      "priority": "medium"
+    },
+    {
+      "id": 4,
+      "title": "Technical Essay Draft",
+      "course": "ENG101",
+      "dueDate": "2024-12-02",
+      "type": "essay",
+      "priority": "medium"
+    },
+    {
+      "id": 5,
+      "title": "Calculus Midterm",
+      "course": "MATH205",
+      "dueDate": "2024-12-05",
+      "type": "exam",
+      "priority": "high"
+    }
+  ],
+  "achievements": [
+    {
+      "id": 1,
+      "title": "Dean's List",
+      "description": "Achieved GPA above 3.5",
+      "icon": "trophy",
+      "date": "2024-05-15",
+      "unlocked": true
+    },
+    {
+      "id": 2,
+      "title": "Perfect Attendance",
+      "description": "100% attendance in a course",
+      "icon": "star",
+      "date": "2024-04-20",
+      "unlocked": true
+    },
+    {
+      "id": 3,
+      "title": "Early Bird",
+      "description": "Register first day of registration",
+      "icon": "clock",
+      "date": null,
+      "unlocked": false
+    },
+    {
+      "id": 4,
+      "title": "Scholar",
+      "description": "Complete 100 credits",
+      "icon": "book",
+      "date": null,
+      "unlocked": false
+    }
+  ],
+  "recentActivity": [
+    {
+      "id": 1,
+      "action": "Submitted assignment",
+      "details": "CS301 - Data Structures Assignment 4",
+      "timestamp": "2024-11-19T14:30:00Z"
+    },
+    {
+      "id": 2,
+      "action": "Attended class",
+      "details": "PHYS201 - Physics for Engineers",
+      "timestamp": "2024-11-19T11:00:00Z"
+    },
+    {
+      "id": 3,
+      "action": "Downloaded materials",
+      "details": "MATH205 - Calculus II Lecture Notes",
+      "timestamp": "2024-11-18T16:45:00Z"
+    },
+    {
+      "id": 4,
+      "action": "Joined waitlist",
+      "details": "CS402 - Machine Learning Fundamentals",
+      "timestamp": "2024-11-17T10:20:00Z"
+    }
+  ]
+}

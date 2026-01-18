@@ -1,0 +1,160 @@
+{
+  "currentCourses": [
+    {
+      "code": "CS301",
+      "name": "Data Structures & Algorithms",
+      "credits": 3,
+      "grade": "A",
+      "gradePoints": 4.0,
+      "attendance": 92,
+      "instructor": "Dr. Robert Chen",
+      "schedule": "Mon, Wed 10:00 AM - 11:30 AM",
+      "room": "Engineering Hall 301",
+      "status": "enrolled"
+    },
+    {
+      "code": "CS302",
+      "name": "Database Systems",
+      "credits": 3,
+      "grade": "A-",
+      "gradePoints": 3.7,
+      "attendance": 88,
+      "instructor": "Dr. Lisa Wang",
+      "schedule": "Tue, Thu 2:00 PM - 3:30 PM",
+      "room": "Tech Building 205",
+      "status": "enrolled"
+    },
+    {
+      "code": "MATH205",
+      "name": "Calculus II",
+      "credits": 4,
+      "grade": "B+",
+      "gradePoints": 3.3,
+      "attendance": 85,
+      "instructor": "Dr. Michael Brown",
+      "schedule": "Mon, Wed, Fri 9:00 AM - 10:00 AM",
+      "room": "Math Building 102",
+      "status": "enrolled"
+    },
+    {
+      "code": "PHYS201",
+      "name": "Physics for Engineers",
+      "credits": 3,
+      "grade": "A",
+      "gradePoints": 4.0,
+      "attendance": 90,
+      "instructor": "Dr. Sarah Johnson",
+      "schedule": "Tue, Thu 11:00 AM - 12:30 PM",
+      "room": "Physics Lab 101",
+      "status": "enrolled"
+    },
+    {
+      "code": "ENG101",
+      "name": "Technical Writing",
+      "credits": 2,
+      "grade": "A-",
+      "gradePoints": 3.7,
+      "attendance": 95,
+      "instructor": "Prof. Emily Davis",
+      "schedule": "Fri 1:00 PM - 3:00 PM",
+      "room": "Liberal Arts 203",
+      "status": "enrolled"
+    },
+    {
+      "code": "CS303",
+      "name": "Software Engineering",
+      "credits": 3,
+      "grade": "B+",
+      "gradePoints": 3.3,
+      "attendance": 82,
+      "instructor": "Dr. James Wilson",
+      "schedule": "Mon, Wed 2:00 PM - 3:30 PM",
+      "room": "Engineering Hall 401",
+      "status": "enrolled"
+    }
+  ],
+  "recommendedCourses": [
+    {
+      "code": "CS401",
+      "name": "Advanced Algorithms",
+      "credits": 3,
+      "instructor": "Dr. Sarah Johnson",
+      "schedule": "Mon, Wed 10:00 AM - 11:30 AM",
+      "priority": 1,
+      "reason": "Strong performance in CS courses (A, A-) suggests readiness for advanced topics",
+      "totalSeats": 250,
+      "occupiedSeats": 187,
+      "bookingStatus": "open",
+      "bookingStartDate": "2024-11-01",
+      "bookingEndDate": "2024-12-15"
+    },
+    {
+      "code": "CS402",
+      "name": "Machine Learning Fundamentals",
+      "credits": 3,
+      "instructor": "Dr. Michael Chen",
+      "schedule": "Tue, Thu 2:00 PM - 3:30 PM",
+      "priority": 2,
+      "reason": "Aligns with your interest in data structures and strong CS foundation",
+      "totalSeats": 200,
+      "occupiedSeats": 200,
+      "bookingStatus": "open",
+      "bookingStartDate": "2024-11-01",
+      "bookingEndDate": "2024-12-15"
+    },
+    {
+      "code": "CS403",
+      "name": "Cloud Computing",
+      "credits": 3,
+      "instructor": "Dr. Emily Rodriguez",
+      "schedule": "Mon, Wed 1:00 PM - 2:30 PM",
+      "priority": 3,
+      "reason": "Builds on your database systems knowledge and industry-relevant skills",
+      "totalSeats": 220,
+      "occupiedSeats": 156,
+      "bookingStatus": "open",
+      "bookingStartDate": "2024-11-01",
+      "bookingEndDate": "2024-12-15"
+    },
+    {
+      "code": "MATH301",
+      "name": "Linear Algebra",
+      "credits": 4,
+      "instructor": "Dr. James Wilson",
+      "schedule": "Tue, Thu 11:00 AM - 12:30 PM",
+      "priority": 4,
+      "reason": "Prerequisite for advanced CS courses, complements your Calculus II background",
+      "totalSeats": 280,
+      "occupiedSeats": 95,
+      "bookingStatus": "not_started",
+      "bookingStartDate": "2024-12-01",
+      "bookingEndDate": "2024-12-20"
+    },
+    {
+      "code": "CS404",
+      "name": "Web Development",
+      "credits": 3,
+      "instructor": "Dr. David Kim",
+      "schedule": "Fri 9:00 AM - 12:00 PM",
+      "priority": 5,
+      "reason": "Practical skills course, fits your schedule and complements software engineering",
+      "totalSeats": 240,
+      "occupiedSeats": 240,
+      "bookingStatus": "closed",
+      "bookingStartDate": "2024-10-15",
+      "bookingEndDate": "2024-11-15"
+    }
+  ],
+  "gradePoints": {
+    "A": 4.0,
+    "A-": 3.7,
+    "B+": 3.3,
+    "B": 3.0,
+    "B-": 2.7,
+    "C+": 2.3,
+    "C": 2.0,
+    "C-": 1.7,
+    "D": 1.0,
+    "F": 0.0
+  }
+}

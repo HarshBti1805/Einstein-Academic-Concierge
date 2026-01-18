@@ -1,7 +1,29 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import gsap from "gsap";
+import {
+  X,
+  Check,
+  Clock,
+  Users,
+  Calendar,
+  BookOpen,
+  Info,
+  Sparkles,
+  Zap,
+  Bot,
+  AlertCircle,
+} from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { GradientCard } from "@/components/ui/animated-card";
+import { GridBackground } from "@/components/ui/background-beams";
+import { cn } from "@/lib/utils";
+
+// Import mock data
+import seatsData from "@/lib/mock-data/seats.json";
 
 interface RecommendedCourse {
   code: string;
@@ -11,66 +33,52 @@ interface RecommendedCourse {
   schedule: string;
   priority: number;
   reason: string;
-}
-
-interface CourseBookingStatus {
-  code: string;
-  availableSeats: number;
   totalSeats: number;
-  bookingStatus: "open" | "closed" | "not_started";
-  waitlistPosition?: number;
-  autoRegistrationEnabled: boolean;
+  occupiedSeats: number;
+  bookingStatus: string;
 }
 
-// Helper function to initialize booking statuses
-const initializeBookingStatuses = (courses: RecommendedCourse[]): { [key: string]: CourseBookingStatus } => {
-  const statuses: { [key: string]: CourseBookingStatus } = {};
-  courses.forEach((course: RecommendedCourse) => {
-    // Simulate different booking scenarios
-    const scenarios = [
-      { available: 5, total: 30, status: "open" as const, waitlist: undefined },
-      { available: 0, total: 25, status: "open" as const, waitlist: 3 },
-      { available: 12, total: 40, status: "open" as const, waitlist: undefined },
-      { available: 0, total: 20, status: "closed" as const, waitlist: 1 },
-      { available: 0, total: 35, status: "not_started" as const, waitlist: undefined },
-    ];
-    const scenario = scenarios[(courses.indexOf(course)) % scenarios.length];
-    
-    statuses[course.code] = {
-      code: course.code,
-      availableSeats: scenario.available,
-      totalSeats: scenario.total,
-      bookingStatus: scenario.status,
-      waitlistPosition: scenario.waitlist,
-      autoRegistrationEnabled: false,
-    };
-  });
-  return statuses;
-};
+interface CourseSeats {
+  totalSeats: number;
+  occupiedSeats: number[];
+  bookingStatus: string;
+}
+
+interface SelectedCourse extends RecommendedCourse {
+  seatData: CourseSeats;
+}
 
 export default function BookingsPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [studentName, setStudentName] = useState("");
   const [recommendedCourses, setRecommendedCourses] = useState<RecommendedCourse[]>([]);
-  const [bookingStatuses, setBookingStatuses] = useState<{ [key: string]: CourseBookingStatus }>({});
+  const [selectedCourse, setSelectedCourse] = useState<SelectedCourse | null>(null);
+  const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
+  const [autoRegistration, setAutoRegistration] = useState<Record<string, boolean>>({});
+  const seatGridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Only run on client side after mount
     const timer = setTimeout(() => {
-      // Check if user is logged in
       const data = sessionStorage.getItem("studentData");
       if (!data) {
         router.push("/");
         return;
       }
 
-      // Load recommended courses
+      try {
+        const parsed = JSON.parse(data);
+        setStudentName(parsed.name || "Student");
+      } catch {
+        router.push("/");
+        return;
+      }
+
       const coursesData = sessionStorage.getItem("recommendedCourses");
       if (coursesData) {
         try {
           const courses = JSON.parse(coursesData);
           setRecommendedCourses(courses);
-          setBookingStatuses(initializeBookingStatuses(courses));
         } catch {
           router.push("/assistant");
           return;
@@ -85,286 +93,587 @@ export default function BookingsPage() {
     return () => clearTimeout(timer);
   }, [router]);
 
-  // Prevent hydration mismatch - show consistent loading state until client-side is ready
+  useEffect(() => {
+    if (selectedCourse && seatGridRef.current) {
+      gsap.fromTo(
+        ".seat-row",
+        { opacity: 0, x: -20 },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 0.3,
+          stagger: 0.02,
+          ease: "power2.out",
+        }
+      );
+    }
+  }, [selectedCourse]);
+
+  const handleCourseClick = (course: RecommendedCourse) => {
+    const seatData = (seatsData.courses as Record<string, CourseSeats>)[course.code];
+    if (!seatData) return;
+
+    // Check if booking is available
+    if (course.bookingStatus === "closed") {
+      return;
+    }
+
+    setSelectedCourse({ ...course, seatData });
+    setSelectedSeats([]);
+  };
+
+  const handleSeatClick = (seatNumber: number) => {
+    if (!selectedCourse) return;
+
+    const isOccupied = selectedCourse.seatData.occupiedSeats.includes(seatNumber);
+    if (isOccupied) return;
+
+    setSelectedSeats((prev) => {
+      if (prev.includes(seatNumber)) {
+        return prev.filter((s) => s !== seatNumber);
+      }
+      return [...prev, seatNumber];
+    });
+  };
+
+  const handleConfirmBooking = () => {
+    if (!selectedCourse || selectedSeats.length === 0) return;
+
+    // Simulate booking confirmation
+    alert(
+      `Successfully booked seat(s) ${selectedSeats.join(", ")} for ${selectedCourse.code}!`
+    );
+    setSelectedCourse(null);
+    setSelectedSeats([]);
+  };
+
+  const handleToggleAutoRegistration = (courseCode: string) => {
+    setAutoRegistration((prev) => ({
+      ...prev,
+      [courseCode]: !prev[courseCode],
+    }));
+  };
+
+  const getStatusInfo = (course: RecommendedCourse) => {
+    const seatData = (seatsData.courses as Record<string, CourseSeats>)[course.code];
+    if (!seatData) return { status: "unknown", available: 0, color: "zinc" };
+
+    const available = seatData.totalSeats - seatData.occupiedSeats.length;
+
+    if (course.bookingStatus === "closed") {
+      return { status: "Booking Closed", available: 0, color: "red" };
+    }
+    if (course.bookingStatus === "not_started") {
+      return { status: "Coming Soon", available, color: "blue" };
+    }
+    if (available === 0) {
+      return { status: "Full - Waitlist", available: 0, color: "yellow" };
+    }
+    return { status: `${available} seats available`, available, color: "green" };
+  };
+
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="text-gray-500">Loading...</div>
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="h-8 w-8 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full"
+        />
       </div>
     );
   }
 
-  const handleManualRegister = (courseCode: string) => {
-    // Simulate manual registration
-    const status = bookingStatuses[courseCode];
-    if (status && status.availableSeats > 0 && status.bookingStatus === "open") {
-      setBookingStatuses((prev) => ({
-        ...prev,
-        [courseCode]: {
-          ...prev[courseCode],
-          availableSeats: prev[courseCode].availableSeats - 1,
-        },
-      }));
-      alert(`Successfully registered for ${courseCode}!`);
-    }
-  };
-
-  const handleToggleAutoRegistration = (courseCode: string) => {
-    setBookingStatuses((prev) => ({
-      ...prev,
-      [courseCode]: {
-        ...prev[courseCode],
-        autoRegistrationEnabled: !prev[courseCode].autoRegistrationEnabled,
-      },
-    }));
-  };
-
-  const getStatusBadge = (status: CourseBookingStatus) => {
-    if (status.bookingStatus === "not_started") {
-      return (
-        <span className="inline-flex px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-          Booking Not Started
-        </span>
-      );
-    }
-    if (status.bookingStatus === "closed") {
-      return (
-        <span className="inline-flex px-2.5 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-          Booking Closed
-        </span>
-      );
-    }
-    if (status.availableSeats === 0) {
-      return (
-        <span className="inline-flex px-2.5 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
-          Full - Waitlist Available
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex px-2.5 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-        {status.availableSeats} Seats Available
-      </span>
-    );
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push("/assistant")}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Course Bookings</h1>
-                <p className="text-sm text-gray-600 mt-1">Register for your recommended courses</p>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                sessionStorage.removeItem("studentData");
-                router.push("/");
-              }}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#0a0a0f] relative">
+      <GridBackground />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <Header
+        title="Course Bookings"
+        subtitle="Select your seats for registration"
+        showBackButton
+        backPath="/assistant"
+        userName={studentName}
+        userRole="Student"
+      />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
         {/* Info Banner */}
-        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20"
+        >
           <div className="flex items-start gap-3">
-            <svg className="h-5 w-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div className="flex-1">
-              <h3 className="text-sm font-semibold text-blue-900 mb-1">How to Book Courses</h3>
-              <ul className="text-xs text-blue-800 space-y-1">
-                <li>• <strong>Manual Registration:</strong> Click &quot;Register Now&quot; if seats are available and booking is open</li>
-                <li>• <strong>Auto-Registration Agent:</strong> Enable for courses that are full or booking hasn&apos;t started. The agent will automatically register you when seats become available.</li>
+            <Info className="h-5 w-5 text-indigo-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="text-sm font-semibold text-indigo-300 mb-1">
+                How to Book
+              </h3>
+              <ul className="text-xs text-indigo-200/70 space-y-1">
+                <li>
+                  • Click on a course to view available seats and select your
+                  preferred position
+                </li>
+                <li>
+                  • For full courses or courses with booking not started, enable
+                  Auto-Registration Agent
+                </li>
+                <li>
+                  • Green seats are available, red seats are occupied, selected
+                  seats glow green
+                </li>
               </ul>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Courses Grid */}
-        <div className="space-y-6">
-          {recommendedCourses.map((course) => {
-            const status = bookingStatuses[course.code];
-            if (!status) return null;
-
-            const canManualRegister = status.availableSeats > 0 && status.bookingStatus === "open";
+        <div className="space-y-4">
+          {recommendedCourses.map((course, index) => {
+            const statusInfo = getStatusInfo(course);
+            const isAutoEnabled = autoRegistration[course.code];
+            const canBook =
+              course.bookingStatus === "open" && statusInfo.available > 0;
+            const needsAutoReg =
+              course.bookingStatus !== "open" || statusInfo.available === 0;
 
             return (
-              <div
+              <motion.div
                 key={course.code}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
               >
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
+                <GradientCard>
+                  <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                    {/* Course Info */}
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg text-white font-bold text-sm">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold">
                           {course.priority}
                         </div>
                         <div>
-                          <h2 className="text-xl font-bold text-gray-900">{course.code}</h2>
-                          <p className="text-sm text-gray-600">{course.name}</p>
+                          <h3 className="text-lg font-semibold text-white">
+                            {course.code}
+                          </h3>
+                          <p className="text-sm text-zinc-400">{course.name}</p>
                         </div>
+                        <span
+                          className={cn(
+                            "ml-auto lg:ml-0 px-3 py-1 rounded-full text-xs font-semibold",
+                            statusInfo.color === "green" &&
+                              "bg-green-500/10 text-green-400",
+                            statusInfo.color === "yellow" &&
+                              "bg-yellow-500/10 text-yellow-400",
+                            statusInfo.color === "blue" &&
+                              "bg-blue-500/10 text-blue-400",
+                            statusInfo.color === "red" &&
+                              "bg-red-500/10 text-red-400"
+                          )}
+                        >
+                          {statusInfo.status}
+                        </span>
                       </div>
-                      <div className="ml-14 space-y-1 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                          </svg>
+
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-400 ml-13">
+                        <div className="flex items-center gap-1.5">
+                          <BookOpen className="h-4 w-4" />
                           <span>{course.credits} Credits</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
+                        <div className="flex items-center gap-1.5">
+                          <Users className="h-4 w-4" />
                           <span>{course.instructor}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="h-4 w-4" />
                           <span>{course.schedule}</span>
                         </div>
                       </div>
+
+                      <p className="text-xs text-zinc-500 mt-2 italic ml-13">
+                        &quot;{course.reason}&quot;
+                      </p>
                     </div>
-                    <div className="text-right">
-                      {getStatusBadge(status)}
-                      {status.waitlistPosition && (
-                        <p className="text-xs text-gray-600 mt-2">
-                          Waitlist Position: <span className="font-semibold">{status.waitlistPosition}</span>
-                        </p>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-3 lg:flex-shrink-0">
+                      {canBook ? (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleCourseClick(course)}
+                          className="btn-primary flex items-center gap-2"
+                        >
+                          <Calendar className="h-4 w-4" />
+                          Select Seats
+                        </motion.button>
+                      ) : (
+                        <button
+                          disabled
+                          className="px-4 py-2.5 rounded-xl bg-zinc-800 text-zinc-500 cursor-not-allowed flex items-center gap-2"
+                        >
+                          <X className="h-4 w-4" />
+                          Unavailable
+                        </button>
+                      )}
+
+                      {/* Auto-Registration Toggle */}
+                      {needsAutoReg && (
+                        <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10">
+                          <div className="flex items-center gap-2">
+                            <Bot className="h-4 w-4 text-zinc-400" />
+                            <span className="text-xs text-zinc-400 hidden sm:inline">
+                              Auto-Register
+                            </span>
+                          </div>
+                          <button
+                            onClick={() =>
+                              handleToggleAutoRegistration(course.code)
+                            }
+                            className={cn(
+                              "relative h-6 w-11 rounded-full transition-colors",
+                              isAutoEnabled ? "bg-indigo-500" : "bg-zinc-700"
+                            )}
+                          >
+                            <motion.div
+                              className="absolute top-1 h-4 w-4 rounded-full bg-white"
+                              animate={{ left: isAutoEnabled ? 24 : 4 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                            />
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Course Details */}
-                  <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-600 italic">&quot;{course.reason}&quot;</p>
-                  </div>
-
-                  {/* Seats Information */}
-                  <div className="mb-4 flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-600">Seats:</span>
-                      <span className="font-semibold text-gray-900">
-                        {status.availableSeats} / {status.totalSeats}
-                      </span>
-                    </div>
-                    <div className="w-32 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-500 h-2 rounded-full transition-all"
-                        style={{ width: `${((status.totalSeats - status.availableSeats) / status.totalSeats) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
-                    {canManualRegister ? (
-                      <button
-                        onClick={() => handleManualRegister(course.code)}
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-lg shadow-lg shadow-green-500/30 hover:from-green-700 hover:to-emerald-700 hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                  {/* Auto-Registration Active Banner */}
+                  <AnimatePresence>
+                    {isAutoEnabled && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mt-4 pt-4 border-t border-white/10"
                       >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Register Now
-                      </button>
-                    ) : (
-                      <button
-                        disabled
-                        className="flex-1 px-6 py-3 bg-gray-300 text-gray-600 font-semibold rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
-                      >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        Manual Registration Unavailable
-                      </button>
+                        <div className="flex items-center gap-2 text-sm text-indigo-300">
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              ease: "linear",
+                            }}
+                          >
+                            <Sparkles className="h-4 w-4" />
+                          </motion.div>
+                          <span>
+                            Auto-registration agent is monitoring this course.
+                            You&apos;ll be registered automatically when a seat
+                            becomes available.
+                          </span>
+                        </div>
+                      </motion.div>
                     )}
-
-                    <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <svg className="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                        </svg>
-                        <span className="text-sm font-medium text-gray-700">Auto-Registration Agent</span>
-                      </div>
-                      <button
-                        onClick={() => handleToggleAutoRegistration(course.code)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          status.autoRegistrationEnabled ? "bg-blue-600" : "bg-gray-300"
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            status.autoRegistrationEnabled ? "translate-x-6" : "translate-x-1"
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Auto-Registration Status */}
-                  {status.autoRegistrationEnabled && (
-                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <div className="flex items-center gap-2 text-sm text-blue-800">
-                        <svg className="h-5 w-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        <span className="font-medium">
-                          Auto-registration agent is active. You&apos;ll be automatically registered when a seat becomes available or when booking opens.
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+                  </AnimatePresence>
+                </GradientCard>
+              </motion.div>
             );
           })}
         </div>
 
-        {/* Summary Section */}
-        <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Booking Summary</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="text-sm text-blue-600 font-medium mb-1">Total Courses</div>
-              <div className="text-2xl font-bold text-blue-900">{recommendedCourses.length}</div>
-            </div>
-            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-              <div className="text-sm text-green-600 font-medium mb-1">Available for Manual Registration</div>
-              <div className="text-2xl font-bold text-green-900">
-                {Object.values(bookingStatuses).filter(
-                  (s) => s.availableSeats > 0 && s.bookingStatus === "open"
-                ).length}
+        {/* Summary Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mt-8"
+        >
+          <GradientCard>
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Booking Summary
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
+                <div className="text-2xl font-bold text-indigo-400">
+                  {recommendedCourses.length}
+                </div>
+                <div className="text-sm text-zinc-400">Recommended Courses</div>
+              </div>
+              <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+                <div className="text-2xl font-bold text-green-400">
+                  {
+                    recommendedCourses.filter(
+                      (c) =>
+                        c.bookingStatus === "open" &&
+                        getStatusInfo(c).available > 0
+                    ).length
+                  }
+                </div>
+                <div className="text-sm text-zinc-400">
+                  Available for Booking
+                </div>
+              </div>
+              <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                <div className="text-2xl font-bold text-purple-400">
+                  {Object.values(autoRegistration).filter(Boolean).length}
+                </div>
+                <div className="text-sm text-zinc-400">
+                  Auto-Registration Active
+                </div>
               </div>
             </div>
-            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-              <div className="text-sm text-purple-600 font-medium mb-1">Auto-Registration Active</div>
-              <div className="text-2xl font-bold text-purple-900">
-                {Object.values(bookingStatuses).filter((s) => s.autoRegistrationEnabled).length}
-              </div>
-            </div>
-          </div>
-        </div>
+          </GradientCard>
+        </motion.div>
       </main>
+
+      {/* Seat Selection Modal */}
+      <AnimatePresence>
+        {selectedCourse && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => {
+              setSelectedCourse(null);
+              setSelectedSeats([]);
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-2xl bg-[#0a0a0f] border border-white/10"
+            >
+              {/* Modal Header */}
+              <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#0a0a0f]">
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    Select Your Seats
+                  </h2>
+                  <p className="text-sm text-zinc-400">
+                    {selectedCourse.code} - {selectedCourse.name}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedCourse(null);
+                    setSelectedSeats([]);
+                  }}
+                  className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                >
+                  <X className="h-5 w-5 text-zinc-400" />
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+                {/* Screen */}
+                <div className="mb-8">
+                  <div className="screen-curve" />
+                  <p className="text-center text-xs text-zinc-500 mt-2 font-medium">
+                    FRONT OF CLASSROOM
+                  </p>
+                </div>
+
+                {/* Seat Grid */}
+                <div ref={seatGridRef} className="flex flex-col items-center gap-1.5">
+                  {Array.from(
+                    { length: Math.ceil(selectedCourse.seatData.totalSeats / 20) },
+                    (_, rowIndex) => {
+                      const seatsPerRow = 20;
+                      const startSeat = rowIndex * seatsPerRow + 1;
+                      const endSeat = Math.min(
+                        (rowIndex + 1) * seatsPerRow,
+                        selectedCourse.seatData.totalSeats
+                      );
+                      const rowLabel = String.fromCharCode(65 + rowIndex);
+
+                      return (
+                        <div
+                          key={rowIndex}
+                          className="seat-row flex items-center gap-1"
+                        >
+                          {/* Row Label Left */}
+                          <span className="w-6 text-xs font-medium text-zinc-600 text-right">
+                            {rowLabel}
+                          </span>
+
+                          {/* Seats */}
+                          <div className="flex items-center gap-1">
+                            {Array.from(
+                              { length: endSeat - startSeat + 1 },
+                              (_, colIndex) => {
+                                const seatNumber = startSeat + colIndex;
+                                const isOccupied =
+                                  selectedCourse.seatData.occupiedSeats.includes(
+                                    seatNumber
+                                  );
+                                const isSelected =
+                                  selectedSeats.includes(seatNumber);
+                                const seatInRow = colIndex + 1;
+                                const hasAisle =
+                                  seatInRow === 5 || seatInRow === 15;
+
+                                return (
+                                  <div
+                                    key={seatNumber}
+                                    className="flex items-center"
+                                  >
+                                    <motion.button
+                                      whileHover={
+                                        !isOccupied ? { scale: 1.15 } : undefined
+                                      }
+                                      whileTap={
+                                        !isOccupied ? { scale: 0.9 } : undefined
+                                      }
+                                      onClick={() => handleSeatClick(seatNumber)}
+                                      disabled={isOccupied}
+                                      className={cn(
+                                        "seat",
+                                        isOccupied && "seat-occupied",
+                                        isSelected && "seat-selected",
+                                        !isOccupied &&
+                                          !isSelected &&
+                                          "seat-available"
+                                      )}
+                                      title={`${rowLabel}${seatInRow}`}
+                                    />
+                                    {hasAisle && <div className="w-3" />}
+                                  </div>
+                                );
+                              }
+                            )}
+                          </div>
+
+                          {/* Row Label Right */}
+                          <span className="w-6 text-xs font-medium text-zinc-600 text-left">
+                            {rowLabel}
+                          </span>
+                        </div>
+                      );
+                    }
+                  )}
+                </div>
+
+                {/* Legend */}
+                <div className="flex items-center justify-center gap-8 mt-8 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="seat seat-available scale-75" />
+                    <span className="text-zinc-400">Available</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="seat seat-occupied scale-75" />
+                    <span className="text-zinc-400">Occupied</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="seat seat-selected scale-75" />
+                    <span className="text-zinc-400">Selected</span>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="flex items-center justify-center gap-6 mt-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-zinc-500">Total:</span>
+                    <span className="font-semibold text-white">
+                      {selectedCourse.seatData.totalSeats}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-zinc-500">Available:</span>
+                    <span className="font-semibold text-green-400">
+                      {selectedCourse.seatData.totalSeats -
+                        selectedCourse.seatData.occupiedSeats.length}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-zinc-500">Selected:</span>
+                    <span className="font-semibold text-indigo-400">
+                      {selectedSeats.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="sticky bottom-0 px-6 py-4 border-t border-white/10 bg-[#0a0a0f] flex items-center justify-between">
+                <div>
+                  {selectedSeats.length > 0 && (
+                    <p className="text-sm text-zinc-400">
+                      Selected seats:{" "}
+                      <span className="text-white font-medium">
+                        {selectedSeats
+                          .sort((a, b) => a - b)
+                          .map((s) => {
+                            const row = Math.floor((s - 1) / 20);
+                            const col = ((s - 1) % 20) + 1;
+                            return `${String.fromCharCode(65 + row)}${col}`;
+                          })
+                          .join(", ")}
+                      </span>
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setSelectedCourse(null);
+                      setSelectedSeats([]);
+                    }}
+                    className="btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleConfirmBooking}
+                    disabled={selectedSeats.length === 0}
+                    className={cn(
+                      "btn-primary flex items-center gap-2",
+                      selectedSeats.length === 0 && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    <Check className="h-4 w-4" />
+                    Confirm Booking
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* No Courses Warning */}
+      {recommendedCourses.length === 0 && mounted && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-8 text-center"
+        >
+          <div className="inline-flex flex-col items-center p-8 rounded-2xl bg-white/5 border border-white/10">
+            <AlertCircle className="h-12 w-12 text-yellow-400 mb-4" />
+            <h3 className="text-lg font-semibold text-white mb-2">
+              No Courses Selected
+            </h3>
+            <p className="text-sm text-zinc-400 mb-4">
+              Please use the AI Assistant to get course recommendations first.
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => router.push("/assistant")}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Zap className="h-4 w-4" />
+              Go to AI Assistant
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

@@ -1,0 +1,42 @@
+{
+  "student": {
+    "id": "STU-2024-001",
+    "name": "John Doe",
+    "rollNumber": "CS2024001",
+    "email": "john.doe@university.edu",
+    "university": "State University of Technology",
+    "department": "Computer Science",
+    "semester": 5,
+    "avatar": "/avatars/student.jpg",
+    "enrollmentYear": 2022,
+    "expectedGraduation": "Spring 2026"
+  },
+  "academicStats": {
+    "currentGPA": 3.65,
+    "overallAttendance": 87.5,
+    "totalCredits": 84,
+    "creditsThisSemester": 18,
+    "academicYear": "2024-2025",
+    "standing": "Good Standing"
+  },
+  "notifications": [
+    {
+      "id": 1,
+      "type": "info",
+      "message": "Registration for Spring 2025 opens on December 1st",
+      "date": "2024-11-15"
+    },
+    {
+      "id": 2,
+      "type": "warning",
+      "message": "Your attendance in CS303 is below 85%",
+      "date": "2024-11-18"
+    },
+    {
+      "id": 3,
+      "type": "success",
+      "message": "You have been registered for CS401 via auto-registration",
+      "date": "2024-11-20"
+    }
+  ]
+}

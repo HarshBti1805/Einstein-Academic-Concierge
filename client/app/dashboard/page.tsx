@@ -4,6 +4,9 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
+import { fontVariables } from "@/lib/fonts";
+import { Search, LayoutDashboard, HelpCircle } from "lucide-react";
+
 import {
   Calendar,
   BookOpen,
@@ -109,7 +112,7 @@ const ProgressRing = ({
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span
             className="text-2xl font-bold text-white"
-            style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+            style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
           >
             {value}
           </span>
@@ -303,7 +306,7 @@ const AnimatedDonutChart = ({
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span
           className="text-3xl font-bold text-white"
-          style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+          style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
         >
           {total}
         </span>
@@ -320,25 +323,14 @@ export default function Dashboard() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
 
-  // Generate particle data using lazy initialization to avoid calling Math.random during render
-  const [particles] = useState<Array<{
+  // Generate particle data only on client-side after mount to avoid hydration mismatch
+  const [particles, setParticles] = useState<Array<{
     x: number;
     y: number;
     duration: number;
     delay: number;
     left: string;
-  }>>(() => {
-    if (typeof window === 'undefined') {
-      return [];
-    }
-    return Array.from({ length: 20 }, () => ({
-      x: Math.random() * window.innerWidth,
-      y: window.innerHeight + 10,
-      duration: 12 + Math.random() * 8,
-      delay: Math.random() * 12,
-      left: `${Math.random() * 100}%`,
-    }));
-  });
+  }>>([]);
 
   const courses: Course[] = coursesData.currentCourses;
   const { academicStats } = studentData;
@@ -361,6 +353,21 @@ export default function Dashboard() {
     }, 0);
     return () => clearTimeout(timer);
   }, [router]);
+
+  // Generate particles only on client-side after mount to avoid hydration mismatch
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setParticles(
+        Array.from({ length: 20 }, () => ({
+          x: Math.random() * window.innerWidth,
+          y: window.innerHeight + 10,
+          duration: 12 + Math.random() * 8,
+          delay: Math.random() * 12,
+          left: `${Math.random() * 100}%`,
+        }))
+      );
+    }
+  }, []);
 
   useEffect(() => {
     if (mounted) {
@@ -454,7 +461,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] relative overflow-x-hidden">
+    <div className={`min-h-screen bg-[#0a0a0f] relative overflow-x-hidden ${fontVariables}`}>
       {/* Background Elements */}
       <div className="fixed inset-0 pointer-events-none">
         {/* Grid pattern */}
@@ -502,106 +509,290 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="sticky top-0 z-50 backdrop-blur-xl bg-[#0a0a0f]/80 border-b border-white/[0.05]"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo & Title */}
-            <div className="flex items-center gap-4">
-              <motion.div
-                whileHover={{ rotate: 10, scale: 1.05 }}
-                className="p-2 rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 shadow-lg shadow-purple-500/20"
-              >
-                <GraduationCap className="h-6 w-6 text-white" />
-              </motion.div>
-              <div>
-                <h1
-                  className="text-lg font-bold text-white"
-                  style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
-                >
-                  Dashboard
-                </h1>
-                <p className="text-xs text-zinc-500">Welcome back to your portal</p>
-              </div>
-            </div>
+{/* Header - Modern Refined Design */}
+<motion.header
+  initial={{ opacity: 0, y: -20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+  className="sticky top-0 z-50"
+>
+  {/* Glassmorphism background with gradient border */}
+  <div className="absolute inset-0 bg-[#0a0a0f]/70 backdrop-blur-2xl" />
+  <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
+  
+  {/* Subtle animated gradient accent */}
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className="absolute -top-20 left-1/4 w-60 h-20 bg-purple-500/10 rounded-full blur-3xl" />
+    <div className="absolute -top-20 right-1/3 w-40 h-20 bg-violet-500/10 rounded-full blur-3xl" />
+  </div>
 
-            {/* Right side */}
-            <div className="flex items-center gap-3">
-              {/* Notifications */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="relative p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-purple-500/20 transition-all"
-              >
-                <Bell className="h-5 w-5 text-zinc-400" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-purple-500 rounded-full animate-pulse" />
-              </motion.button>
-
-              {/* User Menu */}
-              <div className="relative">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-3 p-2 pr-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-purple-500/20 transition-all"
-                >
-                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
-                    {studentInfo.name.charAt(0)}
-                  </div>
-                  <div className="hidden sm:block text-left">
-                    <p className="text-sm font-medium text-white">{studentInfo.name}</p>
-                    <p className="text-xs text-zinc-500">Student</p>
-                  </div>
-                  <ChevronDown className={cn(
-                    "h-4 w-4 text-zinc-500 transition-transform",
-                    showUserMenu && "rotate-180"
-                  )} />
-                </motion.button>
-
-                {/* Dropdown Menu */}
-                <AnimatePresence>
-                  {showUserMenu && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute right-0 mt-2 w-56 rounded-xl bg-[#0d0d14]/95 backdrop-blur-xl border border-white/[0.08] shadow-2xl shadow-black/50 overflow-hidden"
-                    >
-                      <div className="p-3 border-b border-white/[0.05]">
-                        <p className="text-sm font-medium text-white">{studentInfo.name}</p>
-                        <p className="text-xs text-zinc-500">{studentInfo.email}</p>
-                      </div>
-                      <div className="p-2">
-                        {[
-                          { icon: User, label: "Profile", action: () => {} },
-                          { icon: Settings, label: "Settings", action: () => {} },
-                          { icon: LogOut, label: "Sign out", action: () => router.push("/") },
-                        ].map((item) => (
-                          <motion.button
-                            key={item.label}
-                            whileHover={{ x: 4 }}
-                            onClick={item.action}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-all"
-                          >
-                            <item.icon className="h-4 w-4" />
-                            {item.label}
-                          </motion.button>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+  <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex items-center justify-between h-18 py-3">
+      
+      {/* Left Section - Logo & Navigation */}
+      <div className="flex items-center gap-8">
+        {/* Logo */}
+        <motion.div 
+          className="flex items-center gap-3 cursor-pointer group"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <div className="relative">
+            {/* Glow effect */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl blur opacity-40 group-hover:opacity-70 transition-opacity" />
+            <div className="relative p-2.5 rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 shadow-lg">
+              <GraduationCap className="h-5 w-5 text-white" />
             </div>
           </div>
+          <div className="hidden sm:block">
+            <h1
+              className="text-base font-bold text-white tracking-tight"
+              style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+            >
+              StudentPortal
+            </h1>
+            <div className="flex items-center gap-1.5">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
+              <p className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">Online</p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Navigation Pills - Hidden on mobile */}
+        <nav className="hidden lg:flex items-center">
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+            {[
+              { label: "Dashboard", icon: LayoutDashboard, active: true },
+              { label: "Courses", icon: BookOpen, active: false },
+              { label: "Schedule", icon: Calendar, active: false },
+              { label: "Grades", icon: BarChart3, active: false },
+            ].map((item) => (
+              <motion.button
+                key={item.label}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                  item.active
+                    ? "bg-gradient-to-r from-purple-500/20 to-violet-500/20 text-white border border-purple-500/20 shadow-lg shadow-purple-500/10"
+                    : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
+                )}
+              >
+                <item.icon className={cn("h-4 w-4", item.active && "text-purple-400")} />
+                {item.label}
+              </motion.button>
+            ))}
+          </div>
+        </nav>
+      </div>
+
+      {/* Right Section - Actions & Profile */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Search Button */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.05] hover:border-purple-500/20 transition-all group"
+        >
+          <Search className="h-4 w-4 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
+          <span className="text-sm text-zinc-500 group-hover:text-zinc-400 transition-colors">Search...</span>
+          <kbd className="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-white/[0.05] text-[10px] text-zinc-500 font-mono">
+            ⌘K
+          </kbd>
+        </motion.button>
+
+        {/* Quick Actions */}
+        <div className="flex items-center gap-1">
+          {/* AI Assistant Button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => router.push("/assistant")}
+            className="relative p-2.5 rounded-xl bg-gradient-to-br from-purple-500/10 to-violet-500/10 border border-purple-500/20 hover:border-purple-500/40 transition-all group"
+          >
+            <Sparkles className="h-4 w-4 text-purple-400 group-hover:text-purple-300 transition-colors" />
+            {/* Animated glow */}
+            <div className="absolute inset-0 rounded-xl bg-purple-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity -z-10" />
+          </motion.button>
+
+          {/* Notifications */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="relative p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.05] hover:border-purple-500/20 transition-all group"
+          >
+            <Bell className="h-4 w-4 text-zinc-400 group-hover:text-white transition-colors" />
+            {/* Notification badge */}
+            <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-400 opacity-40"></span>
+              <span className="relative inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-violet-600 text-[9px] font-bold text-white shadow-lg shadow-purple-500/30">
+                3
+              </span>
+            </span>
+          </motion.button>
         </div>
-      </motion.header>
+
+        {/* Divider */}
+        <div className="hidden sm:block w-[1px] h-8 bg-gradient-to-b from-transparent via-white/10 to-transparent mx-1" />
+
+        {/* User Profile */}
+        <div className="relative">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className={cn(
+              "flex items-center gap-3 p-1.5 pr-3 rounded-xl transition-all",
+              "bg-white/[0.02] border border-white/[0.06]",
+              "hover:bg-white/[0.05] hover:border-purple-500/20",
+              showUserMenu && "bg-white/[0.05] border-purple-500/20"
+            )}
+          >
+            {/* Avatar with status */}
+            <div className="relative">
+              <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-purple-500/20">
+                {studentInfo.name.charAt(0)}
+              </div>
+              {/* Online status */}
+              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-[#0a0a0f] flex items-center justify-center">
+                <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50" />
+              </div>
+            </div>
+            
+            {/* User info */}
+            <div className="hidden sm:block text-left">
+              <p 
+                className="text-sm font-semibold text-white leading-tight"
+                style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+              >
+                {studentInfo.name.split(' ')[0]}
+              </p>
+              <p className="text-[10px] text-purple-400/80 font-medium">Student</p>
+            </div>
+            
+            {/* Chevron */}
+            <ChevronDown className={cn(
+              "hidden sm:block h-4 w-4 text-zinc-500 transition-transform duration-300",
+              showUserMenu && "rotate-180"
+            )} />
+          </motion.button>
+
+          {/* Dropdown Menu */}
+          <AnimatePresence>
+            {showUserMenu && (
+              <>
+                {/* Backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowUserMenu(false)}
+                />
+                
+                {/* Menu */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute right-0 mt-2 w-72 rounded-2xl bg-[#0d0d14]/95 backdrop-blur-2xl border border-white/[0.08] shadow-2xl shadow-black/50 overflow-hidden z-50"
+                >
+                  {/* User info header */}
+                  <div className="p-4 bg-gradient-to-br from-purple-500/10 to-transparent">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/30">
+                        {studentInfo.name.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p 
+                          className="text-base font-bold text-white truncate"
+                          style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                        >
+                          {studentInfo.name}
+                        </p>
+                        <p className="text-xs text-zinc-500 truncate">{studentInfo.email}</p>
+                      </div>
+                    </div>
+                    {/* Status badge */}
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-emerald-400">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Active Now
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-xs font-medium text-purple-400">
+                        <Zap className="h-3 w-3" />
+                        Pro
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Menu items */}
+                  <div className="p-2">
+                    {[
+                      { icon: User, label: "My Profile", description: "View and edit profile", action: () => {} },
+                      { icon: Settings, label: "Settings", description: "Preferences & privacy", action: () => {} },
+                      { icon: HelpCircle, label: "Help Center", description: "Get support", action: () => {} },
+                    ].map((item, index) => (
+                      <motion.button
+                        key={item.label}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        whileHover={{ x: 4 }}
+                        onClick={item.action}
+                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-white/[0.04] transition-all group"
+                      >
+                        <div className="p-2 rounded-lg bg-white/[0.03] group-hover:bg-purple-500/10 transition-colors">
+                          <item.icon className="h-4 w-4 text-zinc-500 group-hover:text-purple-400 transition-colors" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">{item.label}</p>
+                          <p className="text-xs text-zinc-500">{item.description}</p>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+
+                  {/* Divider */}
+                  <div className="mx-3 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+                  {/* Sign out */}
+                  <div className="p-2">
+                    <motion.button
+                      whileHover={{ x: 4 }}
+                      onClick={() => router.push("/")}
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-red-500/10 transition-all group"
+                    >
+                      <div className="p-2 rounded-lg bg-white/[0.03] group-hover:bg-red-500/10 transition-colors">
+                        <LogOut className="h-4 w-4 text-zinc-500 group-hover:text-red-400 transition-colors" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-zinc-300 group-hover:text-red-400 transition-colors">Sign Out</p>
+                        <p className="text-xs text-zinc-500">End your session</p>
+                      </div>
+                    </motion.button>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-4 py-3 bg-white/[0.02] border-t border-white/[0.04]">
+                    <p className="text-[10px] text-zinc-600 text-center">
+                      StudentPortal v2.0 · Made with 💜
+                    </p>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
+  </div>
+</motion.header>
+
 
       {/* Main Content */}
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -718,7 +909,7 @@ export default function Dashboard() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                       className="text-3xl lg:text-5xl font-bold text-white mb-4"
-                      style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                      style={{ fontFamily: "var(--font-arvo), system-ui, sans-serif" }}
                     >
                       <span className="inline-block">Hello, {studentInfo.name.split(" ")[0]}!</span>
                       <motion.span
@@ -748,7 +939,7 @@ export default function Dashboard() {
                       whileTap={{ scale: 0.97 }}
                       onClick={() => router.push("/assistant")}
                       className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-purple-700 font-bold rounded-2xl shadow-2xl shadow-purple-900/50 hover:shadow-purple-800/60 transition-all duration-300 overflow-hidden"
-                      style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                      style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
                     >
                       {/* Button shine effect */}
                       <motion.div
@@ -776,7 +967,7 @@ export default function Dashboard() {
                       <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <motion.div
                         className="text-4xl font-bold text-white mb-2 relative z-10"
-                        style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                        style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ delay: 0.7, type: "spring", stiffness: 200 }}
@@ -804,7 +995,7 @@ export default function Dashboard() {
                       <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <motion.div
                         className="text-4xl font-bold text-white mb-2 relative z-10"
-                        style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                        style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
@@ -904,7 +1095,7 @@ export default function Dashboard() {
                   </div>
                   <div
                     className="text-2xl font-bold text-white mb-1"
-                    style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                    style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                   >
                     {stat.value}
                   </div>
@@ -928,7 +1119,7 @@ export default function Dashboard() {
                   <div>
                     <h3
                       className="text-lg font-semibold text-white"
-                      style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                      style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                     >
                       Course Attendance
                     </h3>
@@ -975,7 +1166,7 @@ export default function Dashboard() {
                   <div>
                     <h3
                       className="text-lg font-semibold text-white"
-                      style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                      style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                     >
                       Grade Distribution
                     </h3>
@@ -1017,7 +1208,7 @@ export default function Dashboard() {
               <GradientCard delay={0.4}>
                 <h3
                   className="text-lg font-semibold text-white mb-8"
-                  style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                  style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                 >
                   Key Metrics
                 </h3>
@@ -1049,7 +1240,7 @@ export default function Dashboard() {
                   <div>
                     <h3
                       className="text-lg font-semibold text-white"
-                      style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                      style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                     >
                       GPA Trend
                     </h3>
@@ -1088,7 +1279,7 @@ export default function Dashboard() {
                           <div className="absolute inset-0 flex items-center justify-center">
                             <span
                               className="text-xs font-bold text-white"
-                              style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                              style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                             >
                               {sem.gpa}
                             </span>
@@ -1118,7 +1309,7 @@ export default function Dashboard() {
                   <div>
                     <h3
                       className="text-lg font-semibold text-white"
-                      style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                      style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                     >
                       Upcoming Deadlines
                     </h3>
@@ -1198,7 +1389,7 @@ export default function Dashboard() {
                   <div>
                     <h3
                       className="text-lg font-semibold text-white"
-                      style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                      style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                     >
                       Achievements
                     </h3>
@@ -1266,7 +1457,7 @@ export default function Dashboard() {
                 <div>
                   <h3
                     className="text-lg font-semibold text-white"
-                    style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                    style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                   >
                     My Courses
                   </h3>

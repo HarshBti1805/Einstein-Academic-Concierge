@@ -40,25 +40,29 @@ export default function Home() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   
-  // Generate particle data using lazy initialization to avoid calling Math.random during render
-  const [particles] = useState<Array<{
+  // Generate particle data only on client-side after mount to avoid hydration mismatch
+  const [particles, setParticles] = useState<Array<{
     x: number;
     y: number;
     duration: number;
     delay: number;
     left: string;
-  }>>(() => {
-    if (typeof window === 'undefined') {
-      return [];
+  }>>([]);
+
+  // Generate particles only on client-side after mount to avoid hydration mismatch
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setParticles(
+        Array.from({ length: 15 }, () => ({
+          x: Math.random() * window.innerWidth,
+          y: window.innerHeight + 10,
+          duration: 10 + Math.random() * 10,
+          delay: Math.random() * 10,
+          left: `${Math.random() * 100}%`,
+        }))
+      );
     }
-    return Array.from({ length: 15 }, () => ({
-      x: Math.random() * window.innerWidth,
-      y: window.innerHeight + 10,
-      duration: 10 + Math.random() * 10,
-      delay: Math.random() * 10,
-      left: `${Math.random() * 100}%`,
-    }));
-  });
+  }, []);
 
   useEffect(() => {
     // GSAP animations

@@ -18,8 +18,45 @@ import {
   MessageSquare,
   ChevronDown,
   Check,
-  Loader2
+  Loader2,
+  AlertCircle
 } from "lucide-react";
+
+// Import students data for validation
+import studentsData from "@/lib/test-data/students_data.json";
+
+// Define student type based on the JSON structure
+interface Student {
+  student_id: string;
+  name: string;
+  email: string;
+  roll_number: string;
+  university_name: string;
+  branch: string;
+  enrollment_year: number;
+  expectedGraduation: number;
+  year_of_study: number;
+  age: number;
+  academic_data: {
+    academic_year: string;
+    totalCredits: number;
+    creditsThisSemester: number;
+    overall_gpa: number;
+    attendance_percentage: number;
+    subjects: Array<{
+      name: string;
+      marks: number;
+      grade: string;
+      attendance: number;
+      teacher_remarks: string;
+    }>;
+  };
+  behavioral_data: {
+    participation_score: number;
+    discipline_score: number;
+    extracurricular: string[];
+  };
+}
 
 export default function Home() {
   const router = useRouter();
@@ -38,7 +75,46 @@ export default function Home() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+
+  // Helper function to convert "1st Year", "2nd Year", etc. to number
+  const parseYearOfStudy = (yearString: string): number => {
+    const match = yearString.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  };
+
+  // Interface for form data
+  interface FormDataType {
+    name: string;
+    rollNumber: string;
+    email: string;
+    university: string;
+    yearOfStudy: string;
+    passoutYear: string;
+    branch: string;
+    aboutYourself: string;
+  }
+
+  // Validate student credentials against the database
+  const validateStudent = (data: FormDataType): Student | null => {
+    const students: Student[] = studentsData.students;
+    
+    const matchedStudent = students.find((student) => {
+      // Compare all fields (case-insensitive for strings)
+      const nameMatch = student.name.toLowerCase() === data.name.toLowerCase().trim();
+      const rollMatch = student.roll_number.toLowerCase() === data.rollNumber.toLowerCase().trim();
+      const emailMatch = student.email.toLowerCase() === data.email.toLowerCase().trim();
+      const universityMatch = student.university_name.toLowerCase() === data.university.toLowerCase().trim();
+      const yearMatch = student.year_of_study === parseYearOfStudy(data.yearOfStudy);
+      const graduationMatch = student.expectedGraduation === parseInt(data.passoutYear, 10);
+      const branchMatch = student.branch.toLowerCase() === data.branch.toLowerCase().trim();
+
+      return nameMatch && rollMatch && emailMatch && universityMatch && yearMatch && graduationMatch && branchMatch;
+    });
+
+    return matchedStudent || null;
+  };
   
   // Generate particle data only on client-side after mount to avoid hydration mismatch
   const [particles, setParticles] = useState<Array<{
@@ -122,6 +198,8 @@ export default function Home() {
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    // Clear error when user starts typing
+    if (error) setError(null);
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -131,9 +209,20 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     
-    // Simulate API call
+    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Validate student credentials
+    const matchedStudent = validateStudent(formData);
+    
+    if (!matchedStudent) {
+      setIsLoading(false);
+      setError("Invalid credentials. Please check your information and try again.");
+      return;
+    }
+    
     setIsLoading(false);
     setIsSuccess(true);
 
@@ -145,7 +234,14 @@ export default function Home() {
           y: -20,
           duration: 0.3,
           onComplete: () => {
-            sessionStorage.setItem("studentData", JSON.stringify(formData));
+            // Store student data with student_id for dashboard lookup
+            sessionStorage.setItem("studentData", JSON.stringify({
+              ...formData,
+              student_id: matchedStudent.student_id,
+              name: matchedStudent.name,
+              email: matchedStudent.email,
+              rollNumber: matchedStudent.roll_number,
+            }));
             router.push("/dashboard");
           },
         });
@@ -154,15 +250,15 @@ export default function Home() {
   };
 
   const leftColumnFields = [
-    { name: "name", label: "Full Name", type: "text", icon: User, placeholder: "John Doe" },
-    { name: "rollNumber", label: "Roll Number", type: "text", icon: Hash, placeholder: "2024CS001" },
-    { name: "email", label: "Email Address", type: "email", icon: Mail, placeholder: "john@university.edu" },
-    { name: "university", label: "University", type: "text", icon: Building2, placeholder: "Stanford University" },
+    { name: "name", label: "Full Name", type: "text", icon: User, placeholder: "Alex Thompson" },
+    { name: "rollNumber", label: "Roll Number", type: "text", icon: Hash, placeholder: "CS2024-001" },
+    { name: "email", label: "Email Address", type: "email", icon: Mail, placeholder: "alex.thompson@university.edu" },
+    { name: "university", label: "University Name", type: "text", icon: Building2, placeholder: "Metropolitan State University" },
   ];
 
   const rightColumnFields = [
     { name: "yearOfStudy", label: "Year of Study", type: "select", icon: Calendar, placeholder: "Select year", options: ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"] },
-    { name: "passoutYear", label: "Passout Year", type: "select", icon: GraduationCap, placeholder: "Select year", options: ["2024", "2025", "2026", "2027", "2028", "2029"] },
+    { name: "passoutYear", label: "Expected Graduation Year", type: "select", icon: GraduationCap, placeholder: "Select year", options: ["2024", "2025", "2026", "2027", "2028", "2029"] },
     { name: "branch", label: "Branch / Major", type: "text", icon: BookOpen, placeholder: "Computer Science" },
   ];
 
@@ -471,6 +567,23 @@ export default function Home() {
                   </motion.div>
                 </div>
               </div>
+
+              {/* Error Message */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mt-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-center gap-3"
+                  >
+                    <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+                    <p className="text-sm text-red-700" style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}>
+                      {error}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Submit Button */}
               <motion.div

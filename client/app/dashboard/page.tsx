@@ -30,15 +30,77 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Import mock data
-import studentData from "@/lib/mock-data/student.json";
-import coursesData from "@/lib/mock-data/courses.json";
-import dashboardData from "@/lib/mock-data/dashboard.json";
+// Import test data
+import studentsData from "@/lib/test-data/students_data.json";
+import dashboardDataJson from "@/lib/test-data/dashboard_data.json";
+
+// Type definitions for the JSON data
+interface Subject {
+  name: string;
+  marks: number;
+  grade: string;
+  attendance: number;
+  teacher_remarks: string;
+}
+
+interface StudentData {
+  student_id: string;
+  name: string;
+  email: string;
+  roll_number: string;
+  university_name: string;
+  branch: string;
+  enrollment_year: number;
+  expectedGraduation: number;
+  year_of_study: number;
+  age: number;
+  academic_data: {
+    academic_year: string;
+    totalCredits: number;
+    creditsThisSemester: number;
+    overall_gpa: number;
+    attendance_percentage: number;
+    subjects: Subject[];
+  };
+  behavioral_data: {
+    participation_score: number;
+    discipline_score: number;
+    extracurricular: string[];
+  };
+}
+
+interface DashboardData {
+  weeklyActivity: { day: string; attendance: number; studyHours: number }[];
+  semesterProgress: { semester: string; gpa: number; credits: number }[];
+  upcomingDeadlines: {
+    id: number;
+    title: string;
+    course: string;
+    dueDate: string;
+    type: string;
+    priority: string;
+  }[];
+  achievements: {
+    id: number;
+    title: string;
+    description: string;
+    icon: string;
+    date: string | null;
+    unlocked: boolean;
+  }[];
+  recentActivity: {
+    id: number;
+    action: string;
+    details: string;
+    timestamp: string;
+  }[];
+}
 
 interface StudentInfo {
   name: string;
   rollNumber: string;
   email: string;
+  student_id: string;
 }
 
 interface Course {
@@ -291,7 +353,7 @@ const AnimatedDonutChart = ({
         >
           {total}
         </span>
-        <span className="text-xs text-gray-500">Courses</span>
+        <span className="text-xs text-gray-500">Subjects</span>
       </div>
     </div>
   );
@@ -301,6 +363,8 @@ export default function Dashboard() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [studentInfo, setStudentInfo] = useState<StudentInfo | null>(null);
+  const [currentStudent, setCurrentStudent] = useState<StudentData | null>(null);
+  const [currentDashboardData, setCurrentDashboardData] = useState<DashboardData | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
 
@@ -312,10 +376,6 @@ export default function Dashboard() {
     left: string;
   }>>([]);
 
-  const courses: Course[] = coursesData.currentCourses;
-  const { academicStats } = studentData;
-  const { upcomingDeadlines, achievements, semesterProgress } = dashboardData;
-
   useEffect(() => {
     const timer = setTimeout(() => {
       const data = sessionStorage.getItem("studentData");
@@ -323,6 +383,23 @@ export default function Dashboard() {
         try {
           const parsed = JSON.parse(data);
           setStudentInfo(parsed);
+          
+          // Find the student in the students data using student_id
+          const studentId = parsed.student_id;
+          const student = studentsData.students.find(
+            (s: StudentData) => s.student_id === studentId
+          );
+          
+          if (student) {
+            setCurrentStudent(student as StudentData);
+            
+            // Get dashboard data for this student
+            const dashData = (dashboardDataJson as Record<string, DashboardData>)[studentId];
+            if (dashData) {
+              setCurrentDashboardData(dashData);
+            }
+          }
+          
           setMounted(true);
         } catch {
           router.push("/");
@@ -376,7 +453,7 @@ export default function Dashboard() {
     }
   }, [mounted]);
 
-  if (!mounted || !studentInfo) {
+  if (!mounted || !studentInfo || !currentStudent || !currentDashboardData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -391,18 +468,47 @@ export default function Dashboard() {
     );
   }
 
+  // Create academic stats from student data
+  const academicStats = {
+    currentGPA: currentStudent.academic_data.overall_gpa,
+    overallAttendance: currentStudent.academic_data.attendance_percentage,
+    totalCredits: currentStudent.academic_data.totalCredits,
+    creditsThisSemester: currentStudent.academic_data.creditsThisSemester,
+    academicYear: currentStudent.academic_data.academic_year,
+    standing: currentStudent.academic_data.overall_gpa >= 3.5 ? "Good Standing" : "Regular Standing",
+  };
+
+  // Map subjects to courses format for display
+  const courses: Course[] = currentStudent.academic_data.subjects.map((subject, index) => ({
+    code: `SUBJ${(index + 1).toString().padStart(3, '0')}`,
+    name: subject.name,
+    credits: 3, // Default credits per subject
+    grade: subject.grade,
+    gradePoints: subject.marks >= 90 ? 4.0 : subject.marks >= 80 ? 3.5 : subject.marks >= 70 ? 3.0 : subject.marks >= 60 ? 2.5 : 2.0,
+    attendance: subject.attendance,
+    instructor: "Faculty", // Generic instructor
+    schedule: "TBD",
+    status: "active",
+  }));
+
+  // Get dashboard-specific data
+  const { upcomingDeadlines, achievements, semesterProgress } = currentDashboardData;
+
   const gradeDistribution = courses.reduce((acc, course) => {
     acc[course.grade] = (acc[course.grade] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const gradeColors: Record<string, string> = {
+    "A+": "#16a34a",
     A: "#22c55e",
     "A-": "#4ade80",
     "B+": "#fbbf24",
     B: "#fb923c",
     "B-": "#f97316",
-    C: "#ef4444",
+    "C+": "#ef4444",
+    C: "#dc2626",
+    "C-": "#b91c1c",
   };
 
   const donutData = Object.entries(gradeDistribution).map(([label, value]) => ({
@@ -411,7 +517,7 @@ export default function Dashboard() {
     color: gradeColors[label] || "#a855f7",
   }));
 
-  const totalCredits = courses.reduce((sum, course) => sum + course.credits, 0);
+  const totalCredits = currentStudent.academic_data.creditsThisSemester;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -903,8 +1009,8 @@ export default function Dashboard() {
             {[
               {
                 icon: Calendar,
-                label: "Current Semester",
-                value: "Semester 5",
+                label: "Year of Study",
+                value: `Year ${currentStudent.year_of_study}`,
                 badge: academicStats.academicYear,
                 color: "purple",
                 delay: 0.1,
@@ -913,7 +1019,7 @@ export default function Dashboard() {
                 icon: BookOpen,
                 label: "Active Courses",
                 value: courses.length.toString(),
-                badge: "+2 this sem",
+                badge: `${currentStudent.branch}`,
                 badgeColor: "text-emerald-600",
                 color: "green",
                 delay: 0.15,
@@ -921,8 +1027,8 @@ export default function Dashboard() {
               {
                 icon: Target,
                 label: "Total Credits",
-                value: totalCredits.toString(),
-                badge: "On Track",
+                value: academicStats.totalCredits.toString(),
+                badge: `${totalCredits} this sem`,
                 badgeColor: "text-gray-600",
                 color: "blue",
                 delay: 0.2,
@@ -931,7 +1037,7 @@ export default function Dashboard() {
                 icon: Award,
                 label: "Academic Standing",
                 value: academicStats.standing,
-                badge: "Dean's List",
+                badge: academicStats.currentGPA >= 3.5 ? "Dean's List" : "Regular",
                 badgeColor: "text-amber-600",
                 color: "amber",
                 delay: 0.25,
@@ -996,13 +1102,13 @@ export default function Dashboard() {
                       className="text-lg font-semibold text-gray-900"
                       style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                     >
-                      Course Attendance
+                      Subject Attendance
                     </h3>
                     <p
                       className="text-sm text-gray-500"
                       style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                     >
-                      Your attendance by course
+                      Your attendance by subject
                     </p>
                   </div>
                   <div className="p-2.5 rounded-xl bg-emerald-100">
@@ -1010,20 +1116,20 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="space-y-5">
-                  {courses.map((course, index) => (
+                  {currentStudent.academic_data.subjects.slice(0, 6).map((subject, index) => (
                     <motion.div
-                      key={course.code}
+                      key={subject.name}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 * index + 0.3 }}
                     >
                       <AnimatedProgressBar
-                        value={course.attendance}
-                        label={`${course.code} - ${course.name}`}
+                        value={subject.attendance}
+                        label={subject.name}
                         color={
-                          course.attendance >= 90
+                          subject.attendance >= 90
                             ? "green"
-                            : course.attendance >= 80
+                            : subject.attendance >= 80
                             ? "yellow"
                             : "red"
                         }
@@ -1348,13 +1454,13 @@ export default function Dashboard() {
                     className="text-lg font-semibold text-gray-900"
                     style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                   >
-                    My Courses
+                    My Subjects
                   </h3>
                   <p
                     className="text-sm text-gray-500"
                     style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                   >
-                    Current semester enrollment
+                    Current semester performance
                   </p>
                 </div>
                 <motion.button
@@ -1373,7 +1479,7 @@ export default function Dashboard() {
                 <table className="w-full min-w-[600px]">
                   <thead>
                     <tr className="border-b border-gray-100">
-                      {["Course", "Instructor", "Schedule", "Grade", "Attendance"].map(
+                      {["Subject", "Marks", "Grade", "Attendance", "Remarks"].map(
                         (header) => (
                           <th
                             key={header}
@@ -1387,43 +1493,37 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {courses.map((course, index) => (
+                    {currentStudent.academic_data.subjects.map((subject, index) => (
                       <motion.tr
-                        key={course.code}
+                        key={subject.name}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.05 * index + 0.5 }}
                         className="border-b border-gray-50 hover:bg-gray-100/50 transition-colors group"
                       >
                         <td className="py-4 px-4">
-                          <div>
-                            <p
-                              className="font-semibold text-gray-900 group-hover:text-gray-700 transition-colors"
-                              style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
-                            >
-                              {course.code}
-                            </p>
-                            <p className="text-sm text-gray-500">{course.name}</p>
-                          </div>
+                          <p
+                            className="font-semibold text-gray-900 group-hover:text-gray-700 transition-colors"
+                            style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                          >
+                            {subject.name}
+                          </p>
                         </td>
-                        <td className="py-4 px-4 text-sm text-gray-700">
-                          {course.instructor}
-                        </td>
-                        <td className="py-4 px-4 text-sm text-gray-600">
-                          {course.schedule}
+                        <td className="py-4 px-4 text-sm text-gray-700 font-medium">
+                          {subject.marks}/100
                         </td>
                         <td className="py-4 px-4">
                           <span
                             className={cn(
                               "inline-flex px-3 py-1.5 rounded-lg text-xs font-semibold",
-                              course.grade.startsWith("A")
+                              subject.grade.startsWith("A")
                                 ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                                : course.grade.startsWith("B")
+                                : subject.grade.startsWith("B")
                                 ? "bg-amber-100 text-amber-700 border border-amber-200"
                                 : "bg-red-100 text-red-700 border border-red-200"
                             )}
                           >
-                            {course.grade}
+                            {subject.grade}
                           </span>
                         </td>
                         <td className="py-4 px-4">
@@ -1431,22 +1531,27 @@ export default function Dashboard() {
                             <div className="w-20 h-2 bg-gray-100 rounded-full overflow-hidden">
                               <motion.div
                                 initial={{ width: 0 }}
-                                animate={{ width: `${course.attendance}%` }}
+                                animate={{ width: `${subject.attendance}%` }}
                                 transition={{ delay: 0.6, duration: 0.8 }}
                                 className={cn(
                                   "h-full rounded-full",
-                                  course.attendance >= 90
+                                  subject.attendance >= 90
                                     ? "bg-gradient-to-r from-emerald-500 to-green-400"
-                                    : course.attendance >= 80
+                                    : subject.attendance >= 80
                                     ? "bg-gradient-to-r from-amber-500 to-yellow-400"
                                     : "bg-gradient-to-r from-red-500 to-rose-400"
                                 )}
                               />
                             </div>
                             <span className="text-sm text-gray-700 font-medium">
-                              {course.attendance}%
+                              {subject.attendance}%
                             </span>
                           </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <p className="text-xs text-gray-500 max-w-[200px] truncate" title={subject.teacher_remarks}>
+                            {subject.teacher_remarks}
+                          </p>
                         </td>
                       </motion.tr>
                     ))}

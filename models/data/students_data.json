@@ -1,0 +1,369 @@
+{
+  "students": [
+    {
+      "student_id": "STU001",
+      "name": "Alex Thompson",
+      "class": "10th Grade",
+      "age": 15,
+      "academic_data": {
+        "overall_gpa": 3.7,
+        "attendance_percentage": 92.5,
+        "subjects": [
+          {
+            "name": "Mathematics",
+            "marks": 88,
+            "grade": "A",
+            "attendance": 95,
+            "teacher_remarks": "Excellent analytical skills, shows interest in problem-solving"
+          },
+          {
+            "name": "Physics",
+            "marks": 82,
+            "grade": "A-",
+            "attendance": 90,
+            "teacher_remarks": "Good understanding of concepts, needs more lab practice"
+          },
+          {
+            "name": "Chemistry",
+            "marks": 78,
+            "grade": "B+",
+            "attendance": 88,
+            "teacher_remarks": "Average performance, can improve with more focus"
+          },
+          {
+            "name": "Biology",
+            "marks": 72,
+            "grade": "B",
+            "attendance": 85,
+            "teacher_remarks": "Basic understanding, shows more interest in ecology"
+          },
+          {
+            "name": "English",
+            "marks": 85,
+            "grade": "A",
+            "attendance": 94,
+            "teacher_remarks": "Strong writing skills, creative thinker"
+          },
+          {
+            "name": "Computer Science",
+            "marks": 95,
+            "grade": "A+",
+            "attendance": 98,
+            "teacher_remarks": "Outstanding, natural aptitude for programming"
+          },
+          {
+            "name": "History",
+            "marks": 70,
+            "grade": "B-",
+            "attendance": 82,
+            "teacher_remarks": "Needs improvement in memorization"
+          },
+          {
+            "name": "Art",
+            "marks": 90,
+            "grade": "A",
+            "attendance": 96,
+            "teacher_remarks": "Very creative, excellent visual arts skills"
+          }
+        ]
+      },
+      "behavioral_data": {
+        "participation_score": 8.5,
+        "discipline_score": 9.0,
+        "extracurricular": ["Coding Club", "Art Club", "Robotics Team"]
+      }
+    },
+    {
+      "student_id": "STU002",
+      "name": "Sarah Chen",
+      "class": "11th Grade",
+      "age": 16,
+      "academic_data": {
+        "overall_gpa": 3.9,
+        "attendance_percentage": 96.0,
+        "subjects": [
+          {
+            "name": "Mathematics",
+            "marks": 95,
+            "grade": "A+",
+            "attendance": 98,
+            "teacher_remarks": "Exceptional mathematical abilities"
+          },
+          {
+            "name": "Physics",
+            "marks": 92,
+            "grade": "A",
+            "attendance": 96,
+            "teacher_remarks": "Strong conceptual understanding"
+          },
+          {
+            "name": "Chemistry",
+            "marks": 90,
+            "grade": "A",
+            "attendance": 95,
+            "teacher_remarks": "Excellent lab work and theory"
+          },
+          {
+            "name": "Biology",
+            "marks": 88,
+            "grade": "A",
+            "attendance": 94,
+            "teacher_remarks": "Shows interest in molecular biology"
+          },
+          {
+            "name": "English",
+            "marks": 82,
+            "grade": "A-",
+            "attendance": 92,
+            "teacher_remarks": "Good communication skills"
+          },
+          {
+            "name": "Computer Science",
+            "marks": 91,
+            "grade": "A",
+            "attendance": 97,
+            "teacher_remarks": "Great logical thinking"
+          },
+          {
+            "name": "Economics",
+            "marks": 85,
+            "grade": "A",
+            "attendance": 93,
+            "teacher_remarks": "Good understanding of market concepts"
+          },
+          {
+            "name": "Music",
+            "marks": 75,
+            "grade": "B",
+            "attendance": 88,
+            "teacher_remarks": "Average interest"
+          }
+        ]
+      },
+      "behavioral_data": {
+        "participation_score": 9.2,
+        "discipline_score": 9.5,
+        "extracurricular": ["Math Olympiad", "Science Club", "Debate Team"]
+      }
+    },
+    {
+      "student_id": "STU003",
+      "name": "Marcus Johnson",
+      "class": "10th Grade",
+      "age": 15,
+      "academic_data": {
+        "overall_gpa": 2.8,
+        "attendance_percentage": 78.0,
+        "subjects": [
+          {
+            "name": "Mathematics",
+            "marks": 58,
+            "grade": "C",
+            "attendance": 72,
+            "teacher_remarks": "Struggles with abstract concepts"
+          },
+          {
+            "name": "Physics",
+            "marks": 62,
+            "grade": "C+",
+            "attendance": 75,
+            "teacher_remarks": "Needs more practice"
+          },
+          {
+            "name": "Chemistry",
+            "marks": 55,
+            "grade": "C-",
+            "attendance": 70,
+            "teacher_remarks": "Attendance affecting performance"
+          },
+          {
+            "name": "Biology",
+            "marks": 68,
+            "grade": "B-",
+            "attendance": 80,
+            "teacher_remarks": "Shows interest in environmental topics"
+          },
+          {
+            "name": "English",
+            "marks": 72,
+            "grade": "B",
+            "attendance": 82,
+            "teacher_remarks": "Good verbal skills, writing needs work"
+          },
+          {
+            "name": "Physical Education",
+            "marks": 95,
+            "grade": "A+",
+            "attendance": 98,
+            "teacher_remarks": "Outstanding athlete"
+          },
+          {
+            "name": "Music",
+            "marks": 88,
+            "grade": "A",
+            "attendance": 92,
+            "teacher_remarks": "Natural musical talent"
+          },
+          {
+            "name": "Drama",
+            "marks": 90,
+            "grade": "A",
+            "attendance": 94,
+            "teacher_remarks": "Excellent stage presence"
+          }
+        ]
+      },
+      "behavioral_data": {
+        "participation_score": 7.0,
+        "discipline_score": 6.5,
+        "extracurricular": ["Basketball Team", "School Band", "Drama Club"]
+      }
+    },
+    {
+      "student_id": "STU004",
+      "name": "Emily Rodriguez",
+      "class": "12th Grade",
+      "age": 17,
+      "academic_data": {
+        "overall_gpa": 3.5,
+        "attendance_percentage": 89.0,
+        "subjects": [
+          {
+            "name": "Mathematics",
+            "marks": 75,
+            "grade": "B",
+            "attendance": 88,
+            "teacher_remarks": "Steady improvement"
+          },
+          {
+            "name": "Physics",
+            "marks": 70,
+            "grade": "B-",
+            "attendance": 85,
+            "teacher_remarks": "Needs more focus on calculations"
+          },
+          {
+            "name": "Chemistry",
+            "marks": 82,
+            "grade": "A-",
+            "attendance": 90,
+            "teacher_remarks": "Strong in organic chemistry"
+          },
+          {
+            "name": "Biology",
+            "marks": 92,
+            "grade": "A",
+            "attendance": 95,
+            "teacher_remarks": "Passionate about life sciences"
+          },
+          {
+            "name": "English",
+            "marks": 88,
+            "grade": "A",
+            "attendance": 92,
+            "teacher_remarks": "Excellent essay writing"
+          },
+          {
+            "name": "Psychology",
+            "marks": 94,
+            "grade": "A+",
+            "attendance": 97,
+            "teacher_remarks": "Deep understanding of human behavior"
+          },
+          {
+            "name": "Sociology",
+            "marks": 90,
+            "grade": "A",
+            "attendance": 94,
+            "teacher_remarks": "Great analytical skills"
+          },
+          {
+            "name": "Art",
+            "marks": 85,
+            "grade": "A",
+            "attendance": 91,
+            "teacher_remarks": "Creative and expressive"
+          }
+        ]
+      },
+      "behavioral_data": {
+        "participation_score": 8.8,
+        "discipline_score": 9.0,
+        "extracurricular": ["Volunteer Club", "Psychology Club", "Creative Writing"]
+      }
+    },
+    {
+      "student_id": "STU005",
+      "name": "David Kim",
+      "class": "11th Grade",
+      "age": 16,
+      "academic_data": {
+        "overall_gpa": 3.2,
+        "attendance_percentage": 85.0,
+        "subjects": [
+          {
+            "name": "Mathematics",
+            "marks": 78,
+            "grade": "B+",
+            "attendance": 86,
+            "teacher_remarks": "Good with applications"
+          },
+          {
+            "name": "Physics",
+            "marks": 80,
+            "grade": "B+",
+            "attendance": 88,
+            "teacher_remarks": "Strong practical skills"
+          },
+          {
+            "name": "Chemistry",
+            "marks": 72,
+            "grade": "B",
+            "attendance": 82,
+            "teacher_remarks": "Average theoretical understanding"
+          },
+          {
+            "name": "Biology",
+            "marks": 65,
+            "grade": "C+",
+            "attendance": 78,
+            "teacher_remarks": "Limited interest"
+          },
+          {
+            "name": "English",
+            "marks": 70,
+            "grade": "B-",
+            "attendance": 80,
+            "teacher_remarks": "Improving steadily"
+          },
+          {
+            "name": "Business Studies",
+            "marks": 92,
+            "grade": "A",
+            "attendance": 95,
+            "teacher_remarks": "Entrepreneurial mindset"
+          },
+          {
+            "name": "Economics",
+            "marks": 88,
+            "grade": "A",
+            "attendance": 92,
+            "teacher_remarks": "Excellent understanding of markets"
+          },
+          {
+            "name": "Computer Science",
+            "marks": 85,
+            "grade": "A",
+            "attendance": 90,
+            "teacher_remarks": "Good problem-solving skills"
+          }
+        ]
+      },
+      "behavioral_data": {
+        "participation_score": 8.0,
+        "discipline_score": 8.5,
+        "extracurricular": ["Entrepreneurship Club", "Investment Club", "Tech Startup Team"]
+      }
+    }
+  ]
+}

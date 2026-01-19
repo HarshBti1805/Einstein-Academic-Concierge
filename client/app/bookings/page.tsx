@@ -177,32 +177,32 @@ export default function BookingsPage() {
 
   if (!mounted) {
     return (
-      <div className={`min-h-screen bg-[#0a0a0f] flex items-center justify-center ${fontVariables}`}>
+      <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100 flex items-center justify-center ${fontVariables}`}>
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="h-10 w-10 border-2 border-purple-500/20 border-t-purple-500 rounded-full"
+          className="h-10 w-10 border-2 border-gray-200 border-t-gray-800 rounded-full"
         />
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen bg-[#0a0a0f] relative ${fontVariables}`}>
+    <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100 relative ${fontVariables}`}>
       {/* Background Elements */}
       <div className="fixed inset-0 pointer-events-none -z-10">
         <div
-          className="absolute inset-0 opacity-[0.02]"
+          className="absolute inset-0 opacity-[0.4]"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(139, 92, 246, 0.5) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(139, 92, 246, 0.5) 1px, transparent 1px)
+              linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px)
             `,
             backgroundSize: "60px 60px",
           }}
         />
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-violet-600/10 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px]" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gray-200/30 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gray-300/30 rounded-full blur-[120px]" />
       </div>
 
       {/* Header */}
@@ -212,8 +212,8 @@ export default function BookingsPage() {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="sticky top-0 z-50"
       >
-        <div className="absolute inset-0 bg-[#0a0a0f]/80 backdrop-blur-2xl" />
-        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-2xl" />
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gray-300/50 to-transparent" />
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -223,27 +223,27 @@ export default function BookingsPage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => router.push("/assistant")}
-                className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-purple-500/20 transition-all"
+                className="p-2.5 rounded-xl bg-gray-50 border border-gray-200/60 hover:bg-gray-100 hover:border-gray-300 transition-all"
               >
-                <ArrowLeft className="h-4 w-4 text-zinc-400" />
+                <ArrowLeft className="h-4 w-4 text-gray-600" />
               </motion.button>
 
               <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl blur opacity-30" />
-                  <div className="relative p-2.5 rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 shadow-lg">
-                    <GraduationCap className="h-5 w-5 text-white" />
-                  </div>
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-gray-700 to-gray-900 rounded-xl blur opacity-30" />
+                <div className="relative p-2.5 rounded-xl bg-gradient-to-br from-gray-700 via-gray-800 to-black shadow-lg">
+                  <GraduationCap className="h-5 w-5 text-white" />
                 </div>
+              </div>
                 <div>
                   <h1
-                    className="text-base font-bold text-white tracking-tight"
+                    className="text-base font-bold text-gray-900 tracking-tight"
                     style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
                   >
                     Course Bookings
                   </h1>
                   <p 
-                    className="text-[10px] text-zinc-500 font-medium"
+                    className="text-[10px] text-gray-500 font-medium"
                     style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                   >
                     Select your seats for registration
@@ -257,13 +257,13 @@ export default function BookingsPage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-purple-500/20 transition-all"
+                className="relative p-2.5 rounded-xl bg-gray-50 border border-gray-200/60 hover:bg-gray-100 hover:border-gray-300 transition-all"
               >
-                <Bell className="h-4 w-4 text-zinc-400" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-purple-500 rounded-full animate-pulse" />
+                <Bell className="h-4 w-4 text-gray-600" />
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-gray-700 rounded-full animate-pulse" />
               </motion.button>
 
-              <div className="hidden sm:block w-px h-8 bg-gradient-to-b from-transparent via-white/10 to-transparent mx-1" />
+              <div className="hidden sm:block w-px h-8 bg-gradient-to-b from-transparent via-gray-300 to-transparent mx-1" />
 
               <div className="relative">
                 <motion.button
@@ -272,22 +272,22 @@ export default function BookingsPage() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className={cn(
                     "flex items-center gap-3 p-1.5 pr-3 rounded-xl transition-all",
-                    "bg-white/[0.03] border border-white/[0.06]",
-                    "hover:bg-white/[0.06] hover:border-purple-500/20",
-                    showUserMenu && "bg-white/[0.06] border-purple-500/20"
+                    "bg-gray-50 border border-gray-200/60",
+                    "hover:bg-gray-100 hover:border-gray-300",
+                    showUserMenu && "bg-gray-100 border-gray-300"
                   )}
                 >
-                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-semibold text-sm">
                     {studentName.charAt(0)}
                   </div>
                   <div className="hidden sm:block text-left">
                     <p 
-                      className="text-sm font-medium text-white"
+                      className="text-sm font-medium text-gray-900"
                       style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
                     >
                       {studentName}
                     </p>
-                    <p className="text-xs text-zinc-500">Student</p>
+                    <p className="text-xs text-gray-500">Student</p>
                   </div>
                 </motion.button>
 
@@ -297,7 +297,7 @@ export default function BookingsPage() {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-48 rounded-xl bg-[#0d0d14]/95 backdrop-blur-xl border border-white/[0.08] shadow-2xl overflow-hidden"
+                      className="absolute right-0 mt-2 w-48 rounded-xl bg-white backdrop-blur-xl border border-gray-200 shadow-2xl shadow-gray-200/50 overflow-hidden"
                     >
                       <div className="p-2">
                         {[
@@ -309,7 +309,7 @@ export default function BookingsPage() {
                             key={item.label}
                             whileHover={{ x: 4 }}
                             onClick={item.action}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-all"
+                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all"
                           >
                             <item.icon className="h-4 w-4" />
                             {item.label}
@@ -330,19 +330,19 @@ export default function BookingsPage() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 rounded-xl bg-purple-500/10 border border-purple-500/20"
+          className="mb-6 p-4 rounded-xl bg-gray-100 border border-gray-300"
         >
           <div className="flex items-start gap-3">
-            <Info className="h-5 w-5 text-purple-400 mt-0.5 flex-shrink-0" />
+            <Info className="h-5 w-5 text-gray-700 mt-0.5 flex-shrink-0" />
             <div>
               <h3 
-                className="text-sm font-semibold text-purple-300 mb-1"
+                className="text-sm font-semibold text-gray-800 mb-1"
                 style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
               >
                 How to Book
               </h3>
               <ul 
-                className="text-xs text-purple-200/70 space-y-1"
+                className="text-xs text-gray-700/80 space-y-1"
                 style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
               >
                 <li>• Click on a course to view available desks and select your preferred position</li>
@@ -368,27 +368,24 @@ export default function BookingsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <div className="relative rounded-2xl bg-[#0d0d14]/80 backdrop-blur-xl border border-white/[0.06] p-6 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-transparent" />
-                  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
-                  
+                <div className="relative rounded-2xl bg-white backdrop-blur-xl border border-gray-200/60 p-6 overflow-hidden shadow-sm hover:shadow-md transition-all">
                   <div className="relative z-10">
                     <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                       {/* Course Info */}
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 text-white font-bold shadow-lg shadow-purple-500/20">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-gray-700 to-black text-white font-bold shadow-lg shadow-gray-500/20">
                             {course.priority}
                           </div>
                           <div>
                             <h3 
-                              className="text-lg font-semibold text-white"
+                              className="text-lg font-semibold text-gray-900"
                               style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
                             >
                               {course.code}
                             </h3>
                             <p 
-                              className="text-sm text-zinc-400"
+                              className="text-sm text-gray-500"
                               style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                             >
                               {course.name}
@@ -397,10 +394,10 @@ export default function BookingsPage() {
                           <span
                             className={cn(
                               "ml-auto lg:ml-4 px-3 py-1 rounded-full text-xs font-semibold border",
-                              statusInfo.color === "green" && "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-                              statusInfo.color === "yellow" && "bg-amber-500/10 text-amber-400 border-amber-500/20",
-                              statusInfo.color === "blue" && "bg-blue-500/10 text-blue-400 border-blue-500/20",
-                              statusInfo.color === "red" && "bg-red-500/10 text-red-400 border-red-500/20"
+                              statusInfo.color === "green" && "bg-emerald-50 text-emerald-700 border-emerald-200",
+                              statusInfo.color === "yellow" && "bg-amber-50 text-amber-700 border-amber-200",
+                              statusInfo.color === "blue" && "bg-blue-50 text-blue-700 border-blue-200",
+                              statusInfo.color === "red" && "bg-red-50 text-red-700 border-red-200"
                             )}
                           >
                             {statusInfo.status}
@@ -408,7 +405,7 @@ export default function BookingsPage() {
                         </div>
 
                         <div 
-                          className="flex flex-wrap items-center gap-4 text-sm text-zinc-400 ml-13"
+                          className="flex flex-wrap items-center gap-4 text-sm text-gray-500 ml-13"
                           style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
                         >
                           <div className="flex items-center gap-1.5">
@@ -425,7 +422,7 @@ export default function BookingsPage() {
                           </div>
                         </div>
 
-                        <p className="text-xs text-zinc-500 mt-2 italic ml-13">
+                        <p className="text-xs text-gray-400 mt-2 italic ml-13">
                           &quot;{course.reason}&quot;
                         </p>
                       </div>
@@ -437,7 +434,7 @@ export default function BookingsPage() {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleCourseClick(course)}
-                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 text-white font-medium shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all"
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-gray-800 to-black text-white font-medium shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40 transition-all"
                             style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
                           >
                             <Calendar className="h-4 w-4" />
@@ -446,7 +443,7 @@ export default function BookingsPage() {
                         ) : (
                           <button
                             disabled
-                            className="px-4 py-2.5 rounded-xl bg-zinc-800/50 text-zinc-500 cursor-not-allowed flex items-center gap-2 border border-zinc-700/50"
+                            className="px-4 py-2.5 rounded-xl bg-gray-100 text-gray-400 cursor-not-allowed flex items-center gap-2 border border-gray-200"
                           >
                             <X className="h-4 w-4" />
                             Unavailable
@@ -454,11 +451,11 @@ export default function BookingsPage() {
                         )}
 
                         {needsAutoReg && (
-                          <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08]">
+                          <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200">
                             <div className="flex items-center gap-2">
-                              <Bot className="h-4 w-4 text-purple-400" />
+                              <Bot className="h-4 w-4 text-gray-700" />
                               <span 
-                                className="text-xs text-zinc-400 hidden sm:inline"
+                                className="text-xs text-gray-600 hidden sm:inline"
                                 style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
                               >
                                 Auto-Register
@@ -468,7 +465,7 @@ export default function BookingsPage() {
                               onClick={() => handleToggleAutoRegistration(course.code)}
                               className={cn(
                                 "relative h-6 w-11 rounded-full transition-colors",
-                                isAutoEnabled ? "bg-purple-500" : "bg-zinc-700"
+                                isAutoEnabled ? "bg-gray-700" : "bg-gray-300"
                               )}
                             >
                               <motion.div
@@ -489,9 +486,9 @@ export default function BookingsPage() {
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
                           exit={{ opacity: 0, height: 0 }}
-                          className="mt-4 pt-4 border-t border-white/[0.06]"
+                          className="mt-4 pt-4 border-t border-gray-100"
                         >
-                          <div className="flex items-center gap-2 text-sm text-purple-300">
+                          <div className="flex items-center gap-2 text-sm text-gray-700">
                             <motion.div
                               animate={{ rotate: 360 }}
                               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -519,55 +516,52 @@ export default function BookingsPage() {
           transition={{ delay: 0.5 }}
           className="mt-8"
         >
-          <div className="relative rounded-2xl bg-[#0d0d14]/80 backdrop-blur-xl border border-white/[0.06] p-6 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-transparent" />
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
-            
+          <div className="relative rounded-2xl bg-white backdrop-blur-xl border border-gray-200/60 p-6 overflow-hidden shadow-sm">
             <div className="relative z-10">
               <h3 
-                className="text-lg font-semibold text-white mb-4"
+                className="text-lg font-semibold text-gray-900 mb-4"
                 style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
               >
                 Booking Summary
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                <div className="p-4 rounded-xl bg-gray-100 border border-gray-300">
                   <div 
-                    className="text-2xl font-bold text-purple-400"
+                    className="text-2xl font-bold text-gray-700"
                     style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
                   >
                     {recommendedCourses.length}
                   </div>
                   <div 
-                    className="text-sm text-zinc-400"
+                    className="text-sm text-gray-600"
                     style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                   >
                     Recommended Courses
                   </div>
                 </div>
-                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
                   <div 
-                    className="text-2xl font-bold text-emerald-400"
+                    className="text-2xl font-bold text-emerald-700"
                     style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
                   >
                     {recommendedCourses.filter((c) => c.bookingStatus === "open" && getStatusInfo(c).available > 0).length}
                   </div>
                   <div 
-                    className="text-sm text-zinc-400"
+                    className="text-sm text-gray-600"
                     style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                   >
                     Available for Booking
                   </div>
                 </div>
-                <div className="p-4 rounded-xl bg-violet-500/10 border border-violet-500/20">
+                <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
                   <div 
-                    className="text-2xl font-bold text-violet-400"
+                    className="text-2xl font-bold text-gray-700"
                     style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
                   >
                     {Object.values(autoRegistration).filter(Boolean).length}
                   </div>
                   <div 
-                    className="text-sm text-zinc-400"
+                    className="text-sm text-gray-600"
                     style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                   >
                     Auto-Registration Active
@@ -586,7 +580,7 @@ export default function BookingsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
             onClick={() => {
               setSelectedCourse(null);
               setSelectedSeats([]);
@@ -597,19 +591,19 @@ export default function BookingsPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl bg-[#0a0a0f] border border-purple-500/20"
+              className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-2xl"
             >
               {/* Modal Header */}
-              <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-white/[0.06] bg-[#0a0a0f]">
+              <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white">
                 <div>
                   <h2 
-                    className="text-xl font-bold text-white"
+                    className="text-xl font-bold text-gray-900"
                     style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
                   >
                     Select Your Desk
                   </h2>
                   <p 
-                    className="text-sm text-zinc-400"
+                    className="text-sm text-gray-500"
                     style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                   >
                     {selectedCourse.code} - {selectedCourse.name}
@@ -620,30 +614,29 @@ export default function BookingsPage() {
                     setSelectedCourse(null);
                     setSelectedSeats([]);
                   }}
-                  className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  <X className="h-5 w-5 text-zinc-400" />
+                  <X className="h-5 w-5 text-gray-500" />
                 </button>
               </div>
 
               {/* Modal Content - Classroom Layout */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)] bg-gray-50">
                 {/* Whiteboard / Teacher's Desk */}
                 <div className="mb-8">
-                  <div className="relative mx-auto w-3/4 h-12 rounded-lg bg-gradient-to-b from-zinc-700 to-zinc-800 border-2 border-zinc-600 shadow-lg">
+                  <div className="relative mx-auto w-3/4 h-12 rounded-lg bg-gradient-to-b from-gray-600 to-gray-700 border-2 border-gray-500 shadow-lg">
                     <div className="absolute inset-0 flex items-center justify-center">
                       <span 
-                        className="text-xs text-zinc-400 font-medium tracking-wider"
+                        className="text-xs text-gray-300 font-medium tracking-wider"
                         style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
                       >
                         WHITEBOARD
                       </span>
                     </div>
-                    {/* Whiteboard shine effect */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-lg" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-lg" />
                   </div>
-                  <div className="mx-auto w-1/3 h-8 mt-2 rounded-md bg-gradient-to-b from-amber-900/40 to-amber-950/60 border border-amber-800/30 flex items-center justify-center">
-                    <span className="text-[10px] text-amber-500/60 font-medium">TEACHER&apos;S DESK</span>
+                  <div className="mx-auto w-1/3 h-8 mt-2 rounded-md bg-gradient-to-b from-amber-100 to-amber-200 border border-amber-300 flex items-center justify-center shadow-sm">
+                    <span className="text-[10px] text-amber-700 font-medium">TEACHER&apos;S DESK</span>
                   </div>
                 </div>
 
@@ -680,34 +673,29 @@ export default function BookingsPage() {
                                     onClick={() => handleSeatClick(deskNumber)}
                                     disabled={isOccupied}
                                     className={cn(
-                                      "relative w-14 h-10 rounded-lg transition-all duration-200",
-                                      // Desk surface
-                                      isOccupied && "bg-gradient-to-b from-red-900/60 to-red-950/80 border-2 border-red-700/50 cursor-not-allowed",
-                                      isSelected && "bg-gradient-to-b from-purple-500/80 to-purple-700/90 border-2 border-purple-400 shadow-lg shadow-purple-500/40",
-                                      !isOccupied && !isSelected && "bg-gradient-to-b from-zinc-700/80 to-zinc-800/90 border-2 border-zinc-600/50 hover:border-purple-500/50 hover:shadow-md hover:shadow-purple-500/20 cursor-pointer"
+                                      "relative w-14 h-10 rounded-lg transition-all duration-200 shadow-sm",
+                                      isOccupied && "bg-gradient-to-b from-red-100 to-red-200 border-2 border-red-300 cursor-not-allowed",
+                                      isSelected && "bg-gradient-to-b from-gray-600 to-gray-700 border-2 border-gray-800 shadow-lg shadow-gray-500/40",
+                                      !isOccupied && !isSelected && "bg-gradient-to-b from-gray-100 to-gray-200 border-2 border-gray-300 hover:border-gray-500 hover:shadow-md hover:shadow-gray-500/20 cursor-pointer"
                                     )}
                                   >
-                                    {/* Desk surface shine */}
-                                    <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/10 to-transparent" />
+                                    <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/30 to-transparent" />
                                     
-                                    {/* Chair indicator */}
                                     <div 
                                       className={cn(
                                         "absolute -bottom-2 left-1/2 -translate-x-1/2 w-6 h-3 rounded-b-md",
-                                        isOccupied && "bg-red-800/60",
-                                        isSelected && "bg-purple-600/80",
-                                        !isOccupied && !isSelected && "bg-zinc-700/60"
+                                        isOccupied && "bg-red-200",
+                                        isSelected && "bg-gray-700",
+                                        !isOccupied && !isSelected && "bg-gray-200"
                                       )}
                                     />
                                     
-                                    {/* Occupied indicator (person icon) */}
                                     {isOccupied && (
                                       <div className="absolute inset-0 flex items-center justify-center">
-                                        <User className="h-4 w-4 text-red-400/70" />
+                                        <User className="h-4 w-4 text-red-500" />
                                       </div>
                                     )}
                                     
-                                    {/* Selected indicator */}
                                     {isSelected && (
                                       <div className="absolute inset-0 flex items-center justify-center">
                                         <Check className="h-4 w-4 text-white" />
@@ -715,7 +703,6 @@ export default function BookingsPage() {
                                     )}
                                   </motion.button>
                                   
-                                  {/* Aisle spacing */}
                                   {hasAisle && <div className="w-8" />}
                                 </div>
                               );
@@ -729,33 +716,33 @@ export default function BookingsPage() {
 
                 {/* Back of Classroom */}
                 <div className="mt-8 text-center">
-                  <span className="text-xs text-zinc-600 font-medium tracking-wider">BACK OF CLASSROOM</span>
+                  <span className="text-xs text-gray-400 font-medium tracking-wider">BACK OF CLASSROOM</span>
                 </div>
 
                 {/* Legend */}
                 <div className="flex items-center justify-center gap-8 mt-6 text-sm">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-6 rounded bg-gradient-to-b from-zinc-700/80 to-zinc-800/90 border border-zinc-600/50" />
+                    <div className="w-8 h-6 rounded bg-gradient-to-b from-gray-100 to-gray-200 border border-gray-300" />
                     <span 
-                      className="text-zinc-400"
+                      className="text-gray-600"
                       style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
                     >
                       Available
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-6 rounded bg-gradient-to-b from-red-900/60 to-red-950/80 border border-red-700/50" />
+                    <div className="w-8 h-6 rounded bg-gradient-to-b from-red-100 to-red-200 border border-red-300" />
                     <span 
-                      className="text-zinc-400"
+                      className="text-gray-600"
                       style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
                     >
                       Occupied
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-6 rounded bg-gradient-to-b from-purple-500/80 to-purple-700/90 border border-purple-400" />
+                    <div className="w-8 h-6 rounded bg-gradient-to-b from-gray-600 to-gray-700 border border-gray-800" />
                     <span 
-                      className="text-zinc-400"
+                      className="text-gray-600"
                       style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
                     >
                       Selected
@@ -769,31 +756,31 @@ export default function BookingsPage() {
                   style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-zinc-500">Total Desks:</span>
-                    <span className="font-semibold text-white">{selectedCourse.seatData.totalSeats}</span>
+                    <span className="text-gray-500">Total Desks:</span>
+                    <span className="font-semibold text-gray-900">{selectedCourse.seatData.totalSeats}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-zinc-500">Available:</span>
-                    <span className="font-semibold text-emerald-400">
+                    <span className="text-gray-500">Available:</span>
+                    <span className="font-semibold text-emerald-600">
                       {selectedCourse.seatData.totalSeats - selectedCourse.seatData.occupiedSeats.length}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-zinc-500">Selected:</span>
-                    <span className="font-semibold text-purple-400">{selectedSeats.length}</span>
+                    <span className="text-gray-500">Selected:</span>
+                    <span className="font-semibold text-gray-700">{selectedSeats.length}</span>
                   </div>
                 </div>
               </div>
 
               {/* Modal Footer */}
-              <div className="sticky bottom-0 px-6 py-4 border-t border-white/[0.06] bg-[#0a0a0f] flex items-center justify-between">
+              <div className="sticky bottom-0 px-6 py-4 border-t border-gray-100 bg-white flex items-center justify-between">
                 <div>
                   {selectedSeats.length > 0 && (
                     <p 
-                      className="text-sm text-zinc-400"
+                      className="text-sm text-gray-600"
                       style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
                     >
-                      Selected: <span className="text-white font-medium">{selectedSeats.length} desk(s)</span>
+                      Selected: <span className="text-gray-900 font-medium">{selectedSeats.length} desk(s)</span>
                     </p>
                   )}
                 </div>
@@ -803,7 +790,7 @@ export default function BookingsPage() {
                       setSelectedCourse(null);
                       setSelectedSeats([]);
                     }}
-                    className="px-4 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.08] text-zinc-300 hover:bg-white/[0.08] transition-all"
+                    className="px-4 py-2.5 rounded-xl bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200 transition-all"
                     style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
                   >
                     Cancel
@@ -814,7 +801,7 @@ export default function BookingsPage() {
                     onClick={handleConfirmBooking}
                     disabled={selectedSeats.length === 0}
                     className={cn(
-                      "flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 text-white font-medium shadow-lg shadow-purple-500/25 transition-all",
+                      "flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-gray-800 to-black text-white font-medium shadow-lg shadow-gray-500/25 transition-all",
                       selectedSeats.length === 0 && "opacity-50 cursor-not-allowed"
                     )}
                     style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
@@ -836,16 +823,16 @@ export default function BookingsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8"
         >
-          <div className="inline-flex flex-col items-center w-full p-8 rounded-2xl bg-white/[0.03] border border-white/[0.08]">
-            <AlertCircle className="h-12 w-12 text-amber-400 mb-4" />
+          <div className="inline-flex flex-col items-center w-full p-8 rounded-2xl bg-white border border-gray-200 shadow-sm">
+            <AlertCircle className="h-12 w-12 text-amber-500 mb-4" />
             <h3 
-              className="text-lg font-semibold text-white mb-2"
+              className="text-lg font-semibold text-gray-900 mb-2"
               style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
             >
               No Courses Selected
             </h3>
             <p 
-              className="text-sm text-zinc-400 mb-4 text-center"
+              className="text-sm text-gray-500 mb-4 text-center"
               style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
             >
               Please use the AI Assistant to get course recommendations first.
@@ -854,7 +841,7 @@ export default function BookingsPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push("/assistant")}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 text-white font-medium shadow-lg shadow-purple-500/25"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-gray-800 to-black text-white font-medium shadow-lg shadow-gray-500/25"
               style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
             >
               <Zap className="h-4 w-4" />

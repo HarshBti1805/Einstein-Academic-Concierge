@@ -81,7 +81,7 @@ export default function Home() {
       repeat: -1,
       yoyo: true,
       ease: "power1.inOut",
-      delay: 0.5, // Start after Framer Motion animation completes
+      delay: 0.5,
     });
 
     // Subtle card float
@@ -191,32 +191,32 @@ export default function Home() {
   };
 
   return (
-    <div className={`min-h-screen flex items-center justify-center relative overflow-hidden py-8 bg-[#0a0a0f] ${fontVariables}`}>
+    <div className={`min-h-screen flex items-center justify-center relative overflow-hidden py-8 bg-gradient-to-br from-slate-50 via-white to-gray-100 ${fontVariables}`}>
       {/* Animated Grid Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div 
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.4]"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(139, 92, 246, 0.5) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(139, 92, 246, 0.5) 1px, transparent 1px)
+              linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px)
             `,
             backgroundSize: '60px 60px',
           }}
         />
       </div>
 
-      {/* Gradient orbs */}
-      <div className="orb-1 absolute top-1/4 -left-32 w-[500px] h-[500px] bg-violet-600/20 rounded-full blur-[120px] pointer-events-none" />
-      <div className="orb-2 absolute bottom-1/4 -right-32 w-[400px] h-[400px] bg-purple-600/20 rounded-full blur-[100px] pointer-events-none" />
-      <div className="orb-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[150px] pointer-events-none" />
+      {/* Gradient orbs - Light version */}
+      <div className="orb-1 absolute top-1/4 -left-32 w-[500px] h-[500px] bg-gray-200/40 rounded-full blur-[120px] pointer-events-none" />
+      <div className="orb-2 absolute bottom-1/4 -right-32 w-[400px] h-[400px] bg-gray-300/40 rounded-full blur-[100px] pointer-events-none" />
+      <div className="orb-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gray-100/50 rounded-full blur-[150px] pointer-events-none" />
 
-      {/* Floating particles */}
+      {/* Floating particles - Light version */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {particles.map((particle, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-purple-400/30 rounded-full"
+            className="absolute w-1 h-1 bg-gray-400/40 rounded-full"
             initial={{
               x: particle.x,
               y: particle.y,
@@ -246,24 +246,12 @@ export default function Home() {
           className="relative"
         >
           {/* Card glow effect */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-violet-600/20 via-purple-600/20 to-indigo-600/20 rounded-[28px] blur-xl opacity-70" />
+          <div className="absolute -inset-1 bg-gradient-to-r from-gray-200/50 via-gray-300/50 to-gray-200/50 rounded-[28px] blur-xl opacity-70" />
           
-          {/* Animated border */}
-          <div className="absolute inset-0 rounded-[26px] p-px overflow-hidden">
-            <div 
-              className="absolute inset-0 rounded-[26px]"
-              style={{
-                background: 'linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent)',
-                backgroundSize: '200% 100%',
-                animation: 'shimmer 3s linear infinite',
-              }}
-            />
-          </div>
-
           {/* Main card */}
           <div 
             ref={cardRef}
-            className="relative bg-[#0d0d14]/95 backdrop-blur-2xl rounded-[26px] p-6 sm:p-8 md:p-10 border border-white/8 shadow-2xl shadow-purple-500/5"
+            className="relative bg-white/90 backdrop-blur-2xl rounded-[26px] p-6 sm:p-8 md:p-10 border border-gray-200/60 shadow-xl shadow-gray-500/5"
           >
             {/* Header */}
             <div className="text-center mb-10">
@@ -277,7 +265,7 @@ export default function Home() {
                   delay: 0.1,
                   opacity: { duration: 0.3, delay: 0.1 }
                 }}
-                className="float-icon inline-flex items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 shadow-lg shadow-purple-500/30 mb-6 p-4 relative"
+                className="float-icon inline-flex items-center justify-center rounded-2xl bg-gradient-to-br from-gray-800 via-gray-900 to-black shadow-lg shadow-gray-900/30 mb-6 p-4 relative"
                 style={{ opacity: 1 }}
               >
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent" />
@@ -289,7 +277,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
-                className="text-3xl sm:text-4xl mb-3 bg-gradient-to-r from-violet-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent"
+                className="text-3xl sm:text-4xl mb-3 bg-gradient-to-r from-gray-800 via-gray-900 to-black bg-clip-text text-transparent"
                 style={{ fontFamily: "var(--font-vonique), system-ui, sans-serif" }}
               >
                 STUDENT PORTAL
@@ -299,14 +287,14 @@ export default function Home() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="text-zinc-500 text-lg flex items-center justify-center gap-2"
+                className="text-gray-500 text-lg flex items-center justify-center gap-2"
                 style={{ fontFamily: "var(--font-space-grotesk), system-ui, sans-serif" }}
               >
                 <motion.span
                   animate={{ rotate: [0, 15, -15, 0] }}
                   transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
                 >
-                  <Sparkles className="h-4 w-4 text-purple-400" />
+                  <Sparkles className="h-4 w-4 text-gray-700" />
                 </motion.span>
                 AI-Powered Registration System
               </motion.p>
@@ -328,7 +316,7 @@ export default function Home() {
                       <label
                         htmlFor={field.name}
                         className={`block text-sm font-medium mb-2 transition-colors duration-300 ${
-                          focusedField === field.name ? 'text-purple-400' : 'text-zinc-400'
+                          focusedField === field.name ? 'text-gray-900' : 'text-gray-600'
                         }`}
                         style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
                       >
@@ -336,15 +324,15 @@ export default function Home() {
                       </label>
                       <div className="relative group">
                         {/* Input glow on focus */}
-                        <div className={`absolute -inset-0.5 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl opacity-0 blur transition-opacity duration-300 ${
-                          focusedField === field.name ? 'opacity-30' : 'group-hover:opacity-10'
+                        <div className={`absolute -inset-0.5 bg-gradient-to-r from-gray-600 to-gray-800 rounded-xl opacity-0 blur transition-opacity duration-300 ${
+                          focusedField === field.name ? 'opacity-20' : 'group-hover:opacity-10'
                         }`} />
                         
                         <div className="relative flex items-center">
                           <div className={`absolute left-4 transition-all duration-300 ${
                             focusedField === field.name 
-                              ? 'text-purple-400 scale-110' 
-                              : 'text-zinc-600 group-hover:text-zinc-500'
+                              ? 'text-gray-900 scale-110' 
+                              : 'text-gray-400 group-hover:text-gray-500'
                           }`}>
                             <field.icon className="h-[18px] w-[18px]" />
                           </div>
@@ -357,7 +345,7 @@ export default function Home() {
                             onFocus={() => setFocusedField(field.name)}
                             onBlur={() => setFocusedField(null)}
                             required
-                            className="w-full pl-12 pr-4 py-3.5 text-white placeholder-zinc-600 bg-zinc-900/60 border border-zinc-800/80 rounded-xl focus:border-purple-500/50 focus:bg-zinc-900/80 outline-none transition-all duration-300"
+                            className="w-full pl-12 pr-4 py-3.5 text-gray-900 placeholder-gray-400 bg-gray-50/80 border border-gray-200 rounded-xl focus:border-gray-400 focus:bg-white focus:ring-2 focus:ring-gray-500/20 outline-none transition-all duration-300"
                             placeholder={field.placeholder}
                             style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
                           />
@@ -374,7 +362,7 @@ export default function Home() {
                       <label
                         htmlFor={field.name}
                         className={`block text-sm font-medium mb-2 transition-colors duration-300 ${
-                          focusedField === field.name ? 'text-purple-400' : 'text-zinc-400'
+                          focusedField === field.name ? 'text-gray-900' : 'text-gray-600'
                         }`}
                         style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
                       >
@@ -382,15 +370,15 @@ export default function Home() {
                       </label>
                       <div className="relative group">
                         {/* Input glow on focus */}
-                        <div className={`absolute -inset-0.5 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl opacity-0 blur transition-opacity duration-300 ${
-                          focusedField === field.name ? 'opacity-30' : 'group-hover:opacity-10'
+                        <div className={`absolute -inset-0.5 bg-gradient-to-r from-gray-600 to-gray-800 rounded-xl opacity-0 blur transition-opacity duration-300 ${
+                          focusedField === field.name ? 'opacity-20' : 'group-hover:opacity-10'
                         }`} />
                         
                         <div className="relative flex items-center">
                           <div className={`absolute left-4 transition-all duration-300 z-10 ${
                             focusedField === field.name 
-                              ? 'text-purple-400 scale-110' 
-                              : 'text-zinc-600 group-hover:text-zinc-500'
+                              ? 'text-gray-900 scale-110' 
+                              : 'text-gray-400 group-hover:text-gray-500'
                           }`}>
                             <field.icon className="h-[18px] w-[18px]" />
                           </div>
@@ -405,20 +393,20 @@ export default function Home() {
                                 onFocus={() => setFocusedField(field.name)}
                                 onBlur={() => setFocusedField(null)}
                                 required
-                                className="w-full pl-12 pr-10 py-3.5 text-white bg-zinc-900/60 border border-zinc-800/80 rounded-xl focus:border-purple-500/50 focus:bg-zinc-900/80 outline-none transition-all duration-300 appearance-none cursor-pointer"
+                                className="w-full pl-12 pr-10 py-3.5 text-gray-900 bg-gray-50/80 border border-gray-200 rounded-xl focus:border-gray-400 focus:bg-white focus:ring-2 focus:ring-gray-500/20 outline-none transition-all duration-300 appearance-none cursor-pointer"
                                 style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
                               >
-                                <option value="" disabled className="bg-zinc-900 text-zinc-500">
+                                <option value="" disabled className="bg-white text-gray-400">
                                   {field.placeholder}
                                 </option>
                                 {field.options?.map((option) => (
-                                  <option key={option} value={option} className="bg-zinc-900 text-white py-2">
+                                  <option key={option} value={option} className="bg-white text-gray-900 py-2">
                                     {option}
                                   </option>
                                 ))}
                               </select>
                               <ChevronDown className={`absolute right-4 h-4 w-4 pointer-events-none transition-all duration-300 ${
-                                focusedField === field.name ? 'text-purple-400 rotate-180' : 'text-zinc-600'
+                                focusedField === field.name ? 'text-gray-900 rotate-180' : 'text-gray-400'
                               }`} />
                             </>
                           ) : (
@@ -431,7 +419,7 @@ export default function Home() {
                               onFocus={() => setFocusedField(field.name)}
                               onBlur={() => setFocusedField(null)}
                               required
-                              className="w-full pl-12 pr-4 py-3.5 text-white placeholder-zinc-600 bg-zinc-900/60 border border-zinc-800/80 rounded-xl focus:border-purple-500/50 focus:bg-zinc-900/80 outline-none transition-all duration-300"
+                              className="w-full pl-12 pr-4 py-3.5 text-gray-900 placeholder-gray-400 bg-gray-50/80 border border-gray-200 rounded-xl focus:border-gray-400 focus:bg-white focus:ring-2 focus:ring-gray-500/20 outline-none transition-all duration-300"
                               placeholder={field.placeholder}
                               style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
                             />
@@ -446,7 +434,7 @@ export default function Home() {
                     <label
                       htmlFor="aboutYourself"
                       className={`block text-sm font-medium mb-2 transition-colors duration-300 ${
-                        focusedField === 'aboutYourself' ? 'text-purple-400' : 'text-zinc-400'
+                        focusedField === 'aboutYourself' ? 'text-gray-900' : 'text-gray-600'
                       }`}
                       style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                     >
@@ -454,15 +442,15 @@ export default function Home() {
                     </label>
                     <div className="relative group">
                       {/* Textarea glow on focus */}
-                      <div className={`absolute -inset-0.5 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl opacity-0 blur transition-opacity duration-300 ${
-                        focusedField === 'aboutYourself' ? 'opacity-30' : 'group-hover:opacity-10'
+                      <div className={`absolute -inset-0.5 bg-gradient-to-r from-gray-600 to-gray-800 rounded-xl opacity-0 blur transition-opacity duration-300 ${
+                        focusedField === 'aboutYourself' ? 'opacity-20' : 'group-hover:opacity-10'
                       }`} />
                       
                       <div className="relative">
                         <div className={`absolute left-4 top-4 transition-all duration-300 ${
                           focusedField === 'aboutYourself' 
-                            ? 'text-purple-400 scale-110' 
-                            : 'text-zinc-600 group-hover:text-zinc-500'
+                            ? 'text-gray-900 scale-110' 
+                            : 'text-gray-400 group-hover:text-gray-500'
                         }`}>
                           <MessageSquare className="h-[18px] w-[18px]" />
                         </div>
@@ -474,7 +462,7 @@ export default function Home() {
                           onFocus={() => setFocusedField('aboutYourself')}
                           onBlur={() => setFocusedField(null)}
                           rows={3}
-                          className="w-full pl-12 pr-4 py-3.5 text-white placeholder-zinc-600 bg-zinc-900/60 border border-zinc-800/80 rounded-xl focus:border-purple-500/50 focus:bg-zinc-900/80 outline-none transition-all duration-300 resize-none"
+                          className="w-full pl-12 pr-4 py-3.5 text-gray-900 placeholder-gray-400 bg-gray-50/80 border border-gray-200 rounded-xl focus:border-gray-400 focus:bg-white focus:ring-2 focus:ring-gray-500/20 outline-none transition-all duration-300 resize-none"
                           placeholder="Share your interests, goals, or anything about yourself..."
                           style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
                         />
@@ -498,13 +486,13 @@ export default function Home() {
                   style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
                 >
                   {/* Button gradient background */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 transition-all duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-900 to-black transition-all duration-300" />
                   
                   {/* Hover shine effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                   
                   {/* Button glow */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 blur-xl opacity-50 group-hover:opacity-70 transition-opacity duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-900 to-black blur-xl opacity-50 group-hover:opacity-70 transition-opacity duration-300" />
                   
                   {/* Button content */}
                   <span className="relative z-10 flex items-center gap-2">
@@ -556,15 +544,15 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}
-              className="mt-8 text-center text-sm text-zinc-600"
+              className="mt-8 text-center text-sm text-gray-500"
               style={{ fontFamily: "var(--font-space-grotesk), system-ui, sans-serif" }}
             >
               By signing in, you agree to our{" "}
-              <span className="text-zinc-500 hover:text-purple-400 cursor-pointer transition-colors">
+              <span className="text-gray-600 hover:text-gray-900 cursor-pointer transition-colors">
                 terms of service
               </span>{" "}
               and{" "}
-              <span className="text-zinc-500 hover:text-purple-400 cursor-pointer transition-colors">
+              <span className="text-gray-600 hover:text-gray-900 cursor-pointer transition-colors">
                 privacy policy
               </span>
             </motion.p>

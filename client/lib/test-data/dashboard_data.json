@@ -1,0 +1,590 @@
+{
+  "STU001": {
+    "weeklyActivity": [
+      { "day": "Mon", "attendance": 95, "studyHours": 7 },
+      { "day": "Tue", "attendance": 90, "studyHours": 6 },
+      { "day": "Wed", "attendance": 94, "studyHours": 8 },
+      { "day": "Thu", "attendance": 88, "studyHours": 5 },
+      { "day": "Fri", "attendance": 96, "studyHours": 7 },
+      { "day": "Sat", "attendance": 0, "studyHours": 9 },
+      { "day": "Sun", "attendance": 0, "studyHours": 6 }
+    ],
+    "semesterProgress": [
+      { "semester": "Fall 2024", "gpa": 3.7, "credits": 15 }
+    ],
+    "upcomingDeadlines": [
+      {
+        "id": 1,
+        "title": "Introduction to Programming - Project Submission",
+        "course": "CS101",
+        "dueDate": "2024-11-25",
+        "type": "project",
+        "priority": "high"
+      },
+      {
+        "id": 2,
+        "title": "Data Structures Assignment 3",
+        "course": "CS102",
+        "dueDate": "2024-11-28",
+        "type": "assignment",
+        "priority": "high"
+      },
+      {
+        "id": 3,
+        "title": "Database Systems - SQL Lab Exercise",
+        "course": "CS103",
+        "dueDate": "2024-11-30",
+        "type": "lab",
+        "priority": "medium"
+      },
+      {
+        "id": 4,
+        "title": "Web Development - Portfolio Website",
+        "course": "CS106",
+        "dueDate": "2024-12-02",
+        "type": "project",
+        "priority": "high"
+      },
+      {
+        "id": 5,
+        "title": "Discrete Mathematics Midterm",
+        "course": "MATH201",
+        "dueDate": "2024-12-05",
+        "type": "exam",
+        "priority": "high"
+      }
+    ],
+    "achievements": [
+      {
+        "id": 1,
+        "title": "Coding Excellence",
+        "description": "Scored A+ in Introduction to Programming",
+        "icon": "trophy",
+        "date": "2024-10-15",
+        "unlocked": true
+      },
+      {
+        "id": 2,
+        "title": "Perfect Attendance",
+        "description": "100% attendance in Introduction to Programming",
+        "icon": "star",
+        "date": "2024-10-20",
+        "unlocked": true
+      },
+      {
+        "id": 3,
+        "title": "Early Bird",
+        "description": "Register first day of registration",
+        "icon": "clock",
+        "date": null,
+        "unlocked": false
+      },
+      {
+        "id": 4,
+        "title": "Scholar",
+        "description": "Complete 100 credits",
+        "icon": "book",
+        "date": null,
+        "unlocked": false
+      }
+    ],
+    "recentActivity": [
+      {
+        "id": 1,
+        "action": "Submitted assignment",
+        "details": "CS102 - Data Structures Assignment 2",
+        "timestamp": "2024-11-19T16:30:00Z"
+      },
+      {
+        "id": 2,
+        "action": "Attended class",
+        "details": "CS101 - Introduction to Programming",
+        "timestamp": "2024-11-19T10:00:00Z"
+      },
+      {
+        "id": 3,
+        "action": "Joined club",
+        "details": "Coding Club - Weekly Meeting",
+        "timestamp": "2024-11-18T18:00:00Z"
+      },
+      {
+        "id": 4,
+        "action": "Downloaded materials",
+        "details": "CS103 - Database Systems Lecture Notes",
+        "timestamp": "2024-11-17T14:20:00Z"
+      }
+    ]
+  },
+  "STU002": {
+    "weeklyActivity": [
+      { "day": "Mon", "attendance": 98, "studyHours": 8 },
+      { "day": "Tue", "attendance": 96, "studyHours": 7 },
+      { "day": "Wed", "attendance": 97, "studyHours": 9 },
+      { "day": "Thu", "attendance": 95, "studyHours": 8 },
+      { "day": "Fri", "attendance": 94, "studyHours": 7 },
+      { "day": "Sat", "attendance": 0, "studyHours": 10 },
+      { "day": "Sun", "attendance": 0, "studyHours": 8 }
+    ],
+    "semesterProgress": [
+      { "semester": "Fall 2023", "gpa": 3.8, "credits": 15 },
+      { "semester": "Spring 2024", "gpa": 3.85, "credits": 16 },
+      { "semester": "Fall 2024", "gpa": 3.9, "credits": 16 }
+    ],
+    "upcomingDeadlines": [
+      {
+        "id": 1,
+        "title": "Mechanics of Materials - Lab Report",
+        "course": "EN201",
+        "dueDate": "2024-11-26",
+        "type": "lab",
+        "priority": "high"
+      },
+      {
+        "id": 2,
+        "title": "Thermodynamics Project",
+        "course": "EN203",
+        "dueDate": "2024-11-29",
+        "type": "project",
+        "priority": "high"
+      },
+      {
+        "id": 3,
+        "title": "Circuit Analysis Assignment 4",
+        "course": "EN204",
+        "dueDate": "2024-12-01",
+        "type": "assignment",
+        "priority": "medium"
+      },
+      {
+        "id": 4,
+        "title": "Engineering Design - Final Presentation",
+        "course": "EN205",
+        "dueDate": "2024-12-03",
+        "type": "presentation",
+        "priority": "high"
+      },
+      {
+        "id": 5,
+        "title": "Engineering Mathematics Final Exam",
+        "course": "MATH301",
+        "dueDate": "2024-12-06",
+        "type": "exam",
+        "priority": "high"
+      }
+    ],
+    "achievements": [
+      {
+        "id": 1,
+        "title": "Dean's List",
+        "description": "Achieved GPA above 3.5",
+        "icon": "trophy",
+        "date": "2024-05-15",
+        "unlocked": true
+      },
+      {
+        "id": 2,
+        "title": "Math Excellence",
+        "description": "Scored A+ in Engineering Mathematics",
+        "icon": "star",
+        "date": "2024-10-18",
+        "unlocked": true
+      },
+      {
+        "id": 3,
+        "title": "Perfect Attendance",
+        "description": "100% attendance in Engineering Mathematics",
+        "icon": "star",
+        "date": "2024-10-25",
+        "unlocked": true
+      },
+      {
+        "id": 4,
+        "title": "Scholar",
+        "description": "Complete 100 credits",
+        "icon": "book",
+        "date": null,
+        "unlocked": false
+      }
+    ],
+    "recentActivity": [
+      {
+        "id": 1,
+        "action": "Submitted assignment",
+        "details": "EN201 - Mechanics of Materials Lab Report",
+        "timestamp": "2024-11-19T15:45:00Z"
+      },
+      {
+        "id": 2,
+        "action": "Attended class",
+        "details": "EN203 - Thermodynamics",
+        "timestamp": "2024-11-19T14:00:00Z"
+      },
+      {
+        "id": 3,
+        "action": "Participated in competition",
+        "details": "Math Olympiad - Regional Round",
+        "timestamp": "2024-11-18T12:00:00Z"
+      },
+      {
+        "id": 4,
+        "action": "Downloaded materials",
+        "details": "EN205 - Engineering Design Project Guidelines",
+        "timestamp": "2024-11-17T09:30:00Z"
+      }
+    ]
+  },
+  "STU003": {
+    "weeklyActivity": [
+      { "day": "Mon", "attendance": 94, "studyHours": 4 },
+      { "day": "Tue", "attendance": 92, "studyHours": 3 },
+      { "day": "Wed", "attendance": 98, "studyHours": 5 },
+      { "day": "Thu", "attendance": 90, "studyHours": 4 },
+      { "day": "Fri", "attendance": 75, "studyHours": 2 },
+      { "day": "Sat", "attendance": 0, "studyHours": 6 },
+      { "day": "Sun", "attendance": 0, "studyHours": 3 }
+    ],
+    "semesterProgress": [
+      { "semester": "Fall 2024", "gpa": 2.8, "credits": 15 }
+    ],
+    "upcomingDeadlines": [
+      {
+        "id": 1,
+        "title": "Acting Techniques - Scene Performance",
+        "course": "PA101",
+        "dueDate": "2024-11-27",
+        "type": "performance",
+        "priority": "high"
+      },
+      {
+        "id": 2,
+        "title": "Theater History - Essay Assignment",
+        "course": "PA104",
+        "dueDate": "2024-11-29",
+        "type": "essay",
+        "priority": "medium"
+      },
+      {
+        "id": 3,
+        "title": "Stage Production - Design Project",
+        "course": "PA105",
+        "dueDate": "2024-12-01",
+        "type": "project",
+        "priority": "medium"
+      },
+      {
+        "id": 4,
+        "title": "Performance Workshop - Final Showcase",
+        "course": "PA106",
+        "dueDate": "2024-12-04",
+        "type": "performance",
+        "priority": "high"
+      },
+      {
+        "id": 5,
+        "title": "General Education - Midterm Exam",
+        "course": "GEN101",
+        "dueDate": "2024-12-07",
+        "type": "exam",
+        "priority": "medium"
+      }
+    ],
+    "achievements": [
+      {
+        "id": 1,
+        "title": "Performance Star",
+        "description": "Scored A+ in Movement and Physical Theater",
+        "icon": "trophy",
+        "date": "2024-10-22",
+        "unlocked": true
+      },
+      {
+        "id": 2,
+        "title": "Perfect Attendance",
+        "description": "100% attendance in Movement and Physical Theater",
+        "icon": "star",
+        "date": "2024-10-28",
+        "unlocked": true
+      },
+      {
+        "id": 3,
+        "title": "Early Bird",
+        "description": "Register first day of registration",
+        "icon": "clock",
+        "date": null,
+        "unlocked": false
+      },
+      {
+        "id": 4,
+        "title": "Scholar",
+        "description": "Complete 100 credits",
+        "icon": "book",
+        "date": null,
+        "unlocked": false
+      }
+    ],
+    "recentActivity": [
+      {
+        "id": 1,
+        "action": "Performed in showcase",
+        "details": "PA101 - Acting Techniques Scene",
+        "timestamp": "2024-11-19T19:00:00Z"
+      },
+      {
+        "id": 2,
+        "action": "Attended rehearsal",
+        "details": "Drama Club - Weekly Rehearsal",
+        "timestamp": "2024-11-18T17:00:00Z"
+      },
+      {
+        "id": 3,
+        "action": "Missed class",
+        "details": "GEN101 - General Education Requirement",
+        "timestamp": "2024-11-17T10:00:00Z"
+      },
+      {
+        "id": 4,
+        "action": "Attended class",
+        "details": "PA106 - Performance Workshop",
+        "timestamp": "2024-11-16T14:00:00Z"
+      }
+    ]
+  },
+  "STU004": {
+    "weeklyActivity": [
+      { "day": "Mon", "attendance": 97, "studyHours": 6 },
+      { "day": "Tue", "attendance": 94, "studyHours": 7 },
+      { "day": "Wed", "attendance": 95, "studyHours": 6 },
+      { "day": "Thu", "attendance": 92, "studyHours": 5 },
+      { "day": "Fri", "attendance": 91, "studyHours": 6 },
+      { "day": "Sat", "attendance": 0, "studyHours": 7 },
+      { "day": "Sun", "attendance": 0, "studyHours": 5 }
+    ],
+    "semesterProgress": [
+      { "semester": "Fall 2022", "gpa": 3.3, "credits": 15 },
+      { "semester": "Spring 2023", "gpa": 3.4, "credits": 16 },
+      { "semester": "Fall 2023", "gpa": 3.45, "credits": 15 },
+      { "semester": "Spring 2024", "gpa": 3.5, "credits": 16 },
+      { "semester": "Fall 2024", "gpa": 3.5, "credits": 15 }
+    ],
+    "upcomingDeadlines": [
+      {
+        "id": 1,
+        "title": "Cognitive Psychology - Research Paper",
+        "course": "PSY301",
+        "dueDate": "2024-11-26",
+        "type": "essay",
+        "priority": "high"
+      },
+      {
+        "id": 2,
+        "title": "Research Methods - Data Analysis Report",
+        "course": "PSY304",
+        "dueDate": "2024-11-28",
+        "type": "project",
+        "priority": "high"
+      },
+      {
+        "id": 3,
+        "title": "Social Psychology - Group Presentation",
+        "course": "PSY302",
+        "dueDate": "2024-12-01",
+        "type": "presentation",
+        "priority": "medium"
+      },
+      {
+        "id": 4,
+        "title": "Abnormal Psychology - Case Study",
+        "course": "PSY303",
+        "dueDate": "2024-12-03",
+        "type": "assignment",
+        "priority": "high"
+      },
+      {
+        "id": 5,
+        "title": "Statistics for Psychology - Final Exam",
+        "course": "PSY307",
+        "dueDate": "2024-12-06",
+        "type": "exam",
+        "priority": "high"
+      }
+    ],
+    "achievements": [
+      {
+        "id": 1,
+        "title": "Dean's List",
+        "description": "Achieved GPA above 3.5",
+        "icon": "trophy",
+        "date": "2024-05-20",
+        "unlocked": true
+      },
+      {
+        "id": 2,
+        "title": "Psychology Excellence",
+        "description": "Scored A+ in Cognitive Psychology",
+        "icon": "star",
+        "date": "2024-10-25",
+        "unlocked": true
+      },
+      {
+        "id": 3,
+        "title": "Perfect Attendance",
+        "description": "100% attendance in Cognitive Psychology",
+        "icon": "star",
+        "date": "2024-11-01",
+        "unlocked": true
+      },
+      {
+        "id": 4,
+        "title": "Scholar",
+        "description": "Complete 100 credits",
+        "icon": "book",
+        "date": null,
+        "unlocked": false
+      }
+    ],
+    "recentActivity": [
+      {
+        "id": 1,
+        "action": "Submitted assignment",
+        "details": "PSY304 - Research Methods Data Analysis",
+        "timestamp": "2024-11-19T17:00:00Z"
+      },
+      {
+        "id": 2,
+        "action": "Attended class",
+        "details": "PSY301 - Cognitive Psychology",
+        "timestamp": "2024-11-19T11:00:00Z"
+      },
+      {
+        "id": 3,
+        "action": "Volunteered",
+        "details": "Volunteer Club - Community Service",
+        "timestamp": "2024-11-18T15:00:00Z"
+      },
+      {
+        "id": 4,
+        "action": "Downloaded materials",
+        "details": "PSY303 - Abnormal Psychology Case Studies",
+        "timestamp": "2024-11-17T13:45:00Z"
+      }
+    ]
+  },
+  "STU005": {
+    "weeklyActivity": [
+      { "day": "Mon", "attendance": 95, "studyHours": 5 },
+      { "day": "Tue", "attendance": 92, "studyHours": 6 },
+      { "day": "Wed", "attendance": 88, "studyHours": 5 },
+      { "day": "Thu", "attendance": 90, "studyHours": 4 },
+      { "day": "Fri", "attendance": 86, "studyHours": 5 },
+      { "day": "Sat", "attendance": 0, "studyHours": 7 },
+      { "day": "Sun", "attendance": 0, "studyHours": 4 }
+    ],
+    "semesterProgress": [
+      { "semester": "Fall 2023", "gpa": 3.1, "credits": 15 },
+      { "semester": "Spring 2024", "gpa": 3.15, "credits": 16 },
+      { "semester": "Fall 2024", "gpa": 3.2, "credits": 16 }
+    ],
+    "upcomingDeadlines": [
+      {
+        "id": 1,
+        "title": "Business Management - Case Study Analysis",
+        "course": "BA201",
+        "dueDate": "2024-11-25",
+        "type": "assignment",
+        "priority": "high"
+      },
+      {
+        "id": 2,
+        "title": "Financial Accounting - Project Submission",
+        "course": "BA202",
+        "dueDate": "2024-11-27",
+        "type": "project",
+        "priority": "high"
+      },
+      {
+        "id": 3,
+        "title": "Marketing Principles - Campaign Proposal",
+        "course": "BA203",
+        "dueDate": "2024-11-30",
+        "type": "project",
+        "priority": "medium"
+      },
+      {
+        "id": 4,
+        "title": "Microeconomics - Midterm Exam",
+        "course": "ECON201",
+        "dueDate": "2024-12-02",
+        "type": "exam",
+        "priority": "high"
+      },
+      {
+        "id": 5,
+        "title": "Business Statistics - Lab Report",
+        "course": "BA205",
+        "dueDate": "2024-12-04",
+        "type": "lab",
+        "priority": "medium"
+      }
+    ],
+    "achievements": [
+      {
+        "id": 1,
+        "title": "Business Leader",
+        "description": "Scored A in Business Management",
+        "icon": "trophy",
+        "date": "2024-10-20",
+        "unlocked": true
+      },
+      {
+        "id": 2,
+        "title": "Perfect Attendance",
+        "description": "100% attendance in Business Management",
+        "icon": "star",
+        "date": "2024-10-27",
+        "unlocked": true
+      },
+      {
+        "id": 3,
+        "title": "Early Bird",
+        "description": "Register first day of registration",
+        "icon": "clock",
+        "date": null,
+        "unlocked": false
+      },
+      {
+        "id": 4,
+        "title": "Scholar",
+        "description": "Complete 100 credits",
+        "icon": "book",
+        "date": null,
+        "unlocked": false
+      }
+    ],
+    "recentActivity": [
+      {
+        "id": 1,
+        "action": "Submitted assignment",
+        "details": "BA201 - Business Management Case Study",
+        "timestamp": "2024-11-19T16:15:00Z"
+      },
+      {
+        "id": 2,
+        "action": "Attended class",
+        "details": "BA202 - Financial Accounting",
+        "timestamp": "2024-11-19T13:00:00Z"
+      },
+      {
+        "id": 3,
+        "action": "Attended meeting",
+        "details": "Entrepreneurship Club - Startup Pitch Session",
+        "timestamp": "2024-11-18T18:30:00Z"
+      },
+      {
+        "id": 4,
+        "action": "Downloaded materials",
+        "details": "BA203 - Marketing Principles Lecture Slides",
+        "timestamp": "2024-11-17T11:20:00Z"
+      }
+    ]
+  }
+}

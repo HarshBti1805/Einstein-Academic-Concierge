@@ -1,0 +1,414 @@
+{
+  "students": [
+    {
+      "student_id": "STU001",
+      "name": "Alex Thompson",
+      "email": "alex.thompson@university.edu",
+      "roll_number": "CS2024-001",
+      "university_name": "Metropolitan State University",
+      "branch": "Computer Science",
+      "enrollment_year": 2024,
+      "expectedGraduation": 2027,
+      "year_of_study": 1,
+      "age": 18,
+      "academic_data": {
+        "academic_year": "2024-2025",
+        "totalCredits": 15,
+        "creditsThisSemester": 15,
+        "overall_gpa": 3.7,
+        "attendance_percentage": 92.5,
+        "subjects": [
+          {
+            "name": "Introduction to Programming",
+            "marks": 95,
+            "grade": "A+",
+            "attendance": 98,
+            "teacher_remarks": "Outstanding, natural aptitude for programming"
+          },
+          {
+            "name": "Data Structures and Algorithms",
+            "marks": 88,
+            "grade": "A",
+            "attendance": 95,
+            "teacher_remarks": "Excellent analytical skills, shows interest in problem-solving"
+          },
+          {
+            "name": "Discrete Mathematics",
+            "marks": 85,
+            "grade": "A",
+            "attendance": 94,
+            "teacher_remarks": "Strong logical thinking and mathematical foundation"
+          },
+          {
+            "name": "Database Systems",
+            "marks": 82,
+            "grade": "A-",
+            "attendance": 90,
+            "teacher_remarks": "Good understanding of concepts, needs more practice with SQL"
+          },
+          {
+            "name": "Computer Organization",
+            "marks": 78,
+            "grade": "B+",
+            "attendance": 88,
+            "teacher_remarks": "Average performance, can improve with more focus on hardware concepts"
+          },
+          {
+            "name": "Web Development",
+            "marks": 90,
+            "grade": "A",
+            "attendance": 96,
+            "teacher_remarks": "Very creative, excellent front-end development skills"
+          },
+          {
+            "name": "Software Engineering",
+            "marks": 72,
+            "grade": "B",
+            "attendance": 85,
+            "teacher_remarks": "Basic understanding of software development lifecycle"
+          },
+          {
+            "name": "Communication Skills",
+            "marks": 70,
+            "grade": "B-",
+            "attendance": 82,
+            "teacher_remarks": "Needs improvement in technical writing and presentations"
+          }
+        ]
+      },
+      "behavioral_data": {
+        "participation_score": 8.5,
+        "discipline_score": 9.0,
+        "extracurricular": ["Coding Club", "Art Club", "Robotics Team"]
+      }
+    },
+    {
+      "student_id": "STU002",
+      "name": "Sarah Chen",
+      "email": "sarah.chen@university.edu",
+      "roll_number": "EN2023-002",
+      "university_name": "Metropolitan State University",
+      "branch": "Engineering",
+      "enrollment_year": 2023,
+      "expectedGraduation": 2026,
+      "year_of_study": 2,
+      "age": 19,
+      "academic_data": {
+        "academic_year": "2024-2025",
+        "totalCredits": 45,
+        "creditsThisSemester": 16,
+        "overall_gpa": 3.9,
+        "attendance_percentage": 96.0,
+        "subjects": [
+          {
+            "name": "Engineering Mathematics",
+            "marks": 95,
+            "grade": "A+",
+            "attendance": 98,
+            "teacher_remarks": "Exceptional mathematical abilities"
+          },
+          {
+            "name": "Mechanics of Materials",
+            "marks": 92,
+            "grade": "A",
+            "attendance": 96,
+            "teacher_remarks": "Strong conceptual understanding of stress and strain"
+          },
+          {
+            "name": "Thermodynamics",
+            "marks": 90,
+            "grade": "A",
+            "attendance": 95,
+            "teacher_remarks": "Excellent problem-solving skills in heat transfer"
+          },
+          {
+            "name": "Circuit Analysis",
+            "marks": 88,
+            "grade": "A",
+            "attendance": 94,
+            "teacher_remarks": "Shows strong interest in electrical engineering principles"
+          },
+          {
+            "name": "Engineering Design",
+            "marks": 91,
+            "grade": "A",
+            "attendance": 97,
+            "teacher_remarks": "Great logical thinking and innovative design solutions"
+          },
+          {
+            "name": "Materials Science",
+            "marks": 85,
+            "grade": "A",
+            "attendance": 93,
+            "teacher_remarks": "Good understanding of material properties and applications"
+          },
+          {
+            "name": "Technical Communication",
+            "marks": 82,
+            "grade": "A-",
+            "attendance": 92,
+            "teacher_remarks": "Good communication skills in technical writing"
+          },
+          {
+            "name": "Engineering Ethics",
+            "marks": 75,
+            "grade": "B",
+            "attendance": 88,
+            "teacher_remarks": "Average interest, needs more engagement with case studies"
+          }
+        ]
+      },
+      "behavioral_data": {
+        "participation_score": 9.2,
+        "discipline_score": 9.5,
+        "extracurricular": ["Math Olympiad", "Science Club", "Debate Team"]
+      }
+    },
+    {
+      "student_id": "STU003",
+      "name": "Marcus Johnson",
+      "email": "marcus.johnson@university.edu",
+      "roll_number": "PA2024-003",
+      "university_name": "Metropolitan State University",
+      "branch": "Performing Arts",
+      "enrollment_year": 2024,
+      "expectedGraduation": 2027,
+      "year_of_study": 1,
+      "age": 18,
+      "academic_data": {
+        "academic_year": "2024-2025",
+        "totalCredits": 15,
+        "creditsThisSemester": 15,
+        "overall_gpa": 2.8,
+        "attendance_percentage": 78.0,
+        "subjects": [
+          {
+            "name": "Acting Techniques",
+            "marks": 90,
+            "grade": "A",
+            "attendance": 94,
+            "teacher_remarks": "Excellent stage presence and natural acting ability"
+          },
+          {
+            "name": "Voice and Speech",
+            "marks": 88,
+            "grade": "A",
+            "attendance": 92,
+            "teacher_remarks": "Natural vocal talent, strong projection"
+          },
+          {
+            "name": "Movement and Physical Theater",
+            "marks": 95,
+            "grade": "A+",
+            "attendance": 98,
+            "teacher_remarks": "Outstanding physical expression and movement skills"
+          },
+          {
+            "name": "Theater History",
+            "marks": 68,
+            "grade": "B-",
+            "attendance": 80,
+            "teacher_remarks": "Shows interest but needs improvement in historical context"
+          },
+          {
+            "name": "Stage Production",
+            "marks": 72,
+            "grade": "B",
+            "attendance": 82,
+            "teacher_remarks": "Good understanding of production, writing needs work"
+          },
+          {
+            "name": "Performance Workshop",
+            "marks": 88,
+            "grade": "A",
+            "attendance": 90,
+            "teacher_remarks": "Strong performance skills, very expressive"
+          },
+          {
+            "name": "Introduction to Theater",
+            "marks": 62,
+            "grade": "C+",
+            "attendance": 75,
+            "teacher_remarks": "Needs more practice and engagement"
+          },
+          {
+            "name": "General Education Requirement",
+            "marks": 55,
+            "grade": "C-",
+            "attendance": 70,
+            "teacher_remarks": "Attendance affecting performance, needs to prioritize"
+          }
+        ]
+      },
+      "behavioral_data": {
+        "participation_score": 7.0,
+        "discipline_score": 6.5,
+        "extracurricular": ["Basketball Team", "School Band", "Drama Club"]
+      }
+    },
+    {
+      "student_id": "STU004",
+      "name": "Emily Rodriguez",
+      "email": "emily.rodriguez@university.edu",
+      "roll_number": "PS2022-004",
+      "university_name": "Metropolitan State University",
+      "branch": "Psychology",
+      "enrollment_year": 2022,
+      "expectedGraduation": 2025,
+      "year_of_study": 3,
+      "age": 20,
+      "academic_data": {
+        "academic_year": "2024-2025",
+        "totalCredits": 90,
+        "creditsThisSemester": 15,
+        "overall_gpa": 3.5,
+        "attendance_percentage": 89.0,
+        "subjects": [
+          {
+            "name": "Cognitive Psychology",
+            "marks": 94,
+            "grade": "A+",
+            "attendance": 97,
+            "teacher_remarks": "Deep understanding of cognitive processes and human behavior"
+          },
+          {
+            "name": "Social Psychology",
+            "marks": 90,
+            "grade": "A",
+            "attendance": 94,
+            "teacher_remarks": "Great analytical skills in understanding social interactions"
+          },
+          {
+            "name": "Abnormal Psychology",
+            "marks": 92,
+            "grade": "A",
+            "attendance": 95,
+            "teacher_remarks": "Passionate about mental health and psychological disorders"
+          },
+          {
+            "name": "Research Methods in Psychology",
+            "marks": 88,
+            "grade": "A",
+            "attendance": 92,
+            "teacher_remarks": "Excellent research design and statistical analysis skills"
+          },
+          {
+            "name": "Developmental Psychology",
+            "marks": 85,
+            "grade": "A",
+            "attendance": 91,
+            "teacher_remarks": "Creative and expressive in understanding human development"
+          },
+          {
+            "name": "Biological Psychology",
+            "marks": 82,
+            "grade": "A-",
+            "attendance": 90,
+            "teacher_remarks": "Strong understanding of brain-behavior relationships"
+          },
+          {
+            "name": "Statistics for Psychology",
+            "marks": 75,
+            "grade": "B",
+            "attendance": 88,
+            "teacher_remarks": "Steady improvement in statistical analysis"
+          },
+          {
+            "name": "Psychology Elective",
+            "marks": 70,
+            "grade": "B-",
+            "attendance": 85,
+            "teacher_remarks": "Needs more focus on course material"
+          }
+        ]
+      },
+      "behavioral_data": {
+        "participation_score": 8.8,
+        "discipline_score": 9.0,
+        "extracurricular": ["Volunteer Club", "Psychology Club", "Creative Writing"]
+      }
+    },
+    {
+      "student_id": "STU005",
+      "name": "David Kim",
+      "email": "david.kim@university.edu",
+      "roll_number": "BA2023-005",
+      "university_name": "Metropolitan State University",
+      "branch": "Business Administration",
+      "enrollment_year": 2023,
+      "expectedGraduation": 2026,
+      "year_of_study": 2,
+      "age": 19,
+      "academic_data": {
+        "academic_year": "2024-2025",
+        "totalCredits": 45,
+        "creditsThisSemester": 16,
+        "overall_gpa": 3.2,
+        "attendance_percentage": 85.0,
+        "subjects": [
+          {
+            "name": "Business Management",
+            "marks": 92,
+            "grade": "A",
+            "attendance": 95,
+            "teacher_remarks": "Entrepreneurial mindset and strong leadership potential"
+          },
+          {
+            "name": "Financial Accounting",
+            "marks": 88,
+            "grade": "A",
+            "attendance": 92,
+            "teacher_remarks": "Excellent understanding of financial principles and markets"
+          },
+          {
+            "name": "Marketing Principles",
+            "marks": 85,
+            "grade": "A",
+            "attendance": 90,
+            "teacher_remarks": "Good problem-solving skills in marketing strategies"
+          },
+          {
+            "name": "Microeconomics",
+            "marks": 80,
+            "grade": "B+",
+            "attendance": 88,
+            "teacher_remarks": "Strong practical understanding of economic concepts"
+          },
+          {
+            "name": "Business Statistics",
+            "marks": 78,
+            "grade": "B+",
+            "attendance": 86,
+            "teacher_remarks": "Good with statistical applications in business"
+          },
+          {
+            "name": "Organizational Behavior",
+            "marks": 72,
+            "grade": "B",
+            "attendance": 82,
+            "teacher_remarks": "Average theoretical understanding, needs more engagement"
+          },
+          {
+            "name": "Business Communication",
+            "marks": 70,
+            "grade": "B-",
+            "attendance": 80,
+            "teacher_remarks": "Improving steadily in professional communication"
+          },
+          {
+            "name": "General Education Requirement",
+            "marks": 65,
+            "grade": "C+",
+            "attendance": 78,
+            "teacher_remarks": "Limited interest, should focus more on coursework"
+          }
+        ]
+      },
+      "behavioral_data": {
+        "participation_score": 8.0,
+        "discipline_score": 8.5,
+        "extracurricular": ["Entrepreneurship Club", "Investment Club", "Tech Startup Team"]
+      }
+    }
+  ]
+}

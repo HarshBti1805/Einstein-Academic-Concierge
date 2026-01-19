@@ -442,7 +442,7 @@ export default function Dashboard() {
       {/* Background Elements */}
       <div className="fixed inset-0 pointer-events-none">
         <div
-          className="absolute inset-0 opacity-[0.4]"
+          className="absolute inset-0 opacity-[0.6]"
           style={{
             backgroundImage: `
               linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
@@ -517,7 +517,7 @@ export default function Dashboard() {
                 <div className="hidden sm:block">
                   <h1
                     className="text-base font-bold text-gray-900 tracking-tight"
-                    style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
+                    style={{ fontFamily: "var(--font-space-mono), system-ui, sans-serif" }}
                   >
                     Dashboard
                   </h1>
@@ -1127,46 +1127,65 @@ export default function Dashboard() {
                     <Zap className="h-5 w-5 text-gray-900" />
                   </div>
                 </div>
-                <div className="flex items-end justify-between gap-3 h-44 px-2">
-                  {semesterProgress.map((sem, index) => {
-                    const height = (sem.gpa / 4.0) * 100;
-                    const isLast = index === semesterProgress.length - 1;
-                    
-                    return (
-                      <div
-                        key={sem.semester}
-                        className="flex-1 flex flex-col items-center gap-3"
-                      >
-                        <motion.div
-                          initial={{ height: 0 }}
-                          animate={{ height: `${height}%` }}
-                          transition={{ delay: 0.1 * index + 0.3, duration: 0.8, ease: "easeOut" }}
-                          className={cn(
-                            "w-full rounded-xl relative overflow-hidden min-h-[24px]",
-                            isLast
-                              ? "bg-gradient-to-t from-gray-800 to-gray-600 shadow-lg shadow-gray-500/30"
-                              : "bg-gradient-to-t from-gray-300 to-gray-200"
-                          )}
+                <div className="relative">
+                  {/* Y-axis labels */}
+                  <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between text-[10px] text-gray-400 pr-2">
+                    <span>4.0</span>
+                    <span>3.0</span>
+                    <span>2.0</span>
+                    <span>1.0</span>
+                    <span>0.0</span>
+                  </div>
+                  
+                  {/* Chart container */}
+                  <div className="ml-8 flex items-end justify-between gap-3 h-48 px-2 pb-8 border-b border-gray-200">
+                    {semesterProgress.map((sem, index) => {
+                      const heightPercentage = (sem.gpa / 4.0) * 100;
+                      const isLast = index === semesterProgress.length - 1;
+                      const maxHeight = 192; // h-48 = 192px
+                      const barHeight = (heightPercentage / 100) * maxHeight;
+                      
+                      return (
+                        <div
+                          key={sem.semester}
+                          className="flex-1 flex flex-col items-center gap-2 h-full"
                         >
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span
+                          <div className="flex-1 flex items-end w-full relative">
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: barHeight, opacity: 1 }}
+                              transition={{ delay: 0.1 * index + 0.3, duration: 0.8, ease: "easeOut" }}
                               className={cn(
-                                "text-xs font-bold",
-                                isLast ? "text-white" : "text-gray-600"
+                                "w-full rounded-t-xl relative overflow-hidden flex items-start justify-center pt-2",
+                                "min-h-[40px]",
+                                isLast
+                                  ? "bg-gradient-to-t from-gray-800 via-gray-700 to-gray-600 shadow-lg shadow-gray-500/30"
+                                  : "bg-gradient-to-t from-gray-300 via-gray-200 to-gray-100 hover:from-gray-400 hover:via-gray-300 hover:to-gray-200 transition-all"
                               )}
-                              style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                              style={{ minHeight: `${Math.max(barHeight, 40)}px` }}
                             >
-                              {sem.gpa}
-                            </span>
+                              <span
+                                className={cn(
+                                  "text-xs font-bold whitespace-nowrap",
+                                  isLast ? "text-white" : "text-gray-700"
+                                )}
+                                style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                              >
+                                {sem.gpa}
+                              </span>
+                            </motion.div>
                           </div>
-                        </motion.div>
-                        <span className="text-[11px] text-gray-500 text-center whitespace-nowrap">
-                          {sem.semester.split(" ")[0].slice(0, 2)}{" "}
-                          {sem.semester.split(" ")[1]?.slice(2)}
-                        </span>
-                      </div>
-                    );
-                  })}
+                          <span 
+                            className="text-[11px] text-gray-500 text-center whitespace-nowrap font-medium"
+                            style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                          >
+                            {sem.semester.split(" ")[0].slice(0, 2)}{" "}
+                            {sem.semester.split(" ")[1]?.slice(2)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </GradientCard>
             </motion.div>

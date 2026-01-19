@@ -1,6 +1,6 @@
 """
 Student Course Recommendation System
-Using LangChain, OpenAI, and ChromaDB Vector Database
+Using LangChain, OpenAI, and Pinecone Vector Database
 Recommends courses based on student conversation + academic performance
 """
 
@@ -10,16 +10,24 @@ from typing import List, Dict, Any
 from dotenv import load_dotenv
 
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain_chroma import Chroma
+from langchain_pinecone import PineconeVectorStore
 from langchain_core.documents import Document
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+from pinecone import Pinecone, ServerlessSpec
 
 # Load environment variables
 load_dotenv()
 
 # Constants
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-CHROMA_PERSIST_DIR = os.path.join(os.path.dirname(__file__), "chroma_db")
+
+# Pinecone Configuration
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY", None)
+PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "course-recommendations")
+PINECONE_ENVIRONMENT = os.getenv("PINECONE_ENVIRONMENT", "us-east-1")  # AWS region for serverless
+
+if not PINECONE_API_KEY:
+    raise ValueError("PINECONE_API_KEY must be set in environment variables or .env file")
 
 
 def load_json_data(filename: str) -> Dict[str, Any]:
@@ -69,17 +77,121 @@ Keywords: {', '.join(course['keywords'])}
     return documents
 
 
-def initialize_vector_store(documents: List[Document]) -> Chroma:
-    """Initialize ChromaDB vector store with course documents."""
-    embeddings = OpenAIEmbeddings()
+def initialize_vector_store(documents: List[Document]) -> PineconeVectorStore:
+    """Initialize Pinecone vector store with course documents.
     
-    # Create or load the vector store
-    vectorstore = Chroma.from_documents(
-        documents=documents,
-        embedding=embeddings,
-        persist_directory=CHROMA_PERSIST_DIR,
-        collection_name="courses"
-    )
+    Connects to Pinecone cloud and creates/updates the index with course documents.
+    """
+    embeddings = OpenAIEmbeddings()
+    REQUIRED_DIMENSION = 1536  # OpenAI embeddings dimension
+    
+    print("   ☁️  Connecting to Pinecone...")
+    
+    # Initialize Pinecone client
+    pc = Pinecone(api_key=PINECONE_API_KEY)
+    
+    # Check if index exists
+    try:
+        existing_indexes = [index.name for index in pc.list_indexes()]
+    except Exception as e:
+        print(f"   ⚠️  Error listing indexes: {e}")
+        existing_indexes = []
+    
+    if PINECONE_INDEX_NAME in existing_indexes:
+        print(f"   📂 Found existing Pinecone index: {PINECONE_INDEX_NAME}")
+        index = pc.Index(PINECONE_INDEX_NAME)
+        
+        # Check index dimension
+        try:
+            index_description = pc.describe_index(PINECONE_INDEX_NAME)
+            index_dimension = index_description.dimension
+            
+            if index_dimension != REQUIRED_DIMENSION:
+                print(f"   ⚠️  Index dimension mismatch!")
+                print(f"      Current: {index_dimension}, Required: {REQUIRED_DIMENSION}")
+                print(f"   🗑️  Deleting old index to recreate with correct dimension...")
+                
+                # Delete the old index
+                pc.delete_index(PINECONE_INDEX_NAME)
+                print("   ✅ Old index deleted")
+                
+                # Wait a moment for deletion to complete
+                import time
+                time.sleep(2)
+                
+                # Create new index with correct dimension
+                print(f"   🔨 Creating new index with dimension {REQUIRED_DIMENSION}...")
+                pc.create_index(
+                    name=PINECONE_INDEX_NAME,
+                    dimension=REQUIRED_DIMENSION,
+                    metric="cosine",
+                    spec=ServerlessSpec(
+                        cloud="aws",
+                        region=PINECONE_ENVIRONMENT
+                    )
+                )
+                print("   ✅ New index created with correct dimension")
+            else:
+                # Dimension is correct, check if it has data
+                stats = index.describe_index_stats()
+                total_vectors = stats.get('total_vector_count', 0)
+                
+                if total_vectors > 0:
+                    print(f"   ✅ Index already contains {total_vectors} vectors (dimension: {index_dimension})")
+                    # Load existing vector store
+                    vectorstore = PineconeVectorStore(
+                        index_name=PINECONE_INDEX_NAME,
+                        embedding=embeddings,
+                        pinecone_api_key=PINECONE_API_KEY
+                    )
+                    return vectorstore
+                else:
+                    print("   ⚠️  Index exists but is empty, populating...")
+        except Exception as e:
+            print(f"   ⚠️  Error checking index: {e}, will recreate...")
+            # Try to delete and recreate
+            try:
+                pc.delete_index(PINECONE_INDEX_NAME)
+                import time
+                time.sleep(2)
+            except:
+                pass
+    else:
+        print(f"   🔨 Creating new Pinecone index: {PINECONE_INDEX_NAME}")
+        try:
+            # Create new index (serverless)
+            pc.create_index(
+                name=PINECONE_INDEX_NAME,
+                dimension=REQUIRED_DIMENSION,
+                metric="cosine",
+                spec=ServerlessSpec(
+                    cloud="aws",
+                    region=PINECONE_ENVIRONMENT
+                )
+            )
+            print(f"   ✅ Index created successfully with dimension {REQUIRED_DIMENSION}")
+        except Exception as e:
+            print(f"   ⚠️  Error creating index (may already exist): {e}")
+    
+    # Create vector store and add documents
+    print(f"   📤 Uploading {len(documents)} courses to Pinecone...")
+    try:
+        vectorstore = PineconeVectorStore.from_documents(
+            documents=documents,
+            embedding=embeddings,
+            index_name=PINECONE_INDEX_NAME,
+            pinecone_api_key=PINECONE_API_KEY
+        )
+        print(f"   ✅ Successfully uploaded {len(documents)} courses to Pinecone")
+    except Exception as e:
+        print(f"   ⚠️  Error uploading documents: {e}")
+        # Try to load existing vector store if upload fails
+        print("   🔄 Attempting to load existing vector store...")
+        vectorstore = PineconeVectorStore(
+            index_name=PINECONE_INDEX_NAME,
+            embedding=embeddings,
+            pinecone_api_key=PINECONE_API_KEY
+        )
     
     return vectorstore
 
@@ -164,7 +276,7 @@ Discipline Score: {academic_analysis['discipline_score']}/10
 class CourseRecommendationChatbot:
     """Main chatbot class for course recommendations."""
     
-    def __init__(self, vectorstore: Chroma, student: Dict[str, Any], academic_analysis: Dict[str, Any]):
+    def __init__(self, vectorstore: PineconeVectorStore, student: Dict[str, Any], academic_analysis: Dict[str, Any]):
         self.vectorstore = vectorstore
         self.student = student
         self.academic_analysis = academic_analysis
@@ -335,7 +447,7 @@ def main():
     print("\n" + "=" * 60)
     print("🎓 STUDENT COURSE RECOMMENDATION SYSTEM")
     print("=" * 60)
-    print("Powered by LangChain + OpenAI + ChromaDB")
+    print("Powered by LangChain + OpenAI + Pinecone")
     print("=" * 60)
     
     # Load data

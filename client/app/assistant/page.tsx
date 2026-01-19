@@ -256,7 +256,7 @@ export default function AssistantPage() {
       {/* Background Elements - Fixed */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div
-          className="absolute inset-0 opacity-[0.4]"
+          className="absolute inset-0 opacity-[0.6]"
           style={{
             backgroundImage: `
               linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),

@@ -9,13 +9,22 @@ A LangChain-powered chatbot that recommends courses to students based on:
 
 ### Step 1: Set Up Environment Variables
 
-Create a `.env` file in the `Salesforce` directory with your OpenAI API key:
+Create a `.env` file in the `Salesforce` directory:
 
 ```bash
+# Required
 OPENAI_API_KEY=your_openai_api_key_here
+PINECONE_API_KEY=your_pinecone_api_key_here
+
+# Optional Pinecone Configuration
+PINECONE_INDEX_NAME=course-recommendations  # Default: "course-recommendations"
+PINECONE_ENVIRONMENT=us-east-1               # AWS region for serverless (default: "us-east-1")
 ```
 
-**Note:** You mentioned you've already added the OpenAI API key. If it's set as an environment variable in your system, you can skip this step. Otherwise, create the `.env` file.
+**Note:** 
+- **PINECONE_API_KEY is REQUIRED** - Get it from: https://www.pinecone.io/
+- The app uses Pinecone Cloud (serverless) for vector storage
+- Index will be created automatically if it doesn't exist
 
 ### Step 2: Activate Virtual Environment
 
@@ -90,9 +99,33 @@ Salesforce/
 ├── data/
 │   ├── students_data.json     # Mock student data
 │   └── courses_data.json      # 20 available courses
-├── chroma_db/                 # Vector database (auto-created)
 └── venv/                      # Virtual environment
 ```
+
+## ☁️ Pinecone Cloud Deployment
+
+This app uses **Pinecone Cloud (Serverless)** for vector storage - perfect for production!
+
+### Setup Steps:
+
+1. **Sign up for Pinecone**: https://www.pinecone.io/ (Free tier available!)
+2. **Get your API key** from the Pinecone dashboard
+3. **Set environment variables** in your deployment platform:
+   ```bash
+   PINECONE_API_KEY=your_api_key_here
+   PINECONE_INDEX_NAME=course-recommendations  # Optional
+   PINECONE_ENVIRONMENT=us-east-1               # Optional (AWS region)
+   ```
+
+4. **The index will be created automatically** on first run
+
+**Benefits of Pinecone:**
+- ✅ Fully managed cloud service (no local storage)
+- ✅ Serverless - scales automatically
+- ✅ Fast similarity search
+- ✅ Free tier available (100K vectors)
+- ✅ Works across multiple deployment instances
+- ✅ Production-ready and reliable
 
 ## 🔧 Troubleshooting
 
@@ -104,15 +137,23 @@ Salesforce/
 - Make sure virtual environment is activated
 - Run: `pip install -r requirements.txt`
 
-**Issue: ChromaDB errors**
-- Delete the `chroma_db` folder and restart
-- The database will be recreated automatically
+**Issue: Pinecone connection fails**
+- Verify your `PINECONE_API_KEY` is correct
+- Check your Pinecone dashboard to ensure the API key is active
+- Ensure you have sufficient quota (free tier: 100K vectors)
+- Check the index name matches your Pinecone project
+
+**Issue: Index creation fails**
+- Verify your AWS region (`PINECONE_ENVIRONMENT`) is valid
+- Check Pinecone dashboard for any account limitations
+- Ensure your API key has permission to create indexes
 
 ## 📊 Features
 
 - ✅ Conversational AI using GPT-4
-- ✅ Vector database for semantic course search
+- ✅ Pinecone Cloud vector database for semantic course search
 - ✅ Academic performance analysis
 - ✅ Interest-based recommendations
 - ✅ Priority-ranked course suggestions
 - ✅ Mock data for testing
+- ✅ Production-ready cloud deployment

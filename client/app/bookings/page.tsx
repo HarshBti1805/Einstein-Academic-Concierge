@@ -188,11 +188,11 @@ export default function BookingsPage() {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100 relative ${fontVariables}`}>
+    <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100 relative overflow-x-hidden ${fontVariables}`}>
       {/* Background Elements */}
-      <div className="fixed inset-0 pointer-events-none -z-10">
+      <div className="fixed inset-0 pointer-events-none">
         <div
-          className="absolute inset-0 opacity-[0.4]"
+          className="absolute inset-0 opacity-[0.6]"
           style={{
             backgroundImage: `
               linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),

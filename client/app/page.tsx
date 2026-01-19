@@ -74,13 +74,14 @@ export default function Home() {
       );
     }
 
-    // Floating animation for the icon
+    // Floating animation for the icon (delayed to start after Framer Motion animation)
     gsap.to(".float-icon", {
       y: -8,
       duration: 2.5,
       repeat: -1,
       yoyo: true,
       ease: "power1.inOut",
+      delay: 0.5, // Start after Framer Motion animation completes
     });
 
     // Subtle card float
@@ -267,10 +268,17 @@ export default function Home() {
             {/* Header */}
             <div className="text-center mb-10">
               <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
+                initial={{ scale: 0, rotate: -180, opacity: 0 }}
+                animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                transition={{ 
+                  type: "spring", 
+                  stiffness: 200, 
+                  damping: 15, 
+                  delay: 0.1,
+                  opacity: { duration: 0.3, delay: 0.1 }
+                }}
                 className="float-icon inline-flex items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 shadow-lg shadow-purple-500/30 mb-6 p-4 relative"
+                style={{ opacity: 1 }}
               >
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent" />
                 <GraduationCap className="h-10 w-10 text-white relative z-10" />
@@ -281,8 +289,8 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
-                className="text-3xl sm:text-4xl font-bold mb-3 bg-gradient-to-r from-violet-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent"
-                style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                className="text-3xl sm:text-4xl mb-3 bg-gradient-to-r from-violet-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent"
+                style={{ fontFamily: "var(--font-vonique), system-ui, sans-serif" }}
               >
                 STUDENT PORTAL
               </motion.h1>
@@ -291,8 +299,8 @@ export default function Home() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="text-zinc-500 text-md flex items-center justify-center gap-2"
-                style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                className="text-zinc-500 text-lg flex items-center justify-center gap-2"
+                style={{ fontFamily: "var(--font-space-grotesk), system-ui, sans-serif" }}
               >
                 <motion.span
                   animate={{ rotate: [0, 15, -15, 0] }}
@@ -322,7 +330,7 @@ export default function Home() {
                         className={`block text-sm font-medium mb-2 transition-colors duration-300 ${
                           focusedField === field.name ? 'text-purple-400' : 'text-zinc-400'
                         }`}
-                        style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                        style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
                       >
                         {field.label}
                       </label>
@@ -351,7 +359,7 @@ export default function Home() {
                             required
                             className="w-full pl-12 pr-4 py-3.5 text-white placeholder-zinc-600 bg-zinc-900/60 border border-zinc-800/80 rounded-xl focus:border-purple-500/50 focus:bg-zinc-900/80 outline-none transition-all duration-300"
                             placeholder={field.placeholder}
-                            style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                            style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
                           />
                         </div>
                       </div>
@@ -368,7 +376,7 @@ export default function Home() {
                         className={`block text-sm font-medium mb-2 transition-colors duration-300 ${
                           focusedField === field.name ? 'text-purple-400' : 'text-zinc-400'
                         }`}
-                        style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                        style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
                       >
                         {field.label}
                       </label>
@@ -398,7 +406,7 @@ export default function Home() {
                                 onBlur={() => setFocusedField(null)}
                                 required
                                 className="w-full pl-12 pr-10 py-3.5 text-white bg-zinc-900/60 border border-zinc-800/80 rounded-xl focus:border-purple-500/50 focus:bg-zinc-900/80 outline-none transition-all duration-300 appearance-none cursor-pointer"
-                                style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                                style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
                               >
                                 <option value="" disabled className="bg-zinc-900 text-zinc-500">
                                   {field.placeholder}
@@ -506,7 +514,8 @@ export default function Home() {
                           key="success"
                           initial={{ opacity: 0, scale: 0.5 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className="flex items-center gap-2"
+                          className="flex tracking-widest items-center gap-2"
+                          style={{ fontFamily: "var(--font-vonique), system-ui, sans-serif" }}
                         >
                           <Check className="h-5 w-5" />
                           Success!
@@ -516,8 +525,8 @@ export default function Home() {
                           key="loading"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="flex items-center gap-2"
-                          style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                          className="flex tracking-widest items-center gap-2"
+                          style={{ fontFamily: "var(--font-vonique), system-ui, sans-serif" }}
 
                         >
                           <Loader2 className="h-5 w-5 animate-spin" />
@@ -528,8 +537,8 @@ export default function Home() {
                           key="default"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="flex items-center gap-2 text-lg"
-                          style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                          className="flex items-center gap-2 font-thin tracking-widest text-lg"
+                          style={{ fontFamily: "var(--font-vonique), system-ui, sans-serif" }}
 
                         >
                           GET STARTED
@@ -547,8 +556,8 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}
-              className="mt-8 text-center text-xs text-zinc-600"
-              style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+              className="mt-8 text-center text-sm text-zinc-600"
+              style={{ fontFamily: "var(--font-space-grotesk), system-ui, sans-serif" }}
             >
               By signing in, you agree to our{" "}
               <span className="text-zinc-500 hover:text-purple-400 cursor-pointer transition-colors">

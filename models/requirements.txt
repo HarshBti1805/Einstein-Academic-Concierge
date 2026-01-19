@@ -1,6 +1,10 @@
 # LangChain Course Recommendation System
 # Core dependencies
 
+# Flask API
+flask>=3.0.0
+flask-cors>=4.0.0
+
 # LangChain ecosystem
 langchain>=0.3.0
 langchain-openai>=0.2.0

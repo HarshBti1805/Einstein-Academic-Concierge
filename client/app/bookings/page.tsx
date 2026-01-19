@@ -26,8 +26,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Import mock data
-import seatsData from "@/lib/mock-data/seats.json";
+// Import test data
+import seatsData from "@/lib/test-data/seats_data.json";
 
 interface RecommendedCourse {
   code: string;

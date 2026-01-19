@@ -1,15 +1,16 @@
-# 🎓 Student Course Recommendation System
+# 🎓 Student Course Recommendation System - Flask API
 
-A LangChain-powered chatbot that recommends courses to students based on:
+A LangChain-powered chatbot API that recommends courses to students based on:
 - **Conversational analysis** (student interests, passions, career goals)
 - **Academic performance** (marks, grades, attendance)
-- **School expectations** (best courses for best students)
+- **Schedule preferences & workload balance**
+- **Instructor teaching style preferences**
 
 ## 🚀 Quick Start Guide
 
 ### Step 1: Set Up Environment Variables
 
-Create a `.env` file in the `Salesforce` directory:
+Create a `.env` file in the `models` directory:
 
 ```bash
 # Required
@@ -28,8 +29,6 @@ PINECONE_ENVIRONMENT=us-east-1               # AWS region for serverless (defaul
 
 ### Step 2: Activate Virtual Environment
 
-Since you already have a virtual environment set up, activate it:
-
 **Windows PowerShell:**
 ```powershell
 .\venv\Scripts\Activate.ps1
@@ -40,91 +39,182 @@ Since you already have a virtual environment set up, activate it:
 .\venv\Scripts\activate.bat
 ```
 
-### Step 3: Install Dependencies (if needed)
-
-All packages appear to be installed, but if you need to reinstall:
+### Step 3: Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Step 4: Run the Application
+### Step 4: Run the Flask API
 
 ```bash
 python app.py
 ```
 
-## 📖 How to Use
+The API will start at `http://localhost:5000`
 
-1. **Start the app** - Run `python app.py`
+## 🔌 API Endpoints
 
-2. **Select a student** - Choose from available students:
-   - `STU001` - Alex Thompson (GPA: 3.7)
-   - `STU002` - Sarah Chen (GPA: 3.9)
-   - `STU003` - Marcus Johnson (GPA: 2.8)
-   - `STU004` - Emily Rodriguez (GPA: 3.5)
-   - `STU005` - David Kim (GPA: 3.2)
-
-3. **Have a conversation** - Chat with the counselor about:
-   - Your interests and passions
-   - Career aspirations
-   - Favorite subjects
-   - Learning preferences
-
-4. **Get recommendations** - Type `recommend` to get your personalized top 5 courses
-
-5. **Exit** - Type `quit` to exit
-
-## 🎯 Example Conversation
-
+### Health Check
 ```
-👤 You: I love coding and building apps. I want to work in tech.
+GET /api/health
+```
+Returns the status of the API and whether all components are loaded.
 
-🤖 Counselor: That's wonderful! Tell me more about what kind of apps 
-   you enjoy building...
+### Get Student Profile
+```
+GET /api/student/<student_id>
+```
+Returns student profile, academic analysis, and dashboard data.
 
-👤 You: I'm really into AI and machine learning. I think robots are cool.
+**Example:**
+```bash
+curl http://localhost:5000/api/student/STU001
+```
 
-🤖 Counselor: Fascinating! AI is a rapidly growing field...
+### Start Chat Session
+```
+POST /api/chat/start
+Content-Type: application/json
 
-👤 You: recommend
+{
+  "student_id": "STU001"
+}
+```
+Initializes a new chat session for the student and returns a welcome message.
+
+### Send Message
+```
+POST /api/chat/message
+Content-Type: application/json
+
+{
+  "student_id": "STU001",
+  "message": "I'm interested in programming and AI"
+}
+```
+Sends a message to the AI advisor and receives a response.
+
+**Response:**
+```json
+{
+  "response": "That's exciting! AI and programming are...",
+  "conversation_length": 2,
+  "can_recommend": false
+}
+```
+
+### Get Recommendations
+```
+POST /api/chat/recommend
+Content-Type: application/json
+
+{
+  "student_id": "STU001"
+}
+```
+Generates personalized course recommendations based on the conversation.
+
+**Response:**
+```json
+{
+  "recommendations": [
+    {
+      "code": "CS101",
+      "name": "Advanced Programming & Software Development",
+      "credits": 3,
+      "instructor": "Dr. Michael Chen",
+      "schedule": "Mon/Wed/Fri 10:00 AM-11:30 AM",
+      "priority": 1,
+      "reason": "Matches your interest in programming...",
+      "totalSeats": 260,
+      "occupiedSeats": 178,
+      "bookingStatus": "open"
+    }
+  ],
+  "message": "Based on our conversation..."
+}
+```
+
+### Get All Courses
+```
+GET /api/courses
+```
+Returns all available courses with full details.
+
+### Get Seat Availability
+```
+GET /api/seats
+GET /api/seats/<course_id>
+```
+Returns seat availability for all courses or a specific course.
+
+## 🔗 Frontend Integration
+
+The API is designed to work with the Next.js frontend. The frontend will:
+
+1. **Auto-detect API availability** - Falls back to local mode if API is not running
+2. **Start chat session** - Calls `/api/chat/start` when user visits assistant page
+3. **Send messages** - Calls `/api/chat/message` for each user message
+4. **Get recommendations** - Calls `/api/chat/recommend` when user requests recommendations
+5. **Store recommendations** - Saves to sessionStorage for the bookings page
+
+### Running Both Frontend and Backend
+
+**Terminal 1 - Start Flask API:**
+```bash
+cd models
+python app.py
+```
+
+**Terminal 2 - Start Next.js Frontend:**
+```bash
+cd client
+npm run dev
 ```
 
 ## 📁 Project Structure
 
 ```
-Salesforce/
-├── app.py                      # Main application
-├── requirements.txt            # Dependencies
+models/
+├── app.py                      # Flask API application
+├── requirements.txt            # Python dependencies
+├── .env                        # Environment variables (create this)
 ├── data/
-│   ├── students_data.json     # Mock student data
-│   └── courses_data.json      # 20 available courses
-└── venv/                      # Virtual environment
+│   ├── students_data.json      # Student profiles (5 students)
+│   ├── courses_data.json       # Course catalog (20 courses)
+│   ├── dashboard_data.json     # Student dashboard data
+│   ├── seats_data.json         # Seat availability data
+│   └── chat_data.json          # Chat configuration
+└── venv/                       # Virtual environment
 ```
 
-## ☁️ Pinecone Cloud Deployment
+## 📊 Available Students
 
-This app uses **Pinecone Cloud (Serverless)** for vector storage - perfect for production!
+| ID | Name | Branch | GPA | Year |
+|----|------|--------|-----|------|
+| STU001 | Alex Thompson | Computer Science | 3.7 | 1 |
+| STU002 | Sarah Chen | Engineering | 3.9 | 2 |
+| STU003 | Marcus Johnson | Performing Arts | 2.8 | 1 |
+| STU004 | Emily Rodriguez | Psychology | 3.5 | 3 |
+| STU005 | David Kim | Business Administration | 3.2 | 2 |
+
+## ☁️ Pinecone Cloud Configuration
+
+This app uses **Pinecone Cloud (Serverless)** for vector storage.
 
 ### Setup Steps:
 
 1. **Sign up for Pinecone**: https://www.pinecone.io/ (Free tier available!)
 2. **Get your API key** from the Pinecone dashboard
-3. **Set environment variables** in your deployment platform:
-   ```bash
-   PINECONE_API_KEY=your_api_key_here
-   PINECONE_INDEX_NAME=course-recommendations  # Optional
-   PINECONE_ENVIRONMENT=us-east-1               # Optional (AWS region)
-   ```
-
+3. **Set environment variables** in `.env`
 4. **The index will be created automatically** on first run
 
 **Benefits of Pinecone:**
-- ✅ Fully managed cloud service (no local storage)
+- ✅ Fully managed cloud service
 - ✅ Serverless - scales automatically
 - ✅ Fast similarity search
 - ✅ Free tier available (100K vectors)
-- ✅ Works across multiple deployment instances
 - ✅ Production-ready and reliable
 
 ## 🔧 Troubleshooting
@@ -140,20 +230,22 @@ This app uses **Pinecone Cloud (Serverless)** for vector storage - perfect for p
 **Issue: Pinecone connection fails**
 - Verify your `PINECONE_API_KEY` is correct
 - Check your Pinecone dashboard to ensure the API key is active
-- Ensure you have sufficient quota (free tier: 100K vectors)
-- Check the index name matches your Pinecone project
 
-**Issue: Index creation fails**
-- Verify your AWS region (`PINECONE_ENVIRONMENT`) is valid
-- Check Pinecone dashboard for any account limitations
-- Ensure your API key has permission to create indexes
+**Issue: CORS errors from frontend**
+- The API includes CORS configuration for `localhost:3000`
+- Ensure the frontend is running on the expected port
+
+**Issue: Chat session not found**
+- Sessions are stored in memory and reset on server restart
+- The frontend will automatically create a new session if needed
 
 ## 📊 Features
 
+- ✅ RESTful Flask API with CORS support
 - ✅ Conversational AI using GPT-4
 - ✅ Pinecone Cloud vector database for semantic course search
 - ✅ Academic performance analysis
 - ✅ Interest-based recommendations
-- ✅ Priority-ranked course suggestions
-- ✅ Mock data for testing
-- ✅ Production-ready cloud deployment
+- ✅ Real-time seat availability
+- ✅ Session-based chat with history
+- ✅ Graceful fallback to local mode in frontend

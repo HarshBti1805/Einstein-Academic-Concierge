@@ -19,60 +19,60 @@
         "attendance_percentage": 92.5,
         "subjects": [
           {
-            "name": "Mathematics",
-            "marks": 88,
-            "grade": "A",
-            "attendance": 95,
-            "teacher_remarks": "Excellent analytical skills, shows interest in problem-solving"
-          },
-          {
-            "name": "Physics",
-            "marks": 82,
-            "grade": "A-",
-            "attendance": 90,
-            "teacher_remarks": "Good understanding of concepts, needs more lab practice"
-          },
-          {
-            "name": "Chemistry",
-            "marks": 78,
-            "grade": "B+",
-            "attendance": 88,
-            "teacher_remarks": "Average performance, can improve with more focus"
-          },
-          {
-            "name": "Biology",
-            "marks": 72,
-            "grade": "B",
-            "attendance": 85,
-            "teacher_remarks": "Basic understanding, shows more interest in ecology"
-          },
-          {
-            "name": "English",
-            "marks": 85,
-            "grade": "A",
-            "attendance": 94,
-            "teacher_remarks": "Strong writing skills, creative thinker"
-          },
-          {
-            "name": "Computer Science",
+            "name": "Introduction to Programming",
             "marks": 95,
             "grade": "A+",
             "attendance": 98,
             "teacher_remarks": "Outstanding, natural aptitude for programming"
           },
           {
-            "name": "History",
-            "marks": 70,
-            "grade": "B-",
-            "attendance": 82,
-            "teacher_remarks": "Needs improvement in memorization"
+            "name": "Data Structures and Algorithms",
+            "marks": 88,
+            "grade": "A",
+            "attendance": 95,
+            "teacher_remarks": "Excellent analytical skills, shows interest in problem-solving"
           },
           {
-            "name": "Art",
+            "name": "Discrete Mathematics",
+            "marks": 85,
+            "grade": "A",
+            "attendance": 94,
+            "teacher_remarks": "Strong logical thinking and mathematical foundation"
+          },
+          {
+            "name": "Database Systems",
+            "marks": 82,
+            "grade": "A-",
+            "attendance": 90,
+            "teacher_remarks": "Good understanding of concepts, needs more practice with SQL"
+          },
+          {
+            "name": "Computer Organization",
+            "marks": 78,
+            "grade": "B+",
+            "attendance": 88,
+            "teacher_remarks": "Average performance, can improve with more focus on hardware concepts"
+          },
+          {
+            "name": "Web Development",
             "marks": 90,
             "grade": "A",
             "attendance": 96,
-            "teacher_remarks": "Very creative, excellent visual arts skills"
+            "teacher_remarks": "Very creative, excellent front-end development skills"
+          },
+          {
+            "name": "Software Engineering",
+            "marks": 72,
+            "grade": "B",
+            "attendance": 85,
+            "teacher_remarks": "Basic understanding of software development lifecycle"
+          },
+          {
+            "name": "Communication Skills",
+            "marks": 70,
+            "grade": "B-",
+            "attendance": 82,
+            "teacher_remarks": "Needs improvement in technical writing and presentations"
           }
         ]
       },
@@ -101,60 +101,60 @@
         "attendance_percentage": 96.0,
         "subjects": [
           {
-            "name": "Mathematics",
+            "name": "Engineering Mathematics",
             "marks": 95,
             "grade": "A+",
             "attendance": 98,
             "teacher_remarks": "Exceptional mathematical abilities"
           },
           {
-            "name": "Physics",
+            "name": "Mechanics of Materials",
             "marks": 92,
             "grade": "A",
             "attendance": 96,
-            "teacher_remarks": "Strong conceptual understanding"
+            "teacher_remarks": "Strong conceptual understanding of stress and strain"
           },
           {
-            "name": "Chemistry",
+            "name": "Thermodynamics",
             "marks": 90,
             "grade": "A",
             "attendance": 95,
-            "teacher_remarks": "Excellent lab work and theory"
+            "teacher_remarks": "Excellent problem-solving skills in heat transfer"
           },
           {
-            "name": "Biology",
+            "name": "Circuit Analysis",
             "marks": 88,
             "grade": "A",
             "attendance": 94,
-            "teacher_remarks": "Shows interest in molecular biology"
+            "teacher_remarks": "Shows strong interest in electrical engineering principles"
           },
           {
-            "name": "English",
-            "marks": 82,
-            "grade": "A-",
-            "attendance": 92,
-            "teacher_remarks": "Good communication skills"
-          },
-          {
-            "name": "Computer Science",
+            "name": "Engineering Design",
             "marks": 91,
             "grade": "A",
             "attendance": 97,
-            "teacher_remarks": "Great logical thinking"
+            "teacher_remarks": "Great logical thinking and innovative design solutions"
           },
           {
-            "name": "Economics",
+            "name": "Materials Science",
             "marks": 85,
             "grade": "A",
             "attendance": 93,
-            "teacher_remarks": "Good understanding of market concepts"
+            "teacher_remarks": "Good understanding of material properties and applications"
           },
           {
-            "name": "Music",
+            "name": "Technical Communication",
+            "marks": 82,
+            "grade": "A-",
+            "attendance": 92,
+            "teacher_remarks": "Good communication skills in technical writing"
+          },
+          {
+            "name": "Engineering Ethics",
             "marks": 75,
             "grade": "B",
             "attendance": 88,
-            "teacher_remarks": "Average interest"
+            "teacher_remarks": "Average interest, needs more engagement with case studies"
           }
         ]
       },
@@ -183,60 +183,60 @@
         "attendance_percentage": 78.0,
         "subjects": [
           {
-            "name": "Mathematics",
-            "marks": 58,
-            "grade": "C",
-            "attendance": 72,
-            "teacher_remarks": "Struggles with abstract concepts"
-          },
-          {
-            "name": "Physics",
-            "marks": 62,
-            "grade": "C+",
-            "attendance": 75,
-            "teacher_remarks": "Needs more practice"
-          },
-          {
-            "name": "Chemistry",
-            "marks": 55,
-            "grade": "C-",
-            "attendance": 70,
-            "teacher_remarks": "Attendance affecting performance"
-          },
-          {
-            "name": "Biology",
-            "marks": 68,
-            "grade": "B-",
-            "attendance": 80,
-            "teacher_remarks": "Shows interest in environmental topics"
-          },
-          {
-            "name": "English",
-            "marks": 72,
-            "grade": "B",
-            "attendance": 82,
-            "teacher_remarks": "Good verbal skills, writing needs work"
-          },
-          {
-            "name": "Physical Education",
-            "marks": 95,
-            "grade": "A+",
-            "attendance": 98,
-            "teacher_remarks": "Outstanding athlete"
-          },
-          {
-            "name": "Music",
-            "marks": 88,
-            "grade": "A",
-            "attendance": 92,
-            "teacher_remarks": "Natural musical talent"
-          },
-          {
-            "name": "Drama",
+            "name": "Acting Techniques",
             "marks": 90,
             "grade": "A",
             "attendance": 94,
-            "teacher_remarks": "Excellent stage presence"
+            "teacher_remarks": "Excellent stage presence and natural acting ability"
+          },
+          {
+            "name": "Voice and Speech",
+            "marks": 88,
+            "grade": "A",
+            "attendance": 92,
+            "teacher_remarks": "Natural vocal talent, strong projection"
+          },
+          {
+            "name": "Movement and Physical Theater",
+            "marks": 95,
+            "grade": "A+",
+            "attendance": 98,
+            "teacher_remarks": "Outstanding physical expression and movement skills"
+          },
+          {
+            "name": "Theater History",
+            "marks": 68,
+            "grade": "B-",
+            "attendance": 80,
+            "teacher_remarks": "Shows interest but needs improvement in historical context"
+          },
+          {
+            "name": "Stage Production",
+            "marks": 72,
+            "grade": "B",
+            "attendance": 82,
+            "teacher_remarks": "Good understanding of production, writing needs work"
+          },
+          {
+            "name": "Performance Workshop",
+            "marks": 88,
+            "grade": "A",
+            "attendance": 90,
+            "teacher_remarks": "Strong performance skills, very expressive"
+          },
+          {
+            "name": "Introduction to Theater",
+            "marks": 62,
+            "grade": "C+",
+            "attendance": 75,
+            "teacher_remarks": "Needs more practice and engagement"
+          },
+          {
+            "name": "General Education Requirement",
+            "marks": 55,
+            "grade": "C-",
+            "attendance": 70,
+            "teacher_remarks": "Attendance affecting performance, needs to prioritize"
           }
         ]
       },
@@ -265,60 +265,60 @@
         "attendance_percentage": 89.0,
         "subjects": [
           {
-            "name": "Mathematics",
-            "marks": 75,
-            "grade": "B",
-            "attendance": 88,
-            "teacher_remarks": "Steady improvement"
-          },
-          {
-            "name": "Physics",
-            "marks": 70,
-            "grade": "B-",
-            "attendance": 85,
-            "teacher_remarks": "Needs more focus on calculations"
-          },
-          {
-            "name": "Chemistry",
-            "marks": 82,
-            "grade": "A-",
-            "attendance": 90,
-            "teacher_remarks": "Strong in organic chemistry"
-          },
-          {
-            "name": "Biology",
-            "marks": 92,
-            "grade": "A",
-            "attendance": 95,
-            "teacher_remarks": "Passionate about life sciences"
-          },
-          {
-            "name": "English",
-            "marks": 88,
-            "grade": "A",
-            "attendance": 92,
-            "teacher_remarks": "Excellent essay writing"
-          },
-          {
-            "name": "Psychology",
+            "name": "Cognitive Psychology",
             "marks": 94,
             "grade": "A+",
             "attendance": 97,
-            "teacher_remarks": "Deep understanding of human behavior"
+            "teacher_remarks": "Deep understanding of cognitive processes and human behavior"
           },
           {
-            "name": "Sociology",
+            "name": "Social Psychology",
             "marks": 90,
             "grade": "A",
             "attendance": 94,
-            "teacher_remarks": "Great analytical skills"
+            "teacher_remarks": "Great analytical skills in understanding social interactions"
           },
           {
-            "name": "Art",
+            "name": "Abnormal Psychology",
+            "marks": 92,
+            "grade": "A",
+            "attendance": 95,
+            "teacher_remarks": "Passionate about mental health and psychological disorders"
+          },
+          {
+            "name": "Research Methods in Psychology",
+            "marks": 88,
+            "grade": "A",
+            "attendance": 92,
+            "teacher_remarks": "Excellent research design and statistical analysis skills"
+          },
+          {
+            "name": "Developmental Psychology",
             "marks": 85,
             "grade": "A",
             "attendance": 91,
-            "teacher_remarks": "Creative and expressive"
+            "teacher_remarks": "Creative and expressive in understanding human development"
+          },
+          {
+            "name": "Biological Psychology",
+            "marks": 82,
+            "grade": "A-",
+            "attendance": 90,
+            "teacher_remarks": "Strong understanding of brain-behavior relationships"
+          },
+          {
+            "name": "Statistics for Psychology",
+            "marks": 75,
+            "grade": "B",
+            "attendance": 88,
+            "teacher_remarks": "Steady improvement in statistical analysis"
+          },
+          {
+            "name": "Psychology Elective",
+            "marks": 70,
+            "grade": "B-",
+            "attendance": 85,
+            "teacher_remarks": "Needs more focus on course material"
           }
         ]
       },
@@ -347,60 +347,60 @@
         "attendance_percentage": 85.0,
         "subjects": [
           {
-            "name": "Mathematics",
-            "marks": 78,
-            "grade": "B+",
-            "attendance": 86,
-            "teacher_remarks": "Good with applications"
-          },
-          {
-            "name": "Physics",
-            "marks": 80,
-            "grade": "B+",
-            "attendance": 88,
-            "teacher_remarks": "Strong practical skills"
-          },
-          {
-            "name": "Chemistry",
-            "marks": 72,
-            "grade": "B",
-            "attendance": 82,
-            "teacher_remarks": "Average theoretical understanding"
-          },
-          {
-            "name": "Biology",
-            "marks": 65,
-            "grade": "C+",
-            "attendance": 78,
-            "teacher_remarks": "Limited interest"
-          },
-          {
-            "name": "English",
-            "marks": 70,
-            "grade": "B-",
-            "attendance": 80,
-            "teacher_remarks": "Improving steadily"
-          },
-          {
-            "name": "Business Studies",
+            "name": "Business Management",
             "marks": 92,
             "grade": "A",
             "attendance": 95,
-            "teacher_remarks": "Entrepreneurial mindset"
+            "teacher_remarks": "Entrepreneurial mindset and strong leadership potential"
           },
           {
-            "name": "Economics",
+            "name": "Financial Accounting",
             "marks": 88,
             "grade": "A",
             "attendance": 92,
-            "teacher_remarks": "Excellent understanding of markets"
+            "teacher_remarks": "Excellent understanding of financial principles and markets"
           },
           {
-            "name": "Computer Science",
+            "name": "Marketing Principles",
             "marks": 85,
             "grade": "A",
             "attendance": 90,
-            "teacher_remarks": "Good problem-solving skills"
+            "teacher_remarks": "Good problem-solving skills in marketing strategies"
+          },
+          {
+            "name": "Microeconomics",
+            "marks": 80,
+            "grade": "B+",
+            "attendance": 88,
+            "teacher_remarks": "Strong practical understanding of economic concepts"
+          },
+          {
+            "name": "Business Statistics",
+            "marks": 78,
+            "grade": "B+",
+            "attendance": 86,
+            "teacher_remarks": "Good with statistical applications in business"
+          },
+          {
+            "name": "Organizational Behavior",
+            "marks": 72,
+            "grade": "B",
+            "attendance": 82,
+            "teacher_remarks": "Average theoretical understanding, needs more engagement"
+          },
+          {
+            "name": "Business Communication",
+            "marks": 70,
+            "grade": "B-",
+            "attendance": 80,
+            "teacher_remarks": "Improving steadily in professional communication"
+          },
+          {
+            "name": "General Education Requirement",
+            "marks": 65,
+            "grade": "C+",
+            "attendance": 78,
+            "teacher_remarks": "Limited interest, should focus more on coursework"
           }
         ]
       },

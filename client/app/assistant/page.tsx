@@ -28,12 +28,15 @@ import {
   Calendar,
   Star,
   ArrowUpRight,
+  AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Import mock data
-import chatData from "@/lib/mock-data/chat.json";
-import coursesData from "@/lib/mock-data/courses.json";
+// Import test data for fallback
+import chatData from "@/lib/test-data/chat_data.json";
+
+// API base URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 interface Message {
   id: string;
@@ -68,42 +71,82 @@ export default function AssistantPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [studentName, setStudentName] = useState("");
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "msg-0",
-      text: chatData.initialMessage.text,
-      sender: "agent",
-      timestamp: new Date(),
-    },
-  ]);
+  const [studentId, setStudentId] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [recommendedCourses, setRecommendedCourses] = useState<RecommendedCourse[]>([]);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [apiConnected, setApiConnected] = useState(false);
+  const [canRecommend, setCanRecommend] = useState(false);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messageIdCounterRef = useRef<number>(1);
-  const recommendationsShownRef = useRef<boolean>(false);
   const recommendationsRef = useRef<HTMLDivElement>(null);
 
+  // Check API health and initialize chat
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const initializeChat = async () => {
       const data = sessionStorage.getItem("studentData");
       if (!data) {
         router.push("/");
         return;
       }
+      
       try {
         const parsed = JSON.parse(data);
         setStudentName(parsed.name || "Student");
+        setStudentId(parsed.student_id || "");
+        
+        // Check if API is available
+        try {
+          const healthResponse = await fetch(`${API_BASE_URL}/api/health`);
+          if (healthResponse.ok) {
+            setApiConnected(true);
+            
+            // Start chat session with API
+            const startResponse = await fetch(`${API_BASE_URL}/api/chat/start`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ student_id: parsed.student_id })
+            });
+            
+            if (startResponse.ok) {
+              const startData = await startResponse.json();
+              setMessages([{
+                id: "msg-0",
+                text: startData.message,
+                sender: "agent",
+                timestamp: new Date(),
+              }]);
+            } else {
+              throw new Error("Failed to start chat");
+            }
+          } else {
+            throw new Error("API not healthy");
+          }
+        } catch {
+          // Fallback to local mode
+          console.log("API not available, using local mode");
+          setApiConnected(false);
+          setMessages([{
+            id: "msg-0",
+            text: `Hey ${parsed.name?.split(' ')[0] || 'there'}! Ready to figure out your courses for next semester?\n\nWhat's been on your mind - any subjects you're excited about or maybe some scheduling preferences?`,
+            sender: "agent",
+            timestamp: new Date(),
+          }]);
+        }
+        
         setMounted(true);
       } catch {
         router.push("/");
       }
-    }, 0);
-    return () => clearTimeout(timer);
+    };
+    
+    initializeChat();
   }, [router]);
 
   useEffect(() => {
@@ -130,30 +173,62 @@ export default function AssistantPage() {
     }
   }, [mounted]);
 
-  const generateAgentResponse = (userInput: string): string => {
+  // Format message text - strip markdown formatting for cleaner display
+  const formatMessageText = (text: string): string => {
+    return text
+      // Remove bold markers
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/__(.*?)__/g, '$1')
+      // Remove italic markers  
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/_(.*?)_/g, '$1')
+      // Convert bullet points to simple dashes
+      .replace(/^[•●◦]\s*/gm, '- ')
+      // Clean up multiple newlines
+      .replace(/\n{3,}/g, '\n\n');
+  };
+
+  // Local fallback response generator - casual tone
+  const generateLocalResponse = (userInput: string): string => {
     const lowerInput = userInput.toLowerCase();
-    const responses = chatData.responses;
 
     if (lowerInput.includes("register") || lowerInput.includes("enroll") || lowerInput.includes("book")) {
-      return responses.register;
+      return "Oh you're ready to register? That's great! Before we jump into that, tell me - what kind of classes are you hoping for? More hands-on stuff or lecture-based?";
     }
-    if (lowerInput.includes("schedule") || lowerInput.includes("time") || lowerInput.includes("when")) {
-      return responses.schedule;
+    if (lowerInput.includes("schedule") || lowerInput.includes("time") || lowerInput.includes("when") || lowerInput.includes("morning") || lowerInput.includes("afternoon")) {
+      return "Got it, schedule matters! Are you more of a morning person or do you prefer afternoon/evening classes? Also, any days you need to keep free?";
     }
     if (lowerInput.includes("prerequisite") || lowerInput.includes("required") || lowerInput.includes("need")) {
-      return responses.prerequisite;
+      return "Prerequisites can be tricky! Don't worry, I'll make sure any courses I suggest you're actually eligible for. What subjects are you most interested in exploring?";
     }
     if (lowerInput.includes("gpa") || lowerInput.includes("grade") || lowerInput.includes("performance")) {
-      return responses.gpa;
+      return "Your grades are looking good! No stress there. What matters more to you - keeping that GPA up with easier courses, or challenging yourself a bit?";
     }
     if (lowerInput.includes("waitlist") || lowerInput.includes("full") || lowerInput.includes("available")) {
-      return responses.waitlist;
+      return "Yeah some popular courses fill up fast! I can help you find good alternatives too. What area are you most interested in?";
     }
     if (lowerInput.includes("help") || lowerInput.includes("what can you do")) {
-      return responses.help;
+      return "I'm here to help you find courses that actually fit what you want! Just chat with me about your interests, schedule preferences, career goals - whatever's on your mind. What should we start with?";
+    }
+    if (lowerInput.includes("programming") || lowerInput.includes("coding") || lowerInput.includes("software") || lowerInput.includes("tech")) {
+      return "Nice, tech stuff! Are you looking for more theory-heavy courses or do you prefer building actual projects? Also, any specific area like AI, web dev, or something else?";
+    }
+    if (lowerInput.includes("business") || lowerInput.includes("management") || lowerInput.includes("finance")) {
+      return "Business track, cool! Are you thinking more entrepreneurship vibes or corporate/finance path? That'll help me figure out what fits.";
+    }
+    if (lowerInput.includes("art") || lowerInput.includes("design") || lowerInput.includes("creative")) {
+      return "Creative stuff is awesome! Digital or traditional? And do you prefer studio-based classes or more theory?";
     }
 
-    return `I understand you're asking about: "${userInput}". Let me help you with that. Could you provide a bit more detail? For example:\n\n• Are you looking to register for specific courses?\n• Do you have schedule constraints?\n• Are you checking prerequisites or availability?\n\nI'm here to make your course registration as smooth as possible!`;
+    // Default casual responses
+    const casualResponses = [
+      "Interesting! Tell me more about that - what specifically draws you to it?",
+      "Cool, I can work with that! Anything else you're considering or any dealbreakers I should know about?",
+      "Got it! So if you could design your perfect semester, what would it look like?",
+      "Makes sense! What's your ideal balance - challenging courses vs ones where you can cruise a bit?"
+    ];
+    
+    return casualResponses[Math.floor(Math.random() * casualResponses.length)];
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -168,44 +243,130 @@ export default function AssistantPage() {
       timestamp: new Date(),
     };
 
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
+    setMessages((prev) => [...prev, userMessage]);
+    const currentInput = inputMessage;
     setInputMessage("");
     setIsTyping(true);
 
-    setTimeout(() => {
-      const agentResponse = generateAgentResponse(inputMessage);
-      const agentMessageId = `msg-${messageIdCounterRef.current++}`;
-      const agentMessage: Message = {
-        id: agentMessageId,
-        text: agentResponse,
+    if (apiConnected && studentId) {
+      // Use API for response
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/chat/message`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            student_id: studentId,
+            message: currentInput 
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const agentMessageId = `msg-${messageIdCounterRef.current++}`;
+          const agentMessage: Message = {
+            id: agentMessageId,
+            text: data.response,
+            sender: "agent",
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, agentMessage]);
+          setCanRecommend(data.can_recommend);
+        } else {
+          throw new Error("API error");
+        }
+      } catch {
+        // Fallback to local
+        const agentResponse = generateLocalResponse(currentInput);
+        const agentMessageId = `msg-${messageIdCounterRef.current++}`;
+        const agentMessage: Message = {
+          id: agentMessageId,
+          text: agentResponse,
+          sender: "agent",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, agentMessage]);
+        if (messages.length >= 4) {
+          setCanRecommend(true);
+        }
+      }
+    } else {
+      // Local mode
+      setTimeout(() => {
+        const agentResponse = generateLocalResponse(currentInput);
+        const agentMessageId = `msg-${messageIdCounterRef.current++}`;
+        const agentMessage: Message = {
+          id: agentMessageId,
+          text: agentResponse,
+          sender: "agent",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, agentMessage]);
+        if (messages.length >= 4) {
+          setCanRecommend(true);
+        }
+      }, 1000);
+    }
+    
+    setIsTyping(false);
+  };
+
+  const generateCourseRecommendations = async () => {
+    setIsLoadingRecommendations(true);
+    
+    if (apiConnected && studentId) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/chat/recommend`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ student_id: studentId })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setRecommendedCourses(data.recommendations);
+          setShowRecommendations(true);
+          
+          const recommendationMessageId = `msg-${messageIdCounterRef.current++}`;
+          const recommendationMessage: Message = {
+            id: recommendationMessageId,
+            text: data.message,
+            sender: "agent",
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, recommendationMessage]);
+        } else {
+          throw new Error("Failed to get recommendations");
+        }
+      } catch {
+        // Fallback to local recommendations
+        setRecommendedCourses(chatData.recommendedCourses);
+        setShowRecommendations(true);
+        
+        const recommendationMessageId = `msg-${messageIdCounterRef.current++}`;
+        const recommendationMessage: Message = {
+          id: recommendationMessageId,
+          text: "Alright, based on our chat I've pulled together some courses that I think you'd actually enjoy! Take a look below - you can reorder them by priority, then head to bookings to grab your seats.",
+          sender: "agent",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, recommendationMessage]);
+      }
+    } else {
+      // Local mode
+      setRecommendedCourses(chatData.recommendedCourses);
+      setShowRecommendations(true);
+      
+      const recommendationMessageId = `msg-${messageIdCounterRef.current++}`;
+      const recommendationMessage: Message = {
+        id: recommendationMessageId,
+        text: "Alright, based on our chat I've pulled together some courses that I think you'd actually enjoy! Take a look below - you can reorder them by priority, then head to bookings to grab your seats.",
         sender: "agent",
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, agentMessage]);
-      setIsTyping(false);
-
-      if (updatedMessages.length >= 4 && !recommendationsShownRef.current) {
-        recommendationsShownRef.current = true;
-        setTimeout(() => {
-          generateCourseRecommendations();
-        }, 2000);
-      }
-    }, 1500);
-  };
-
-  const generateCourseRecommendations = () => {
-    setRecommendedCourses(coursesData.recommendedCourses);
-    setShowRecommendations(true);
-
-    const recommendationMessageId = `msg-${messageIdCounterRef.current++}`;
-    const recommendationMessage: Message = {
-      id: recommendationMessageId,
-      text: "Based on our discussion and your academic performance (GPA: 3.65), I've identified 5 courses that would be an excellent fit for you. You can review and prioritize them below, then proceed to the bookings page to select your seats.",
-      sender: "agent",
-      timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, recommendationMessage]);
+      setMessages((prev) => [...prev, recommendationMessage]);
+    }
+    
+    setIsLoadingRecommendations(false);
   };
 
   const handlePriorityChange = (courseCode: string, direction: "up" | "down") => {
@@ -309,11 +470,17 @@ export default function AssistantPage() {
                   </h1>
                   <div className="flex items-center gap-1.5">
                     <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                      <span className={cn(
+                        "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
+                        apiConnected ? "bg-emerald-400" : "bg-amber-400"
+                      )}></span>
+                      <span className={cn(
+                        "relative inline-flex rounded-full h-1.5 w-1.5",
+                        apiConnected ? "bg-emerald-500" : "bg-amber-500"
+                      )}></span>
                     </span>
                     <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">
-                      Einstein Copilot
+                      {apiConnected ? "AI Powered" : "Local Mode"}
                     </p>
                   </div>
                 </div>
@@ -322,6 +489,30 @@ export default function AssistantPage() {
 
             {/* Right Section */}
             <div className="flex items-center gap-2 sm:gap-3">
+              {/* Get Recommendations Button */}
+              {canRecommend && !showRecommendations && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={generateCourseRecommendations}
+                  disabled={isLoadingRecommendations}
+                  className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-gray-800 to-black text-white text-sm font-medium shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40 transition-all disabled:opacity-50"
+                >
+                  {isLoadingRecommendations ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full"
+                    />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
+                  Get Recommendations
+                </motion.button>
+              )}
+              
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -398,6 +589,16 @@ export default function AssistantPage() {
         </div>
       </motion.header>
 
+      {/* API Status Banner */}
+      {!apiConnected && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2">
+          <div className="max-w-7xl mx-auto flex items-center gap-2 text-sm text-amber-700">
+            <AlertCircle className="h-4 w-4" />
+            <span>Running in local mode. Start the Flask API for AI-powered recommendations.</span>
+          </div>
+        </div>
+      )}
+
       {/* Main Content - Scrollable */}
       <main className="flex-1 overflow-y-auto relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -466,6 +667,28 @@ export default function AssistantPage() {
                         ))}
                       </div>
                     </div>
+                    
+                    {/* Mobile Recommend Button */}
+                    {canRecommend && !showRecommendations && (
+                      <motion.button
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        onClick={generateCourseRecommendations}
+                        disabled={isLoadingRecommendations}
+                        className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-gray-800 to-black text-white font-medium shadow-lg disabled:opacity-50"
+                      >
+                        {isLoadingRecommendations ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full"
+                          />
+                        ) : (
+                          <Sparkles className="h-4 w-4" />
+                        )}
+                        Get Recommendations
+                      </motion.button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -480,7 +703,10 @@ export default function AssistantPage() {
                     <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-gray-700 via-gray-800 to-black flex items-center justify-center shadow-lg shadow-gray-500/20">
                       <Bot className="h-6 w-6 text-white" />
                     </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 bg-emerald-500 rounded-full border-2 border-white" />
+                    <div className={cn(
+                      "absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white",
+                      apiConnected ? "bg-emerald-500" : "bg-amber-500"
+                    )} />
                   </div>
                   <div>
                     <h3 
@@ -490,8 +716,11 @@ export default function AssistantPage() {
                       Einstein Copilot
                     </h3>
                     <p className="text-xs text-gray-500 flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                      Online and ready to help
+                      <span className={cn(
+                        "h-1.5 w-1.5 rounded-full animate-pulse",
+                        apiConnected ? "bg-emerald-500" : "bg-amber-500"
+                      )} />
+                      {apiConnected ? "AI Powered - Ready to help" : "Local Mode - Limited responses"}
                     </p>
                   </div>
                 </div>
@@ -555,7 +784,7 @@ export default function AssistantPage() {
                               )}
                             >
                             <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                              {message.text}
+                              {formatMessageText(message.text)}
                             </p>
                           </div>
                           <span className="text-[10px] text-gray-500 mt-1 px-1">
@@ -832,7 +1061,7 @@ export default function AssistantPage() {
                     <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
                       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <p className="text-xs text-gray-500 text-center sm:text-left">
-                          💡 Tip: Use the arrows to reorder courses by your preference. Higher priority courses will be processed first.
+                          Use the arrows to reorder courses by your preference. Higher priority courses will be processed first.
                         </p>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-gray-500">Total Credits:</span>

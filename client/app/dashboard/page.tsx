@@ -547,9 +547,9 @@ export default function Dashboard() {
           <div className="hidden sm:block">
             <h1
               className="text-base font-bold text-white tracking-tight"
-              style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+              style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
             >
-              StudentPortal
+              Dashboard
             </h1>
             <div className="flex items-center gap-1.5">
               <span className="relative flex h-1.5 w-1.5">
@@ -591,18 +591,6 @@ export default function Dashboard() {
 
       {/* Right Section - Actions & Profile */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Search Button */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.05] hover:border-purple-500/20 transition-all group"
-        >
-          <Search className="h-4 w-4 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
-          <span className="text-sm text-zinc-500 group-hover:text-zinc-400 transition-colors">Search...</span>
-          <kbd className="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-white/[0.05] text-[10px] text-zinc-500 font-mono">
-            ⌘K
-          </kbd>
-        </motion.button>
 
         {/* Quick Actions */}
         <div className="flex items-center gap-1">
@@ -775,13 +763,6 @@ export default function Dashboard() {
                         <p className="text-xs text-zinc-500">End your session</p>
                       </div>
                     </motion.button>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="px-4 py-3 bg-white/[0.02] border-t border-white/[0.04]">
-                    <p className="text-[10px] text-zinc-600 text-center">
-                      StudentPortal v2.0 · Made with 💜
-                    </p>
                   </div>
                 </motion.div>
               </>

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
+import { fontVariables } from "@/lib/fonts";
 import {
   Send,
   BookOpen,
@@ -18,10 +19,16 @@ import {
   Bot,
   User,
   Zap,
+  Bell,
+  ArrowLeft,
+  Settings,
+  LogOut,
+  GraduationCap,
+  Users,
+  Calendar,
+  Star,
+  ArrowUpRight,
 } from "lucide-react";
-import { Header } from "@/components/layout/header";
-import { GradientCard } from "@/components/ui/animated-card";
-import { GridBackground } from "@/components/ui/background-beams";
 import { cn } from "@/lib/utils";
 
 // Import mock data
@@ -73,10 +80,13 @@ export default function AssistantPage() {
   const [isTyping, setIsTyping] = useState(false);
   const [recommendedCourses, setRecommendedCourses] = useState<RecommendedCourse[]>([]);
   const [showRecommendations, setShowRecommendations] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messageIdCounterRef = useRef<number>(1);
   const recommendationsShownRef = useRef<boolean>(false);
+  const recommendationsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -96,16 +106,28 @@ export default function AssistantPage() {
     return () => clearTimeout(timer);
   }, [router]);
 
+  // Scroll to bottom of messages when new message arrives
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [messages, isTyping]);
+
+  // Scroll to recommendations when they appear
+  useEffect(() => {
+    if (showRecommendations && recommendationsRef.current) {
+      setTimeout(() => {
+        recommendationsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+    }
+  }, [showRecommendations]);
 
   useEffect(() => {
     if (mounted) {
       gsap.fromTo(
         ".quick-action-btn",
         { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.4, stagger: 0.1, ease: "back.out(1.7)" }
+        { opacity: 1, y: 0, duration: 0.4, stagger: 0.1, ease: "back.out(1.7)", delay: 0.3 }
       );
     }
   }, [mounted]);
@@ -221,394 +243,641 @@ export default function AssistantPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+      <div className={`min-h-screen bg-[#0a0a0f] flex items-center justify-center ${fontVariables}`}>
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="h-8 w-8 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full"
+          className="h-10 w-10 border-2 border-purple-500/20 border-t-purple-500 rounded-full"
         />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] relative">
-      <GridBackground />
+    <div className={`min-h-screen bg-[#0a0a0f] flex flex-col ${fontVariables}`}>
+      {/* Background Elements - Fixed */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(139, 92, 246, 0.5) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(139, 92, 246, 0.5) 1px, transparent 1px)
+            `,
+            backgroundSize: "60px 60px",
+          }}
+        />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-violet-600/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-600/5 rounded-full blur-[180px]" />
+      </div>
 
-      <Header
-        title="AI Course Assistant"
-        subtitle="Powered by Einstein Copilot"
-        showBackButton
-        backPath="/dashboard"
-        userName={studentName}
-        userRole="Student"
-      />
+      {/* Header - Fixed */}
+      <motion.header
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="sticky top-0 z-50 flex-shrink-0"
+      >
+        <div className="absolute inset-0 bg-[#0a0a0f]/80 backdrop-blur-2xl" />
+        <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Left Section */}
+            <div className="flex items-center gap-4">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => router.push("/dashboard")}
+                className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-purple-500/20 transition-all"
+              >
+                <ArrowLeft className="h-4 w-4 text-zinc-400" />
+              </motion.button>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
-        {/* Course Recommendations */}
-        <AnimatePresence>
-          {showRecommendations && recommendedCourses.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="mb-6"
-            >
-              <GradientCard>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-indigo-500/10">
-                      <Sparkles className="h-5 w-5 text-indigo-400" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-white">
-                        Recommended Courses
-                      </h2>
-                      <p className="text-sm text-zinc-400">
-                        Based on your grades and discussion
-                      </p>
-                    </div>
-                  </div>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleGoToBookings}
-                    className="btn-primary flex items-center gap-2"
-                  >
-                    <Zap className="h-4 w-4" />
-                    Book Seats
-                    <ChevronRight className="h-4 w-4" />
-                  </motion.button>
-                </div>
-
-                <div className="space-y-3">
-                  {recommendedCourses.map((course, index) => (
-                    <motion.div
-                      key={course.code}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className={cn(
-                        "flex items-center gap-4 p-4 rounded-xl",
-                        "bg-white/5 border border-white/5",
-                        "hover:bg-white/10 hover:border-indigo-500/30 transition-all"
-                      )}
-                    >
-                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold">
-                        {course.priority}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-white">
-                            {course.code}
-                          </h3>
-                          <span className="text-zinc-500">-</span>
-                          <span className="text-zinc-300 truncate">
-                            {course.name}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 text-xs text-zinc-500">
-                          <span>{course.credits} Credits</span>
-                          <span>•</span>
-                          <span>{course.instructor}</span>
-                          <span>•</span>
-                          <span>{course.schedule}</span>
-                        </div>
-                        <p className="text-xs text-zinc-400 mt-1 italic">
-                          {course.reason}
-                        </p>
-                      </div>
-
-                      <div className="flex flex-col gap-1">
-                        <button
-                          onClick={() => handlePriorityChange(course.code, "up")}
-                          disabled={course.priority === 1}
-                          className={cn(
-                            "p-1.5 rounded-lg transition-colors",
-                            course.priority === 1
-                              ? "text-zinc-600 cursor-not-allowed"
-                              : "text-zinc-400 hover:text-white hover:bg-white/10"
-                          )}
-                        >
-                          <ChevronUp className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handlePriorityChange(course.code, "down")}
-                          disabled={course.priority === 5}
-                          className={cn(
-                            "p-1.5 rounded-lg transition-colors",
-                            course.priority === 5
-                              ? "text-zinc-600 cursor-not-allowed"
-                              : "text-zinc-400 hover:text-white hover:bg-white/10"
-                          )}
-                        >
-                          <ChevronDown className="h-4 w-4" />
-                        </button>
-                      </div>
-
-                      <div className="text-right">
-                        <div
-                          className={cn(
-                            "inline-flex px-2.5 py-1 rounded-full text-xs font-semibold",
-                            course.bookingStatus === "open"
-                              ? course.totalSeats - course.occupiedSeats > 0
-                                ? "bg-green-500/10 text-green-400"
-                                : "bg-yellow-500/10 text-yellow-400"
-                              : course.bookingStatus === "not_started"
-                              ? "bg-blue-500/10 text-blue-400"
-                              : "bg-red-500/10 text-red-400"
-                          )}
-                        >
-                          {course.bookingStatus === "open"
-                            ? `${course.totalSeats - course.occupiedSeats} seats left`
-                            : course.bookingStatus === "not_started"
-                            ? "Coming Soon"
-                            : "Closed"}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </GradientCard>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Chat Interface */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-16rem)]">
-          {/* Quick Actions Sidebar */}
-          <div className="lg:col-span-1">
-            <GradientCard className="h-full flex flex-col">
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold text-white">
-                  Quick Actions
-                </h3>
-                <p className="text-sm text-zinc-400">
-                  Select to start a conversation
-                </p>
-              </div>
-
-              <div className="space-y-2 flex-1 overflow-y-auto">
-                {chatData.quickActions.map((action) => {
-                  const Icon = iconMap[action.icon] || Sparkles;
-                  return (
-                    <motion.button
-                      key={action.id}
-                      className="quick-action-btn w-full"
-                      whileHover={{ scale: 1.02, x: 4 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleQuickAction(action.text)}
-                    >
-                      <div
-                        className={cn(
-                          "flex items-center gap-3 p-3 rounded-xl",
-                          "bg-white/5 border border-white/5",
-                          "hover:bg-indigo-500/10 hover:border-indigo-500/30 transition-all",
-                          "text-left"
-                        )}
-                      >
-                        <div className="p-2 rounded-lg bg-indigo-500/10">
-                          <Icon className="h-4 w-4 text-indigo-400" />
-                        </div>
-                        <span className="text-sm text-zinc-300 flex-1">
-                          {action.text}
-                        </span>
-                        <ChevronRight className="h-4 w-4 text-zinc-600" />
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
-
-              {/* Suggested Follow-ups */}
-              <div className="mt-4 pt-4 border-t border-white/10">
-                <p className="text-xs text-zinc-500 mb-2">Try asking:</p>
-                <div className="flex flex-wrap gap-2">
-                  {chatData.suggestedFollowUps.slice(0, 2).map((suggestion) => (
-                    <button
-                      key={suggestion}
-                      onClick={() => handleQuickAction(suggestion)}
-                      className="text-xs px-2 py-1 rounded-lg bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </GradientCard>
-          </div>
-
-          {/* Chat Area */}
-          <div className="lg:col-span-3 flex flex-col">
-            <GradientCard className="flex-1 flex flex-col min-h-0">
-              {/* Chat Header */}
-              <div className="flex items-center gap-3 pb-4 border-b border-white/10 mb-4">
+              <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                    <Bot className="h-6 w-6 text-white" />
+                  <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl blur opacity-30" />
+                  <div className="relative p-2.5 rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 shadow-lg">
+                    <Sparkles className="h-5 w-5 text-white" />
                   </div>
-                  <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-[#111118]" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">Einstein Copilot</h3>
-                  <p className="text-xs text-zinc-400 flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 bg-green-500 rounded-full animate-pulse" />
-                    Online and ready to help
+                  <h1
+                    className="text-base font-bold text-white tracking-tight"
+                    style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                  >
+                    AI Assistant
+                  </h1>
+                  <div className="flex items-center gap-1.5">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    </span>
+                    <p className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">
+                      Einstein Copilot
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Section */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="relative p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-purple-500/20 transition-all"
+              >
+                <Bell className="h-4 w-4 text-zinc-400" />
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-purple-500 rounded-full animate-pulse" />
+              </motion.button>
+
+              <div className="hidden sm:block w-[1px] h-8 bg-gradient-to-b from-transparent via-white/10 to-transparent mx-1" />
+
+              <div className="relative">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className={cn(
+                    "flex items-center gap-3 p-1.5 pr-3 rounded-xl transition-all",
+                    "bg-white/[0.03] border border-white/[0.06]",
+                    "hover:bg-white/[0.06] hover:border-purple-500/20",
+                    showUserMenu && "bg-white/[0.06] border-purple-500/20"
+                  )}
+                >
+                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+                    {studentName.charAt(0)}
+                  </div>
+                  <div className="hidden sm:block text-left">
+                    <p className="text-sm font-medium text-white">{studentName}</p>
+                    <p className="text-xs text-zinc-500">Student</p>
+                  </div>
+                </motion.button>
+
+                <AnimatePresence>
+                  {showUserMenu && (
+                    <>
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowUserMenu(false)}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute right-0 mt-2 w-48 rounded-xl bg-[#0d0d14]/95 backdrop-blur-xl border border-white/[0.08] shadow-2xl shadow-black/50 overflow-hidden z-50"
+                      >
+                        <div className="p-2">
+                          {[
+                            { icon: User, label: "Profile", action: () => {} },
+                            { icon: Settings, label: "Settings", action: () => {} },
+                            { icon: LogOut, label: "Sign out", action: () => router.push("/") },
+                          ].map((item) => (
+                            <motion.button
+                              key={item.label}
+                              whileHover={{ x: 4 }}
+                              onClick={item.action}
+                              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-all"
+                            >
+                              <item.icon className="h-4 w-4" />
+                              {item.label}
+                            </motion.button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.header>
+
+      {/* Main Content - Scrollable */}
+      <main className="flex-1 overflow-y-auto relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Chat Interface */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            {/* Quick Actions Sidebar */}
+            <div className="lg:col-span-1 hidden lg:block">
+              <div className="sticky top-6">
+                <div className="relative rounded-2xl bg-[#0d0d14]/80 backdrop-blur-xl border border-white/[0.06] p-5 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-transparent" />
+                  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
+                  
+                  <div className="relative z-10">
+                    <div className="mb-4">
+                      <h3 
+                        className="text-base font-semibold text-white"
+                        style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                      >
+                        Quick Actions
+                      </h3>
+                      <p className="text-xs text-zinc-500">
+                        Select to start a conversation
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      {chatData.quickActions.map((action) => {
+                        const Icon = iconMap[action.icon] || Sparkles;
+                        return (
+                          <motion.button
+                            key={action.id}
+                            className="quick-action-btn w-full"
+                            whileHover={{ scale: 1.02, x: 4 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleQuickAction(action.text)}
+                          >
+                            <div
+                              className={cn(
+                                "flex items-center gap-3 p-3 rounded-xl",
+                                "bg-white/[0.03] border border-white/[0.06]",
+                                "hover:bg-purple-500/10 hover:border-purple-500/20 transition-all",
+                                "text-left"
+                              )}
+                            >
+                              <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                                <Icon className="h-4 w-4 text-purple-400" />
+                              </div>
+                              <span className="text-sm text-zinc-300 flex-1">
+                                {action.text}
+                              </span>
+                              <ChevronRight className="h-4 w-4 text-zinc-600" />
+                            </div>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-white/[0.06]">
+                      <p className="text-xs text-zinc-500 mb-2">Try asking:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {chatData.suggestedFollowUps.slice(0, 2).map((suggestion) => (
+                          <button
+                            key={suggestion}
+                            onClick={() => handleQuickAction(suggestion)}
+                            className="text-xs px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-zinc-400 hover:text-white hover:bg-purple-500/10 hover:border-purple-500/20 transition-all"
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Chat Area */}
+            <div className="lg:col-span-3">
+              <div className="relative rounded-2xl bg-[#0d0d14]/80 backdrop-blur-xl border border-white/[0.06] overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-indigo-500/5 pointer-events-none" />
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
+                
+                {/* Chat Header */}
+                <div className="relative z-10 flex items-center gap-3 p-5 border-b border-white/[0.06]">
+                  <div className="relative">
+                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
+                      <Bot className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 bg-emerald-500 rounded-full border-2 border-[#0d0d14]" />
+                  </div>
+                  <div>
+                    <h3 
+                      className="font-semibold text-white"
+                      style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                    >
+                      Einstein Copilot
+                    </h3>
+                    <p className="text-xs text-zinc-400 flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                      Online and ready to help
+                    </p>
+                  </div>
+                </div>
+
+                {/* Messages Container - Fixed Height with Internal Scroll */}
+                <div 
+                  ref={messagesContainerRef}
+                  className="relative z-10 h-[450px] overflow-y-auto p-5 space-y-4 scroll-smooth"
+                  style={{
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(139, 92, 246, 0.2) transparent',
+                  }}
+                >
+                  {messages.map((message, index) => {
+                    const isUser = message.sender === "user";
+                    const showAvatar =
+                      index === 0 || messages[index - 1].sender !== message.sender;
+
+                    return (
+                      <motion.div
+                        key={message.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={cn(
+                          "flex gap-3",
+                          isUser ? "flex-row-reverse" : "flex-row"
+                        )}
+                      >
+                        {showAvatar && (
+                          <div className="flex-shrink-0">
+                            <div
+                              className={cn(
+                                "h-9 w-9 rounded-lg flex items-center justify-center shadow-lg",
+                                isUser
+                                  ? "bg-gradient-to-br from-blue-500 to-indigo-600 shadow-blue-500/20"
+                                  : "bg-gradient-to-br from-purple-500 to-violet-600 shadow-purple-500/20"
+                              )}
+                            >
+                              {isUser ? (
+                                <User className="h-4 w-4 text-white" />
+                              ) : (
+                                <Bot className="h-4 w-4 text-white" />
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        <div
+                          className={cn(
+                            "flex flex-col max-w-[75%]",
+                            isUser ? "items-end" : "items-start",
+                            !showAvatar && (isUser ? "mr-12" : "ml-12")
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "rounded-2xl px-4 py-3",
+                              isUser
+                                ? "bg-gradient-to-br from-purple-500 to-violet-600 text-white rounded-br-md shadow-lg shadow-purple-500/20"
+                                : "bg-white/[0.05] border border-white/[0.08] text-zinc-200 rounded-bl-md"
+                            )}
+                          >
+                            <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                              {message.text}
+                            </p>
+                          </div>
+                          <span className="text-[10px] text-zinc-500 mt-1 px-1">
+                            {message.timestamp.toLocaleTimeString("en-US", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: true,
+                            })}
+                          </span>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+
+                  {/* Typing Indicator */}
+                  <AnimatePresence>
+                    {isTyping && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex gap-3"
+                      >
+                        <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/20">
+                          <Bot className="h-4 w-4 text-white" />
+                        </div>
+                        <div className="bg-white/[0.05] border border-white/[0.08] rounded-2xl rounded-bl-md px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-2 w-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                            <div className="h-2 w-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                            <div className="h-2 w-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input Area */}
+                <div className="relative z-10 p-5 border-t border-white/[0.06] bg-[#0d0d14]/50 backdrop-blur-xl">
+                  <form onSubmit={handleSendMessage} className="relative">
+                    <textarea
+                      ref={inputRef}
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      placeholder="Type your message..."
+                      rows={2}
+                      className={cn(
+                        "w-full px-4 py-3 pr-14 rounded-xl resize-none",
+                        "bg-white/[0.03] border border-white/[0.08]",
+                        "text-white placeholder-zinc-500",
+                        "focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20",
+                        "transition-all"
+                      )}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          if (inputMessage.trim() && !isTyping) {
+                            handleSendMessage(e);
+                          }
+                        }
+                      }}
+                    />
+                    <motion.button
+                      type="submit"
+                      disabled={!inputMessage.trim() || isTyping}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={cn(
+                        "absolute right-3 bottom-3 p-2.5 rounded-xl",
+                        "bg-gradient-to-br from-purple-500 to-violet-600",
+                        "text-white shadow-lg shadow-purple-500/25",
+                        "disabled:opacity-50 disabled:cursor-not-allowed",
+                        "transition-all"
+                      )}
+                    >
+                      <Send className="h-5 w-5" />
+                    </motion.button>
+                  </form>
+                  <p className="text-xs text-zinc-500 mt-2 text-center">
+                    Press{" "}
+                    <kbd className="px-1.5 py-0.5 bg-white/[0.05] border border-white/[0.08] rounded text-zinc-400">
+                      Enter
+                    </kbd>{" "}
+                    to send,{" "}
+                    <kbd className="px-1.5 py-0.5 bg-white/[0.05] border border-white/[0.08] rounded text-zinc-400">
+                      Shift+Enter
+                    </kbd>{" "}
+                    for new line
                   </p>
                 </div>
               </div>
+            </div>
+          </div>
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto space-y-4 min-h-0 pr-2">
-                {messages.map((message, index) => {
-                  const isUser = message.sender === "user";
-                  const showAvatar =
-                    index === 0 || messages[index - 1].sender !== message.sender;
-
-                  return (
-                    <motion.div
-                      key={message.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={cn(
-                        "flex gap-3",
-                        isUser ? "flex-row-reverse" : "flex-row"
-                      )}
-                    >
-                      {showAvatar && (
-                        <div className="flex-shrink-0">
-                          <div
-                            className={cn(
-                              "h-8 w-8 rounded-full flex items-center justify-center",
-                              isUser
-                                ? "bg-gradient-to-br from-blue-500 to-indigo-600"
-                                : "bg-gradient-to-br from-purple-500 to-pink-600"
-                            )}
-                          >
-                            {isUser ? (
-                              <User className="h-4 w-4 text-white" />
-                            ) : (
-                              <Bot className="h-4 w-4 text-white" />
-                            )}
-                          </div>
+          {/* Course Recommendations Section - Below Chat */}
+          <AnimatePresence>
+            {showRecommendations && recommendedCourses.length > 0 && (
+              <motion.div
+                ref={recommendationsRef}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 30 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="mt-6"
+              >
+                <div className="relative rounded-2xl bg-[#0d0d14]/90 backdrop-blur-xl border border-purple-500/20 overflow-hidden">
+                  {/* Background effects */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-indigo-500/10" />
+                  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
+                  
+                  <div className="relative z-10">
+                    {/* Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 border-b border-white/[0.06]">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border border-purple-500/30">
+                          <Sparkles className="h-6 w-6 text-purple-400" />
                         </div>
-                      )}
-
-                      <div
-                        className={cn(
-                          "flex flex-col max-w-[75%]",
-                          isUser ? "items-end" : "items-start",
-                          !showAvatar && (isUser ? "mr-11" : "ml-11")
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "rounded-2xl px-4 py-3",
-                            isUser
-                              ? "bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-br-md"
-                              : "bg-white/5 border border-white/10 text-zinc-200 rounded-bl-md"
-                          )}
-                        >
-                          <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                            {message.text}
+                        <div>
+                          <h3 
+                            className="text-xl font-bold text-white"
+                            style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                          >
+                            Recommended Courses
+                          </h3>
+                          <p className="text-sm text-zinc-500">
+                            {recommendedCourses.length} courses matched your profile • Drag to reorder priority
                           </p>
                         </div>
-                        <span className="text-[10px] text-zinc-500 mt-1 px-1">
-                          {message.timestamp.toLocaleTimeString("en-US", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: true,
-                          })}
-                        </span>
                       </div>
-                    </motion.div>
-                  );
-                })}
+                      <motion.button
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleGoToBookings}
+                        className="group flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all"
+                        style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                      >
+                        <Zap className="h-5 w-5" />
+                        Proceed to Booking
+                        <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      </motion.button>
+                    </div>
 
-                {/* Typing Indicator */}
-                <AnimatePresence>
-                  {isTyping && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="flex gap-3"
-                    >
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0">
-                        <Bot className="h-4 w-4 text-white" />
+                    {/* Course Cards Grid */}
+                    <div className="p-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {recommendedCourses.map((course, index) => {
+                          const availableSeats = course.totalSeats - course.occupiedSeats;
+                          const seatPercentage = (course.occupiedSeats / course.totalSeats) * 100;
+                          
+                          return (
+                            <motion.div
+                              key={course.code}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                              whileHover={{ y: -4 }}
+                              className="group relative"
+                            >
+                              {/* Card glow effect */}
+                              <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-violet-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity" />
+                              
+                              <div className="relative bg-[#111118]/80 rounded-2xl border border-white/[0.06] group-hover:border-purple-500/30 overflow-hidden transition-all">
+                                {/* Priority Badge */}
+                                <div className="absolute top-4 right-4 flex items-center gap-1">
+                                  <div className="flex items-center gap-0.5">
+                                    <button
+                                      onClick={() => handlePriorityChange(course.code, "up")}
+                                      disabled={course.priority === 1}
+                                      className={cn(
+                                        "p-1 rounded-md transition-colors",
+                                        course.priority === 1
+                                          ? "text-zinc-600 cursor-not-allowed"
+                                          : "text-zinc-400 hover:text-purple-400 hover:bg-purple-500/10"
+                                      )}
+                                    >
+                                      <ChevronUp className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handlePriorityChange(course.code, "down")}
+                                      disabled={course.priority === recommendedCourses.length}
+                                      className={cn(
+                                        "p-1 rounded-md transition-colors",
+                                        course.priority === recommendedCourses.length
+                                          ? "text-zinc-600 cursor-not-allowed"
+                                          : "text-zinc-400 hover:text-purple-400 hover:bg-purple-500/10"
+                                      )}
+                                    >
+                                      <ChevronDown className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 text-white text-sm font-bold shadow-lg shadow-purple-500/30">
+                                    {course.priority}
+                                  </div>
+                                </div>
+
+                                <div className="p-5">
+                                  {/* Course Code & Name */}
+                                  <div className="mb-4 pr-20">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span 
+                                        className="text-lg font-bold text-white"
+                                        style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                                      >
+                                        {course.code}
+                                      </span>
+                                      <span className="px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs text-purple-400">
+                                        {course.credits} Credits
+                                      </span>
+                                    </div>
+                                    <h4 className="text-sm text-zinc-300 line-clamp-1">
+                                      {course.name}
+                                    </h4>
+                                  </div>
+
+                                  {/* Course Details */}
+                                  <div className="space-y-3 mb-4">
+                                    <div className="flex items-center gap-2 text-sm text-zinc-400">
+                                      <GraduationCap className="h-4 w-4 text-zinc-500" />
+                                      <span className="truncate">{course.instructor}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm text-zinc-400">
+                                      <Calendar className="h-4 w-4 text-zinc-500" />
+                                      <span>{course.schedule}</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Seat Availability */}
+                                  <div className="mb-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <div className="flex items-center gap-2">
+                                        <Users className="h-4 w-4 text-zinc-500" />
+                                        <span className="text-xs text-zinc-500">Seat Availability</span>
+                                      </div>
+                                      <span className={cn(
+                                        "text-xs font-semibold",
+                                        availableSeats > 10 ? "text-emerald-400" : availableSeats > 5 ? "text-amber-400" : "text-red-400"
+                                      )}>
+                                        {availableSeats} / {course.totalSeats}
+                                      </span>
+                                    </div>
+                                    <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                                      <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${100 - seatPercentage}%` }}
+                                        transition={{ delay: 0.3 + index * 0.1, duration: 0.8 }}
+                                        className={cn(
+                                          "h-full rounded-full",
+                                          availableSeats > 10 
+                                            ? "bg-gradient-to-r from-emerald-500 to-green-400" 
+                                            : availableSeats > 5 
+                                            ? "bg-gradient-to-r from-amber-500 to-yellow-400" 
+                                            : "bg-gradient-to-r from-red-500 to-rose-400"
+                                        )}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Reason Badge */}
+                                  <div className="flex items-start gap-2 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                                    <Star className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                                    <p className="text-xs text-zinc-400 leading-relaxed line-clamp-2">
+                                      {course.reason}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
                       </div>
-                      <div className="bg-white/5 border border-white/10 rounded-2xl rounded-bl-md px-4 py-3">
-                        <div className="flex items-center gap-1.5">
-                          <div className="typing-dot h-2 w-2 bg-zinc-400 rounded-full" />
-                          <div className="typing-dot h-2 w-2 bg-zinc-400 rounded-full" />
-                          <div className="typing-dot h-2 w-2 bg-zinc-400 rounded-full" />
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-6 py-4 bg-white/[0.02] border-t border-white/[0.04]">
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <p className="text-xs text-zinc-500 text-center sm:text-left">
+                          💡 Tip: Use the arrows to reorder courses by your preference. Higher priority courses will be processed first.
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-zinc-500">Total Credits:</span>
+                          <span className="px-2 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-sm font-semibold text-purple-400">
+                            {recommendedCourses.reduce((sum, c) => sum + c.credits, 0)}
+                          </span>
                         </div>
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Input Area */}
-              <div className="pt-4 border-t border-white/10 mt-4">
-                <form onSubmit={handleSendMessage} className="relative">
-                  <textarea
-                    ref={inputRef}
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    placeholder="Type your message..."
-                    rows={2}
-                    className={cn(
-                      "w-full px-4 py-3 pr-14 rounded-xl resize-none",
-                      "bg-white/5 border border-white/10",
-                      "text-white placeholder-zinc-500",
-                      "focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20",
-                      "transition-all"
-                    )}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        if (inputMessage.trim() && !isTyping) {
-                          handleSendMessage(e);
-                        }
-                      }
-                    }}
-                  />
-                  <motion.button
-                    type="submit"
-                    disabled={!inputMessage.trim() || isTyping}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={cn(
-                      "absolute right-3 bottom-3 p-2 rounded-lg",
-                      "bg-gradient-to-br from-indigo-500 to-purple-600",
-                      "text-white shadow-lg shadow-indigo-500/25",
-                      "disabled:opacity-50 disabled:cursor-not-allowed",
-                      "transition-opacity"
-                    )}
-                  >
-                    <Send className="h-5 w-5" />
-                  </motion.button>
-                </form>
-                <p className="text-xs text-zinc-500 mt-2 text-center">
-                  Press{" "}
-                  <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-zinc-400">
-                    Enter
-                  </kbd>{" "}
-                  to send,{" "}
-                  <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-zinc-400">
-                    Shift+Enter
-                  </kbd>{" "}
-                  for new line
-                </p>
-              </div>
-            </GradientCard>
-          </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </main>
+
+      {/* Custom Scrollbar Styles */}
+      <style jsx global>{`
+        /* Custom scrollbar for messages container */}        
+        .scroll-smooth::-webkit-scrollbar {
+          width: 6px;
+        }
+        .scroll-smooth::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .scroll-smooth::-webkit-scrollbar-thumb {
+          background: rgba(139, 92, 246, 0.2);
+          border-radius: 3px;
+        }
+        .scroll-smooth::-webkit-scrollbar-thumb:hover {
+          background: rgba(139, 92, 246, 0.4);
+        }
+      `}</style>
     </div>
   );
 }

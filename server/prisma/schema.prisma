@@ -12,36 +12,166 @@ datasource db {
   provider = "postgresql"
 }
 
-model Discipline {
-  id       String    @id @default(uuid())
-  name     String
-  students Student[]
-  courses  Course[]
+model Student {
+  id                 String           @id @default(uuid())
+  studentId          String           @unique // e.g., STU001
+  name               String
+  email              String           @unique
+  rollNumber         String           @unique
+  universityName     String
+  branch             String
+  enrollmentYear     Int
+  expectedGraduation Int
+  yearOfStudy        Int
+  age                Int
+  academic           AcademicRecord?
+  behavioral         BehavioralRecord?
+  dashboard          Dashboard?
+  enrollments        Enrollment[]
 }
 
-model Student {
-  id           String       @id @default(uuid())
-  name         String
-  email        String       @unique
-  disciplineId String
-  discipline   Discipline   @relation(fields: [disciplineId], references: [id])
-  enrollments  Enrollment[]
+model AcademicRecord {
+  id                  String          @id @default(uuid())
+  studentId           String          @unique
+  student             Student         @relation(fields: [studentId], references: [id])
+  academicYear        String
+  totalCredits        Int
+  creditsThisSemester Int
+  overallGpa          Float
+  attendancePercentage Float
+  subjects            SubjectRecord[]
+}
+
+model SubjectRecord {
+  id              String         @id @default(uuid())
+  academicRecordId String
+  academicRecord  AcademicRecord @relation(fields: [academicRecordId], references: [id])
+  name            String
+  marks           Float
+  grade           String
+  attendance      Float
+  teacherRemarks  String?
+}
+
+model BehavioralRecord {
+  id                 String   @id @default(uuid())
+  studentId          String   @unique
+  student            Student  @relation(fields: [studentId], references: [id])
+  participationScore Float
+  disciplineScore    Float
+  extracurricular    String[] // Stored as array of strings
+}
+
+model Instructor {
+  id              String   @id @default(uuid())
+  name            String
+  email           String   @unique
+  department      String
+  toughnessRating String
+  generalRemarks  String
+  courses         Course[]
 }
 
 model Course {
-  id           String       @id @default(uuid())
-  name         String
-  capacity     Int
-  disciplineId String
-  discipline   Discipline   @relation(fields: [disciplineId], references: [id])
-  enrollments  Enrollment[]
+  id                  String       @id @default(uuid())
+  courseId            String       @unique // e.g., CS101
+  name                String
+  category            String
+  difficulty          String
+  prerequisites       String[]
+  description         String
+  skillsDeveloped     String[]
+  careerPaths         String[]
+  idealFor            String
+  minGpaRecommended   Float
+  keywords            String[]
+  classroomNumber     String
+  schedule            Json         // Stores { weekdays: [], timings: { start, end } }
+  
+  instructorId        String
+  instructor          Instructor   @relation(fields: [instructorId], references: [id])
+  
+  enrollments         Enrollment[]
+  seatConfig          SeatConfig?
 }
 
 model Enrollment {
   id        String   @id @default(uuid())
-  status    String
+  status    String   // e.g., "enrolled", "waitlist"
   courseId  String
   course    Course   @relation(fields: [courseId], references: [id])
   studentId String
   student   Student  @relation(fields: [studentId], references: [id])
+}
+
+// Dashboard Models
+model Dashboard {
+  id                String             @id @default(uuid())
+  studentId         String             @unique
+  student           Student            @relation(fields: [studentId], references: [id])
+  weeklyActivity    WeeklyActivity[]
+  semesterProgress  SemesterProgress[]
+  upcomingDeadlines Deadline[]
+  achievements      Achievement[]
+  recentActivity    RecentActivity[]
+}
+
+model WeeklyActivity {
+  id          String    @id @default(uuid())
+  dashboardId String
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id])
+  day         String
+  attendance  Int
+  studyHours  Int
+}
+
+model SemesterProgress {
+  id          String    @id @default(uuid())
+  dashboardId String
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id])
+  semester    String
+  gpa         Float
+  credits     Int
+}
+
+model Deadline {
+  id          String    @id @default(uuid())
+  dashboardId String
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id])
+  title       String
+  course      String
+  dueDate     DateTime
+  type        String
+  priority    String
+}
+
+model Achievement {
+  id          String    @id @default(uuid())
+  dashboardId String
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id])
+  title       String
+  description String
+  icon        String
+  date        DateTime?
+  unlocked    Boolean
+}
+
+model RecentActivity {
+  id          String    @id @default(uuid())
+  dashboardId String
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id])
+  action      String
+  details     String
+  timestamp   DateTime
+}
+
+// Seat Management
+model SeatConfig {
+  id             String @id @default(uuid())
+  courseId       String @unique
+  course         Course @relation(fields: [courseId], references: [id])
+  totalSeats     Int
+  occupiedSeats  Int[]  // Array of seat numbers
+  bookingStatus  String // open, closed, etc.
+  // Common config can be stored if it varies per course, or global constant
 }

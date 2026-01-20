@@ -1,0 +1,122 @@
+{
+  "initialMessage": {
+    "id": "msg-0",
+    "text": "Hey there! Ready to figure out your courses for next semester?\n\nWhat's been on your mind - any subjects you're excited about or maybe some scheduling preferences?",
+    "sender": "agent",
+    "timestamp": "2024-11-20T10:00:00Z"
+  },
+  "quickActions": [
+    {
+      "id": "qa-1",
+      "text": "I'm interested in tech courses",
+      "icon": "BookOpen",
+      "category": "browse"
+    },
+    {
+      "id": "qa-2",
+      "text": "What are my options?",
+      "icon": "CheckCircle",
+      "category": "academic"
+    },
+    {
+      "id": "qa-3",
+      "text": "I prefer morning classes",
+      "icon": "Clock",
+      "category": "schedule"
+    },
+    {
+      "id": "qa-4",
+      "text": "I prefer afternoon classes",
+      "icon": "Eye",
+      "category": "schedule"
+    },
+    {
+      "id": "qa-5",
+      "text": "Help me pick courses",
+      "icon": "Sparkles",
+      "category": "ai"
+    },
+    {
+      "id": "qa-6",
+      "text": "What's available?",
+      "icon": "ClipboardList",
+      "category": "status"
+    }
+  ],
+  "responses": {
+    "register": "Oh you're ready to register? That's great! Before we jump into that, tell me - what kind of classes are you hoping for?",
+    "schedule": "Got it, schedule matters! Are you more of a morning person or do you prefer afternoon/evening classes?",
+    "prerequisite": "Prerequisites can be tricky! Don't worry, I'll make sure any courses I suggest you're eligible for. What subjects interest you most?",
+    "gpa": "Your grades are looking good! What matters more - keeping that GPA up with easier courses, or challenging yourself a bit?",
+    "waitlist": "Yeah some popular courses fill up fast! I can help you find good alternatives. What area are you most interested in?",
+    "help": "I'm here to help you find courses that actually fit! Just chat with me about your interests, schedule, career goals - whatever's on your mind."
+  },
+  "suggestedFollowUps": [
+    "I like hands-on projects",
+    "I want to explore new areas",
+    "Help me balance my workload",
+    "What fits my schedule?"
+  ],
+  "recommendedCourses": [
+    {
+      "code": "CS101",
+      "name": "Advanced Programming & Software Development",
+      "credits": 3,
+      "instructor": "Dr. Michael Chen",
+      "schedule": "Mon/Wed/Fri 10:00-11:30 AM",
+      "priority": 1,
+      "reason": "Great for building practical coding skills with lots of hands-on projects",
+      "totalSeats": 260,
+      "occupiedSeats": 178,
+      "bookingStatus": "open"
+    },
+    {
+      "code": "CS102",
+      "name": "Artificial Intelligence & Machine Learning",
+      "credits": 3,
+      "instructor": "Dr. Sarah Williams",
+      "schedule": "Tue/Thu 2:00-4:00 PM",
+      "priority": 2,
+      "reason": "Super relevant for tech careers - challenging but worth it",
+      "totalSeats": 240,
+      "occupiedSeats": 240,
+      "bookingStatus": "closed"
+    },
+    {
+      "code": "DATA101",
+      "name": "Data Science & Analytics",
+      "credits": 3,
+      "instructor": "Dr. Kevin Zhang",
+      "schedule": "Tue/Thu 12:00-1:30 PM",
+      "priority": 3,
+      "reason": "Combines coding with real-world data analysis skills",
+      "totalSeats": 220,
+      "occupiedSeats": 220,
+      "bookingStatus": "closed"
+    },
+    {
+      "code": "STEM103",
+      "name": "Engineering Fundamentals & Robotics",
+      "credits": 3,
+      "instructor": "Dr. Robert Kim",
+      "schedule": "Mon/Wed/Fri 1:00-2:30 PM",
+      "priority": 4,
+      "reason": "Hands-on robotics projects - really fun if you like building things",
+      "totalSeats": 220,
+      "occupiedSeats": 145,
+      "bookingStatus": "open"
+    },
+    {
+      "code": "CHEM101",
+      "name": "Advanced Chemistry & Chemical Engineering",
+      "credits": 3,
+      "instructor": "Dr. Thomas Wilson",
+      "schedule": "Mon/Wed/Fri 9:00-10:30 AM",
+      "priority": 5,
+      "reason": "Registration opens soon - good chance to get in early",
+      "totalSeats": 180,
+      "occupiedSeats": 54,
+      "bookingStatus": "not_started"
+    }
+  ]
+}

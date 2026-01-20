@@ -14,8 +14,8 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 // Paths to the test data files
-// Note: Adjusted paths assuming the script is run from server root or server/prisma
-const TEST_DATA_DIR = path.resolve('../client/lib/test-data');
+// Note: Adjusted paths assuming the script is run from server root
+const TEST_DATA_DIR = path.resolve(process.cwd(), 'test-data');
 
 async function main() {
   console.log('Start seeding ...');
@@ -48,8 +48,10 @@ async function main() {
 
     // Academic Record
     if (stu.academic_data) {
-      const academic = await prisma.academicRecord.create({
-        data: {
+      await prisma.academicRecord.upsert({
+        where: { studentId: student.id },
+        update: {},
+        create: {
           studentId: student.id,
           academicYear: stu.academic_data.academic_year,
           totalCredits: stu.academic_data.totalCredits,
@@ -71,8 +73,10 @@ async function main() {
 
     // Behavioral Record
     if (stu.behavioral_data) {
-      await prisma.behavioralRecord.create({
-        data: {
+      await prisma.behavioralRecord.upsert({
+        where: { studentId: student.id },
+        update: {},
+        create: {
           studentId: student.id,
           participationScore: stu.behavioral_data.participation_score,
           disciplineScore: stu.behavioral_data.discipline_score,
@@ -84,8 +88,10 @@ async function main() {
     // Dashboard Data
     const dData = dashboardData[stu.student_id];
     if (dData) {
-      await prisma.dashboard.create({
-        data: {
+      await prisma.dashboard.upsert({
+        where: { studentId: student.id },
+        update: {},
+        create: {
           studentId: student.id,
           weeklyActivity: {
             create: dData.weeklyActivity.map(wa => ({
@@ -176,15 +182,19 @@ async function main() {
     // Seat Config
     const sData = seatsData.courses[c.course_id];
     if (sData) {
-        await prisma.seatConfig.create({
-            data: {
+        await prisma.seatConfig.upsert({
+            where: { courseId: course.id },
+            update: {
+                totalSeats: sData.totalSeats,
+                occupiedSeats: sData.occupiedSeats,
+                bookingStatus: sData.bookingStatus
+            },
+            create: {
                 courseId: course.id,
                 totalSeats: sData.totalSeats,
                 occupiedSeats: sData.occupiedSeats,
                 bookingStatus: sData.bookingStatus
             }
-        }).catch(e => {
-            console.log(`Seat config for ${c.course_id} might already exist or error:`, e.message);
         });
     }
   }

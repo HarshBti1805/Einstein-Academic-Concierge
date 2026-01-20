@@ -57,6 +57,12 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ accessCode }),
       });
 
+      // Check if response is JSON
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Server returned an invalid response. Please check if the server is running.');
+      }
+
       const data = await res.json();
 
       if (!res.ok) {
@@ -74,7 +80,7 @@ export default function AdminLoginPage() {
       }, 1000);
       
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'An error occurred during login. Please try again.');
     } finally {
       setLoading(false);
     }

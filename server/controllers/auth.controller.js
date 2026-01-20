@@ -111,6 +111,55 @@ export const loginStudent = async (req, res) => {
 };
 
 /**
+ * Login for university admin using access code
+ */
+export const loginUniversity = async (req, res) => {
+  try {
+    const { accessCode } = req.body;
+
+    if (!accessCode) {
+      return res.status(400).json({
+        error: "Access code is required"
+      });
+    }
+
+    // For now, use a simple access code validation
+    // In production, this should be stored in a database with proper security
+    const validAccessCodes = process.env.UNIVERSITY_ACCESS_CODES 
+      ? process.env.UNIVERSITY_ACCESS_CODES.split(',').map(code => code.trim())
+      : ['UNIV2024', 'ADMIN123', 'EINSTEIN2024']; // Default fallback codes
+
+    if (!validAccessCodes.includes(accessCode)) {
+      return res.status(401).json({
+        error: "Invalid access code"
+      });
+    }
+
+    // Get unique university name from access code or use a default
+    // In production, this should query a University table
+    const universityName = accessCode.startsWith('UNIV') 
+      ? `University ${accessCode.slice(4)}`
+      : `University (${accessCode})`;
+
+    // Return university info (no JWT needed for admin, using localStorage instead)
+    res.json({
+      success: true,
+      university: {
+        accessCode,
+        name: universityName,
+        authenticated: true
+      }
+    });
+
+  } catch (error) {
+    console.error("University login error:", error);
+    res.status(500).json({
+      error: "Server error during authentication"
+    });
+  }
+};
+
+/**
  * Verify JWT token and return student info
  */
 export const verifyToken = async (req, res) => {

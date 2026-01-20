@@ -9,6 +9,7 @@ import enrollmentRoutes from "./routes/enrollment.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import seatRoutes from "./routes/seat.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
+import universitiesRoutes from "./routes/universities.routes.js";
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/seats", seatRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/universities", universitiesRoutes);
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {

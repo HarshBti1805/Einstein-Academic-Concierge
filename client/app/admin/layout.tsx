@@ -26,6 +26,7 @@ export default function AdminLayout({
   const pathname = usePathname();
   const [authorized, setAuthorized] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
     // Skip check for login page
@@ -41,6 +42,17 @@ export default function AdminLayout({
       setAuthorized(true);
     }
   }, [pathname, router]);
+
+  useEffect(() => {
+    // Check if we're on desktop
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+    
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
   
   const isLoginPage = pathname === '/admin/login';
 
@@ -64,7 +76,7 @@ export default function AdminLayout({
 
       {/* Sidebar */}
       <AnimatePresence>
-        {(isSidebarOpen || typeof window !== 'undefined' && window.innerWidth >= 768) && (
+        {(isSidebarOpen || isDesktop) && (
           <motion.aside 
             initial={{ x: -300, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}

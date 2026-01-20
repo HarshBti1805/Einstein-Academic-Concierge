@@ -12,7 +12,7 @@ Recommends courses based on:
 import os
 import json
 from typing import List, Dict, Any, Optional
-from dotenv import load_dotenv
+from dotenv import load_dotenv 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 

@@ -23,6 +23,7 @@ import {
   LogOut,
   User,
   GraduationCap,
+  Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -449,6 +450,18 @@ export default function BookingsPage() {
                             Unavailable
                           </button>
                         )}
+
+                        {/* Live View Button */}
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => router.push(`/liveview?course=${course.code}`)}
+                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all"
+                          style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
+                        >
+                          <Eye className="h-4 w-4" />
+                          <span className="hidden sm:inline">Live View</span>
+                        </motion.button>
 
                         {needsAutoReg && (
                           <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200">

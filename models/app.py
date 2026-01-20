@@ -438,14 +438,14 @@ class UniversityCourseAdvisor:
         
         self.system_prompt = self._create_system_prompt()
     
-def _create_system_prompt(self) -> str:
-    """Create comprehensive system prompt for the advisor."""
-    branch = self.student.get('branch', 'their program')
-    year = self.student.get('year_of_study', 1)
-    gpa = self.academic_analysis.get('overall_gpa', 3.0)
-    top_subjects = self.academic_analysis.get('top_performers', [])
-    
-    return f"""You're a friendly academic advisor chatting with {self.student['name']}, a Year {year} {branch} student.
+    def _create_system_prompt(self) -> str:
+        """Create comprehensive system prompt for the advisor."""
+        branch = self.student.get('branch', 'their program')
+        year = self.student.get('year_of_study', 1)
+        gpa = self.academic_analysis.get('overall_gpa', 3.0)
+        top_subjects = self.academic_analysis.get('top_performers', [])
+        
+        return f"""You're a friendly academic advisor chatting with {self.student['name']}, a Year {year} {branch} student.
 
 FULL STUDENT PROFILE & ACADEMIC DATA:
 {self.student_context}

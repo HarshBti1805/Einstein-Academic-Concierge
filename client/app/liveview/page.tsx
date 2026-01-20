@@ -53,9 +53,16 @@ export default function LiveViewPage() {
   
   const [mounted, setMounted] = useState(false);
   const [studentName, setStudentName] = useState("");
+  const [studentId, setStudentId] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isConnected, setIsConnected] = useState(true);
   const [occupiedSeats, setOccupiedSeats] = useState<number[]>([]);
+  const [originalOccupiedSeats, setOriginalOccupiedSeats] = useState<number[]>([]);
+  const [leftSeats, setLeftSeats] = useState<number[]>([]);
+  const [studentSeat, setStudentSeat] = useState<number | null>(null);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [selectedSeatForJoin, setSelectedSeatForJoin] = useState<number | null>(null);
+  const [isJoining, setIsJoining] = useState(false);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [highlightedSeat, setHighlightedSeat] = useState<number | null>(null);
@@ -84,6 +91,7 @@ export default function LiveViewPage() {
       try {
         const parsed = JSON.parse(data);
         setStudentName(parsed.name || "Student");
+        setStudentId(parsed.student_id || "");
       } catch {
         router.push("/");
         return;
@@ -125,6 +133,8 @@ export default function LiveViewPage() {
       if (seatData) {
         setCourseData(seatData);
         setOccupiedSeats([...seatData.occupiedSeats]);
+        setOriginalOccupiedSeats([...seatData.occupiedSeats]);
+        setLeftSeats([]);
       }
 
       setMounted(true);
@@ -182,6 +192,7 @@ export default function LiveViewPage() {
       const randomName = mockStudentNames[Math.floor(Math.random() * mockStudentNames.length)];
 
       setOccupiedSeats((prev) => [...prev, newSeat]);
+      setLeftSeats((prev) => prev.filter((s) => s !== newSeat)); // Remove from left seats if it was there
       setHighlightedSeat(newSeat);
       setTimeout(() => setHighlightedSeat(null), 2000);
 
@@ -195,10 +206,10 @@ export default function LiveViewPage() {
 
       setRecentActivity((prev) => [...prev.slice(-19), activity]);
       setLastUpdate(new Date());
-    } else if (occupiedSeats.length > courseData.occupiedSeats.length) {
+    } else if (occupiedSeats.length > originalOccupiedSeats.length) {
       // Occasionally someone leaves (but not from the original occupied seats)
       const addedSeats = occupiedSeats.filter(
-        (seat) => !courseData.occupiedSeats.includes(seat)
+        (seat) => !originalOccupiedSeats.includes(seat) && seat !== studentSeat
       );
       if (addedSeats.length > 0) {
         const randomIndex = Math.floor(Math.random() * addedSeats.length);
@@ -206,6 +217,7 @@ export default function LiveViewPage() {
         const randomName = mockStudentNames[Math.floor(Math.random() * mockStudentNames.length)];
 
         setOccupiedSeats((prev) => prev.filter((s) => s !== leavingSeat));
+        setLeftSeats((prev) => [...prev, leavingSeat]); // Mark as left
 
         const activity: RecentActivity = {
           id: `${Date.now()}-${leavingSeat}`,
@@ -219,7 +231,7 @@ export default function LiveViewPage() {
         setLastUpdate(new Date());
       }
     }
-  }, [courseData, isBookingOpen, occupiedSeats, totalSeats]);
+  }, [originalOccupiedSeats, isBookingOpen, occupiedSeats, totalSeats, courseData, studentSeat]);
 
   // Simulate real-time updates
   useEffect(() => {
@@ -259,6 +271,68 @@ export default function LiveViewPage() {
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m ago`;
     return `${Math.floor(minutes / 60)}h ago`;
+  };
+
+  const handleJoinClass = async () => {
+    if (!selectedSeatForJoin || !studentId || !courseCode || isJoining) return;
+
+    setIsJoining(true);
+    const token = sessionStorage.getItem("authToken");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/seats/${courseCode}/book`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          seatNumbers: [selectedSeatForJoin],
+          studentId: studentId
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setOccupiedSeats((prev) => [...prev, selectedSeatForJoin]);
+        setLeftSeats((prev) => prev.filter((s) => s !== selectedSeatForJoin)); // Remove from left seats
+        setStudentSeat(selectedSeatForJoin);
+        setShowJoinModal(false);
+        setSelectedSeatForJoin(null);
+        
+        const activity: RecentActivity = {
+          id: `${Date.now()}-${selectedSeatForJoin}`,
+          seatNumber: selectedSeatForJoin,
+          action: "joined",
+          timestamp: new Date(),
+          studentName: studentName,
+        };
+        setRecentActivity((prev) => [...prev.slice(-19), activity]);
+        setLastUpdate(new Date());
+      } else {
+        alert(data.message || "Failed to join class. Please try again.");
+      }
+    } catch {
+      // Fallback - just update local state for demo
+      setOccupiedSeats((prev) => [...prev, selectedSeatForJoin]);
+      setLeftSeats((prev) => prev.filter((s) => s !== selectedSeatForJoin)); // Remove from left seats
+      setStudentSeat(selectedSeatForJoin);
+      setShowJoinModal(false);
+      setSelectedSeatForJoin(null);
+      
+      const activity: RecentActivity = {
+        id: `${Date.now()}-${selectedSeatForJoin}`,
+        seatNumber: selectedSeatForJoin,
+        action: "joined",
+        timestamp: new Date(),
+        studentName: studentName,
+      };
+      setRecentActivity((prev) => [...prev.slice(-19), activity]);
+      setLastUpdate(new Date());
+    } finally {
+      setIsJoining(false);
+    }
   };
 
   if (!mounted) {
@@ -412,6 +486,17 @@ export default function LiveViewPage() {
 
             {/* Right Section */}
             <div className="flex items-center gap-2 sm:gap-3">
+              {isBookingOpen && !studentSeat && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowJoinModal(true)}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-medium text-sm shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all"
+                >
+                  Join Class
+                </motion.button>
+              )}
+              
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -623,7 +708,7 @@ export default function LiveViewPage() {
               )}>
                 {/* Whiteboard / Teacher's Desk */}
                 <div className="mb-8">
-                  <div className="relative mx-auto w-3/4 h-12 rounded-lg bg-gradient-to-b from-gray-600 to-gray-700 border-2 border-gray-500 shadow-lg">
+                  <div className="relative mx-auto w-3/4 h-12 rounded-lg bg-gradient-to-b from-gray-900 to-gray-800 border-2 border-gray-500 shadow-lg">
                     <div className="absolute inset-0 flex items-center justify-center">
                       <span 
                         className="text-xs text-gray-300 font-medium tracking-wider"
@@ -664,8 +749,12 @@ export default function LiveViewPage() {
                             (_, colIndex) => {
                               const deskNumber = startDesk + colIndex;
                               const isOccupied = occupiedSeats.includes(deskNumber);
+                              const isStudentSeat = studentSeat === deskNumber;
+                              const isLeftSeat = leftSeats.includes(deskNumber);
+                              const isOriginalOccupied = originalOccupiedSeats.includes(deskNumber);
                               const isHighlighted = highlightedSeat === deskNumber;
                               const hasAisle = colIndex === 4;
+                              const isAvailable = !isOccupied;
 
                               return (
                                 <div key={deskNumber} className="flex items-center">
@@ -679,13 +768,26 @@ export default function LiveViewPage() {
                                     }}
                                     transition={{ duration: 0.5 }}
                                     className={cn(
-                                      "relative w-10 h-8 rounded-md transition-all duration-300 cursor-default",
-                                      isOccupied 
-                                        ? "bg-gradient-to-b from-gray-700 to-gray-800 border-2 border-gray-600 shadow-md"
-                                        : "bg-gradient-to-b from-gray-100 to-gray-200 border-2 border-gray-300",
-                                      isHighlighted && "ring-2 ring-emerald-400 ring-offset-2"
+                                      "relative w-10 h-8 rounded-md transition-all duration-300",
+                                      isAvailable 
+                                        ? isLeftSeat
+                                          ? "bg-gradient-to-b from-red-100 to-red-500 border-2 border-red-700 cursor-pointer hover:border-red-500 hover:shadow-md"
+                                          : "bg-white border-2 border-gray-200 cursor-pointer hover:border-gray-300 hover:shadow-md"
+                                        : isStudentSeat
+                                        ? "bg-gradient-to-b from-emerald-600 to-emerald-700 border-2 border-emerald-500 shadow-md"
+                                        : isOriginalOccupied
+                                        ? "bg-black border-2 border-gray-900 shadow-md"
+                                        : "bg-gradient-to-b from-pink-800 to-gray-900 border-2 border-gray-700 shadow-md",
+                                      isHighlighted && "ring-2 ring-emerald-400 ring-offset-2",
+                                      isStudentSeat && "ring-2 ring-blue-400 ring-offset-2"
                                     )}
-                                    title={`Seat ${deskNumber}${isOccupied ? ' (Occupied)' : ' (Available)'}`}
+                                    onClick={() => {
+                                      if (isAvailable && isBookingOpen && !studentSeat) {
+                                        setSelectedSeatForJoin(deskNumber);
+                                        setShowJoinModal(true);
+                                      }
+                                    }}
+                                    title={`Seat ${deskNumber}${isStudentSeat ? ' (Your Seat)' : isOccupied ? (isOriginalOccupied ? ' (Pre-filled)' : ' (Occupied)') : isLeftSeat ? ' (Recently Left - Available)' : ' (Available - Click to Join)'}`}
                                   >
                                     <div className="absolute inset-0 rounded-md bg-gradient-to-br from-white/20 to-transparent" />
                                     
@@ -693,7 +795,13 @@ export default function LiveViewPage() {
                                     <div 
                                       className={cn(
                                         "absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-5 h-2 rounded-b-sm",
-                                        isOccupied ? "bg-gray-700" : "bg-gray-200"
+                                        isAvailable 
+                                          ? isLeftSeat 
+                                            ? "bg-red-200" 
+                                            : "bg-gray-100"
+                                          : isStudentSeat 
+                                          ? "bg-emerald-600" 
+                                          : "bg-black"
                                       )}
                                     />
                                     
@@ -701,6 +809,10 @@ export default function LiveViewPage() {
                                       <div className="absolute inset-0 flex items-center justify-center">
                                         <User className="h-3 w-3 text-white" />
                                       </div>
+                                    )}
+                                    
+                                    {isStudentSeat && (
+                                      <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-blue-500 border-2 border-white" />
                                     )}
                                   </motion.div>
                                   
@@ -724,9 +836,9 @@ export default function LiveViewPage() {
                 </div>
 
                 {/* Legend */}
-                <div className="flex items-center justify-center gap-8 mt-6 text-sm">
+                <div className="flex items-center justify-center gap-6 mt-6 text-sm flex-wrap">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-5 rounded bg-gradient-to-b from-gray-100 to-gray-200 border-2 border-gray-300" />
+                    <div className="w-6 h-5 rounded bg-white border-2 border-gray-200" />
                     <span 
                       className="text-gray-600"
                       style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
@@ -735,7 +847,25 @@ export default function LiveViewPage() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-5 rounded bg-gradient-to-b from-gray-700 to-gray-800 border-2 border-gray-600" />
+                    <div className="w-6 h-5 rounded bg-gradient-to-b from-red-300 to-red-500 border-2 border-red-300" />
+                    <span 
+                      className="text-gray-600"
+                      style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                    >
+                      Recently Left
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-5 rounded bg-black border-2 border-gray-900" />
+                    <span 
+                      className="text-gray-600"
+                      style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                    >
+                      Pre-filled
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-5 rounded bg-gradient-to-b from-pink-800 to-pink-900 border-2 border-gray-700" />
                     <span 
                       className="text-gray-600"
                       style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
@@ -743,19 +873,19 @@ export default function LiveViewPage() {
                       Occupied
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <motion.div
-                      animate={{ boxShadow: ["0 0 8px rgba(34, 197, 94, 0.3)", "0 0 16px rgba(34, 197, 94, 0.5)", "0 0 8px rgba(34, 197, 94, 0.3)"] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                      className="w-6 h-5 rounded bg-gradient-to-b from-gray-700 to-gray-800 border-2 border-emerald-400"
-                    />
-                    <span 
-                      className="text-gray-600"
-                      style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
-                    >
-                      Just Joined
-                    </span>
-                  </div>
+                  {studentSeat && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-5 rounded bg-gradient-to-b from-emerald-600 to-emerald-700 border-2 border-blue-400 relative">
+                        <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-blue-500 border-2 border-white" />
+                      </div>
+                      <span 
+                        className="text-gray-600"
+                        style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                      >
+                        Your Seat
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -939,6 +1069,129 @@ export default function LiveViewPage() {
           </div>
         </div>
       </main>
+
+      {/* Join Class Modal */}
+      <AnimatePresence>
+        {showJoinModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              onClick={() => !isJoining && setShowJoinModal(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200">
+                <h3 
+                  className="text-xl font-semibold text-gray-900 mb-2"
+                  style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                >
+                  Join Class
+                </h3>
+                <p className="text-sm text-gray-600 mb-6">
+                  {selectedSeatForJoin 
+                    ? `Confirm booking seat ${selectedSeatForJoin}?`
+                    : "Select a seat to join the class"}
+                </p>
+                
+                {selectedSeatForJoin ? (
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-10 rounded-md bg-gradient-to-b from-emerald-600 to-emerald-700 border-2 border-emerald-500 flex items-center justify-center">
+                          <User className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-emerald-900">Seat {selectedSeatForJoin}</p>
+                          <p className="text-xs text-emerald-700">Available for booking</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-3">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setSelectedSeatForJoin(null);
+                          setShowJoinModal(false);
+                        }}
+                        disabled={isJoining}
+                        className="flex-1 px-4 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-all disabled:opacity-50"
+                      >
+                        Cancel
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleJoinClass}
+                        disabled={isJoining}
+                        className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-medium shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {isJoining ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                            Joining...
+                          </>
+                        ) : (
+                          "Confirm"
+                        )}
+                      </motion.button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {Array.from({ length: totalSeats }, (_, i) => i + 1)
+                      .filter(seat => !occupiedSeats.includes(seat))
+                      .map(seat => {
+                        const isLeft = leftSeats.includes(seat);
+                        return (
+                          <motion.button
+                            key={seat}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setSelectedSeatForJoin(seat)}
+                            className={cn(
+                              "w-full p-3 rounded-xl border-2 transition-all text-left",
+                              isLeft
+                                ? "bg-red-50 border-red-200 hover:border-red-400 hover:bg-red-100"
+                                : "bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={cn(
+                                "w-10 h-8 rounded-md border-2",
+                                isLeft
+                                  ? "bg-gradient-to-b from-red-100 to-red-200 border-red-300"
+                                  : "bg-white border-gray-200"
+                              )} />
+                              <div>
+                                <p className="font-medium text-gray-900">Seat {seat}</p>
+                                <p className="text-xs text-gray-500">
+                                  {isLeft ? "Recently left - Click to select" : "Click to select"}
+                                </p>
+                              </div>
+                            </div>
+                          </motion.button>
+                        );
+                      })}
+                    {Array.from({ length: totalSeats }, (_, i) => i + 1)
+                      .filter(seat => !occupiedSeats.includes(seat)).length === 0 && (
+                        <p className="text-center text-gray-500 py-4">No available seats</p>
+                      )}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Custom Scrollbar Styles */}
       <style jsx global>{`

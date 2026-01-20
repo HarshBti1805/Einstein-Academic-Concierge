@@ -22,39 +22,23 @@ import {
   AlertCircle
 } from "lucide-react";
 
-// Import students data for validation
-import studentsData from "@/lib/test-data/students_data.json";
+// API base URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-// Define student type based on the JSON structure
-interface Student {
-  student_id: string;
-  name: string;
-  email: string;
-  roll_number: string;
-  university_name: string;
-  branch: string;
-  enrollment_year: number;
-  expectedGraduation: number;
-  year_of_study: number;
-  age: number;
-  academic_data: {
-    academic_year: string;
-    totalCredits: number;
-    creditsThisSemester: number;
-    overall_gpa: number;
-    attendance_percentage: number;
-    subjects: Array<{
-      name: string;
-      marks: number;
-      grade: string;
-      attendance: number;
-      teacher_remarks: string;
-    }>;
-  };
-  behavioral_data: {
-    participation_score: number;
-    discipline_score: number;
-    extracurricular: string[];
+// API response type
+interface LoginResponse {
+  success: boolean;
+  message: string;
+  token?: string;
+  student?: {
+    student_id: string;
+    name: string;
+    email: string;
+    rollNumber: string;
+    universityName: string;
+    branch: string;
+    yearOfStudy: number;
+    expectedGraduation: number;
   };
 }
 
@@ -78,42 +62,25 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
-  // Helper function to convert "1st Year", "2nd Year", etc. to number
-  const parseYearOfStudy = (yearString: string): number => {
-    const match = yearString.match(/(\d+)/);
-    return match ? parseInt(match[1], 10) : 0;
-  };
-
-  // Interface for form data
-  interface FormDataType {
-    name: string;
-    rollNumber: string;
-    email: string;
-    university: string;
-    yearOfStudy: string;
-    passoutYear: string;
-    branch: string;
-    aboutYourself: string;
-  }
-
-  // Validate student credentials against the database
-  const validateStudent = (data: FormDataType): Student | null => {
-    const students: Student[] = studentsData.students;
-    
-    const matchedStudent = students.find((student) => {
-      // Compare all fields (case-insensitive for strings)
-      const nameMatch = student.name.toLowerCase() === data.name.toLowerCase().trim();
-      const rollMatch = student.roll_number.toLowerCase() === data.rollNumber.toLowerCase().trim();
-      const emailMatch = student.email.toLowerCase() === data.email.toLowerCase().trim();
-      const universityMatch = student.university_name.toLowerCase() === data.university.toLowerCase().trim();
-      const yearMatch = student.year_of_study === parseYearOfStudy(data.yearOfStudy);
-      const graduationMatch = student.expectedGraduation === parseInt(data.passoutYear, 10);
-      const branchMatch = student.branch.toLowerCase() === data.branch.toLowerCase().trim();
-
-      return nameMatch && rollMatch && emailMatch && universityMatch && yearMatch && graduationMatch && branchMatch;
+  // API login function
+  const loginWithAPI = async (data: typeof formData): Promise<LoginResponse> => {
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: data.name.trim(),
+        rollNumber: data.rollNumber.trim(),
+        email: data.email.trim(),
+        university: data.university.trim(),
+        yearOfStudy: data.yearOfStudy,
+        passoutYear: data.passoutYear,
+        branch: data.branch.trim(),
+      }),
     });
-
-    return matchedStudent || null;
+    
+    return response.json();
   };
   
   // Generate particle data only on client-side after mount to avoid hydration mismatch
@@ -211,42 +178,46 @@ export default function Home() {
     setIsLoading(true);
     setError(null);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Validate student credentials
-    const matchedStudent = validateStudent(formData);
-    
-    if (!matchedStudent) {
-      setIsLoading(false);
-      setError("Invalid credentials. Please check your information and try again.");
-      return;
-    }
-    
-    setIsLoading(false);
-    setIsSuccess(true);
-
-    // Animate out after success
-    setTimeout(() => {
-      if (formRef.current) {
-        gsap.to(formRef.current, {
-          opacity: 0,
-          y: -20,
-          duration: 0.3,
-          onComplete: () => {
-            // Store student data with student_id for dashboard lookup
-            sessionStorage.setItem("studentData", JSON.stringify({
-              ...formData,
-              student_id: matchedStudent.student_id,
-              name: matchedStudent.name,
-              email: matchedStudent.email,
-              rollNumber: matchedStudent.roll_number,
-            }));
-            router.push("/dashboard");
-          },
-        });
+    try {
+      // Call the login API
+      const response = await loginWithAPI(formData);
+      
+      if (!response.success || !response.token || !response.student) {
+        setIsLoading(false);
+        setError(response.message || "Invalid credentials. Please check your information and try again.");
+        return;
       }
-    }, 1000);
+      
+      setIsLoading(false);
+      setIsSuccess(true);
+
+      // Animate out after success
+      setTimeout(() => {
+        if (formRef.current) {
+          gsap.to(formRef.current, {
+            opacity: 0,
+            y: -20,
+            duration: 0.3,
+            onComplete: () => {
+              // Store token and student data
+              sessionStorage.setItem("authToken", response.token!);
+              sessionStorage.setItem("studentData", JSON.stringify({
+                student_id: response.student!.student_id,
+                name: response.student!.name,
+                email: response.student!.email,
+                rollNumber: response.student!.rollNumber,
+              }));
+              router.push("/dashboard");
+            },
+          });
+        }
+      }, 1000);
+      
+    } catch (err) {
+      setIsLoading(false);
+      setError("Unable to connect to server. Please try again later.");
+      console.error("Login error:", err);
+    }
   };
 
   const leftColumnFields = [

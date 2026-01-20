@@ -35,8 +35,9 @@ import { cn } from "@/lib/utils";
 // Import test data for fallback
 import chatData from "@/lib/test-data/chat_data.json";
 
-// API base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+// API URLs - Express for auth/data, Flask for AI chat
+const EXPRESS_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const AI_API_URL = process.env.NEXT_PUBLIC_AI_API_URL || "http://localhost:5000";
 
 interface Message {
   id: string;
@@ -90,8 +91,10 @@ export default function AssistantPage() {
   // Check API health and initialize chat
   useEffect(() => {
     const initializeChat = async () => {
+      const token = sessionStorage.getItem("authToken");
       const data = sessionStorage.getItem("studentData");
-      if (!data) {
+      
+      if (!token || !data) {
         router.push("/");
         return;
       }
@@ -101,36 +104,45 @@ export default function AssistantPage() {
         setStudentName(parsed.name || "Student");
         setStudentId(parsed.student_id || "");
         
-        // Check if API is available
+        // Check if Flask AI API is available
         try {
-          const healthResponse = await fetch(`${API_BASE_URL}/api/health`);
+          const healthResponse = await fetch(`${AI_API_URL}/api/health`);
           if (healthResponse.ok) {
-            setApiConnected(true);
+            const healthData = await healthResponse.json();
             
-            // Start chat session with API
-            const startResponse = await fetch(`${API_BASE_URL}/api/chat/start`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ student_id: parsed.student_id })
-            });
-            
-            if (startResponse.ok) {
-              const startData = await startResponse.json();
-              setMessages([{
-                id: "msg-0",
-                text: startData.message,
-                sender: "agent",
-                timestamp: new Date(),
-              }]);
+            // Check if vector store is ready (AI is properly initialized)
+            if (healthData.vectorstore_ready) {
+              setApiConnected(true);
+              
+              // Start chat session with Flask AI API
+              const startResponse = await fetch(`${AI_API_URL}/api/chat/start`, {
+                method: 'POST',
+                headers: { 
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ student_id: parsed.student_id })
+              });
+              
+              if (startResponse.ok) {
+                const startData = await startResponse.json();
+                setMessages([{
+                  id: "msg-0",
+                  text: startData.message,
+                  sender: "agent",
+                  timestamp: new Date(),
+                }]);
+              } else {
+                throw new Error("Failed to start chat");
+              }
             } else {
-              throw new Error("Failed to start chat");
+              throw new Error("AI not initialized - check PINECONE_API_KEY and OPENAI_API_KEY");
             }
           } else {
-            throw new Error("API not healthy");
+            throw new Error("AI API not healthy");
           }
-        } catch {
+        } catch (error) {
           // Fallback to local mode
-          console.log("API not available, using local mode");
+          console.log("AI API not available, using local mode:", error);
           setApiConnected(false);
           setMessages([{
             id: "msg-0",
@@ -249,11 +261,13 @@ export default function AssistantPage() {
     setIsTyping(true);
 
     if (apiConnected && studentId) {
-      // Use API for response
+      // Use Flask AI API for response
       try {
-        const response = await fetch(`${API_BASE_URL}/api/chat/message`, {
+        const response = await fetch(`${AI_API_URL}/api/chat/message`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({ 
             student_id: studentId,
             message: currentInput 
@@ -315,9 +329,12 @@ export default function AssistantPage() {
     
     if (apiConnected && studentId) {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/chat/recommend`, {
+        // Use Flask AI API for recommendations
+        const response = await fetch(`${AI_API_URL}/api/chat/recommend`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({ student_id: studentId })
         });
         
@@ -566,7 +583,11 @@ export default function AssistantPage() {
                           {[
                             { icon: User, label: "Profile", action: () => {} },
                             { icon: Settings, label: "Settings", action: () => {} },
-                            { icon: LogOut, label: "Sign out", action: () => router.push("/") },
+                            { icon: LogOut, label: "Sign out", action: () => {
+                              sessionStorage.removeItem("authToken");
+                              sessionStorage.removeItem("studentData");
+                              router.push("/");
+                            }},
                           ].map((item) => (
                             <motion.button
                               key={item.label}
@@ -594,7 +615,7 @@ export default function AssistantPage() {
         <div className="bg-amber-50 border-b border-amber-200 px-4 py-2">
           <div className="max-w-7xl mx-auto flex items-center gap-2 text-sm text-amber-700">
             <AlertCircle className="h-4 w-4" />
-            <span>Running in local mode. Start the Flask API for AI-powered recommendations.</span>
+            <span>Running in local mode. Start the Flask AI API (python models/app.py) with valid OPENAI_API_KEY and PINECONE_API_KEY for AI-powered recommendations.</span>
           </div>
         </div>
       )}

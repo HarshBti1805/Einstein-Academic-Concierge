@@ -26,8 +26,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Import test data
-import seatsData from "@/lib/test-data/seats_data.json";
+// Import test data as fallback
+import seatsDataFallback from "@/lib/test-data/seats_data.json";
+
+// API base URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 interface CourseSeats {
   totalSeats: number;
@@ -56,12 +59,12 @@ export default function LiveViewPage() {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [highlightedSeat, setHighlightedSeat] = useState<number | null>(null);
+  const [courseData, setCourseData] = useState<CourseSeats | null>(null);
   
   const seatGridRef = useRef<HTMLDivElement>(null);
   const activityEndRef = useRef<HTMLDivElement>(null);
 
-  // Get course data from seatsData
-  const courseData = (seatsData.courses as Record<string, CourseSeats>)[courseCode];
+  // Derived state from courseData
   const bookingStatus = courseData?.bookingStatus || "not_started";
   const totalSeats = courseData?.totalSeats || 0;
   const isBookingOpen = bookingStatus === "open";
@@ -69,9 +72,11 @@ export default function LiveViewPage() {
   const isBookingNotStarted = bookingStatus === "not_started";
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const initializePage = async () => {
+      const token = sessionStorage.getItem("authToken");
       const data = sessionStorage.getItem("studentData");
-      if (!data) {
+      
+      if (!token || !data) {
         router.push("/");
         return;
       }
@@ -84,16 +89,50 @@ export default function LiveViewPage() {
         return;
       }
 
-      // Initialize occupied seats from data
-      if (courseData) {
-        setOccupiedSeats([...courseData.occupiedSeats]);
+      // Fetch seat data from API
+      let seatData: CourseSeats | null = null;
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/seats/course/${courseCode}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const apiData = await response.json();
+          if (apiData.success) {
+            seatData = {
+              totalSeats: apiData.totalSeats,
+              occupiedSeats: apiData.occupiedSeats || [],
+              bookingStatus: apiData.bookingStatus
+            };
+          }
+        }
+      } catch {
+        console.log("Using fallback seat data");
+      }
+
+      // Fallback to local data
+      if (!seatData) {
+        const fallbackData = (seatsDataFallback.courses as Record<string, CourseSeats>)[courseCode];
+        if (fallbackData) {
+          seatData = fallbackData;
+        }
+      }
+
+      if (seatData) {
+        setCourseData(seatData);
+        setOccupiedSeats([...seatData.occupiedSeats]);
       }
 
       setMounted(true);
-    }, 0);
+    };
 
+    const timer = setTimeout(initializePage, 0);
     return () => clearTimeout(timer);
-  }, [router, courseData]);
+  }, [router, courseCode]);
 
   // Animate seats on load
   useEffect(() => {
@@ -430,7 +469,12 @@ export default function LiveViewPage() {
                           {[
                             { icon: User, label: "Profile", action: () => {} },
                             { icon: Settings, label: "Settings", action: () => {} },
-                            { icon: LogOut, label: "Sign out", action: () => router.push("/") },
+                            { icon: LogOut, label: "Sign out", action: () => {
+                              sessionStorage.removeItem("authToken");
+                              sessionStorage.removeItem("studentData");
+                              sessionStorage.removeItem("recommendedCourses");
+                              router.push("/");
+                            }},
                           ].map((item) => (
                             <motion.button
                               key={item.label}

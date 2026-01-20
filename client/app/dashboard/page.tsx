@@ -30,9 +30,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Import test data
-import studentsData from "@/lib/test-data/students_data.json";
-import dashboardDataJson from "@/lib/test-data/dashboard_data.json";
+// API base URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 // Type definitions for the JSON data
 interface Subject {
@@ -377,37 +376,85 @@ export default function Dashboard() {
   }>>([]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const fetchDashboardData = async () => {
+      const token = sessionStorage.getItem("authToken");
       const data = sessionStorage.getItem("studentData");
-      if (data) {
-        try {
-          const parsed = JSON.parse(data);
-          setStudentInfo(parsed);
-          
-          // Find the student in the students data using student_id
-          const studentId = parsed.student_id;
-          const student = studentsData.students.find(
-            (s: StudentData) => s.student_id === studentId
-          );
-          
-          if (student) {
-            setCurrentStudent(student as StudentData);
-            
-            // Get dashboard data for this student
-            const dashData = (dashboardDataJson as Record<string, DashboardData>)[studentId];
-            if (dashData) {
-              setCurrentDashboardData(dashData);
+      
+      if (!token || !data) {
+        router.push("/");
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(data);
+        setStudentInfo(parsed);
+        
+        // Fetch dashboard data from API
+        const response = await fetch(`${API_BASE_URL}/api/students/${parsed.student_id}/dashboard`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Token expired or invalid, redirect to login
+            sessionStorage.removeItem("authToken");
+            sessionStorage.removeItem("studentData");
+            router.push("/");
+            return;
+          }
+          throw new Error('Failed to fetch dashboard data');
+        }
+
+        const result = await response.json();
+        
+        if (result.success && result.student) {
+          // Transform API response to match frontend types
+          const studentData: StudentData = {
+            student_id: result.student.student_id,
+            name: result.student.name,
+            email: result.student.email,
+            roll_number: result.student.roll_number,
+            university_name: result.student.university_name,
+            branch: result.student.branch,
+            enrollment_year: result.student.enrollment_year,
+            expectedGraduation: result.student.expectedGraduation,
+            year_of_study: result.student.year_of_study,
+            age: result.student.age,
+            academic_data: result.student.academic_data || {
+              academic_year: "",
+              totalCredits: 0,
+              creditsThisSemester: 0,
+              overall_gpa: 0,
+              attendance_percentage: 0,
+              subjects: []
+            },
+            behavioral_data: result.student.behavioral_data || {
+              participation_score: 0,
+              discipline_score: 0,
+              extracurricular: []
             }
+          };
+          
+          setCurrentStudent(studentData);
+          
+          if (result.dashboard) {
+            setCurrentDashboardData(result.dashboard);
           }
           
           setMounted(true);
-        } catch {
-          router.push("/");
+        } else {
+          throw new Error('Invalid response data');
         }
-      } else {
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
         router.push("/");
       }
-    }, 0);
+    };
+
+    const timer = setTimeout(fetchDashboardData, 0);
     return () => clearTimeout(timer);
   }, [router]);
 
@@ -806,7 +853,11 @@ export default function Dashboard() {
                         <div className="p-2">
                           <motion.button
                             whileHover={{ x: 4 }}
-                            onClick={() => router.push("/")}
+                            onClick={() => {
+                              sessionStorage.removeItem("authToken");
+                              sessionStorage.removeItem("studentData");
+                              router.push("/");
+                            }}
                             className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-red-50 transition-all group"
                           >
                             <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-red-100 transition-colors">

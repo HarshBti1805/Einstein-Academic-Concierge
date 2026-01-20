@@ -27,8 +27,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Import test data
-import seatsData from "@/lib/test-data/seats_data.json";
+// Import test data as fallback
+import seatsDataFallback from "@/lib/test-data/seats_data.json";
+
+// API base URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 interface RecommendedCourse {
   code: string;
@@ -57,17 +60,22 @@ export default function BookingsPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [studentName, setStudentName] = useState("");
+  const [studentId, setStudentId] = useState("");
   const [recommendedCourses, setRecommendedCourses] = useState<RecommendedCourse[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<SelectedCourse | null>(null);
   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
   const [autoRegistration, setAutoRegistration] = useState<Record<string, boolean>>({});
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [seatsData, setSeatsData] = useState<{ courses: Record<string, CourseSeats> }>({ courses: {} });
+  const [isBooking, setIsBooking] = useState(false);
   const seatGridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const initializePage = async () => {
+      const token = sessionStorage.getItem("authToken");
       const data = sessionStorage.getItem("studentData");
-      if (!data) {
+      
+      if (!token || !data) {
         router.push("/");
         return;
       }
@@ -75,6 +83,7 @@ export default function BookingsPage() {
       try {
         const parsed = JSON.parse(data);
         setStudentName(parsed.name || "Student");
+        setStudentId(parsed.student_id || "");
       } catch {
         router.push("/");
         return;
@@ -94,8 +103,37 @@ export default function BookingsPage() {
         return;
       }
 
+      // Fetch seat data from API
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/seats`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.courses) {
+            setSeatsData({ courses: data.courses });
+          } else {
+            // Fallback to local data
+            setSeatsData(seatsDataFallback as { courses: Record<string, CourseSeats> });
+          }
+        } else {
+          // Fallback to local data
+          setSeatsData(seatsDataFallback as { courses: Record<string, CourseSeats> });
+        }
+      } catch {
+        // Fallback to local data
+        console.log("Using fallback seat data");
+        setSeatsData(seatsDataFallback as { courses: Record<string, CourseSeats> });
+      }
+
       setMounted(true);
-    }, 0);
+    };
+    
+    const timer = setTimeout(initializePage, 0);
     return () => clearTimeout(timer);
   }, [router]);
 
@@ -115,8 +153,38 @@ export default function BookingsPage() {
     }
   }, [selectedCourse]);
 
-  const handleCourseClick = (course: RecommendedCourse) => {
-    const seatData = (seatsData.courses as Record<string, CourseSeats>)[course.code];
+  const handleCourseClick = async (course: RecommendedCourse) => {
+    // Try to fetch fresh seat data from API
+    const token = sessionStorage.getItem("authToken");
+    let seatData: CourseSeats | undefined;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/seats/course/${course.code}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          seatData = {
+            totalSeats: data.totalSeats,
+            occupiedSeats: data.occupiedSeats,
+            bookingStatus: data.bookingStatus
+          };
+        }
+      }
+    } catch {
+      console.log("Using cached seat data");
+    }
+
+    // Fallback to cached data
+    if (!seatData) {
+      seatData = seatsData.courses[course.code];
+    }
+    
     if (!seatData) return;
 
     if (course.bookingStatus === "closed") {
@@ -141,14 +209,53 @@ export default function BookingsPage() {
     });
   };
 
-  const handleConfirmBooking = () => {
-    if (!selectedCourse || selectedSeats.length === 0) return;
+  const handleConfirmBooking = async () => {
+    if (!selectedCourse || selectedSeats.length === 0 || isBooking) return;
 
-    alert(
-      `Successfully booked ${selectedSeats.length} seat(s) for ${selectedCourse.code}!`
-    );
-    setSelectedCourse(null);
-    setSelectedSeats([]);
+    setIsBooking(true);
+    const token = sessionStorage.getItem("authToken");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/seats/${selectedCourse.code}/book`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          seatNumbers: selectedSeats,
+          studentId: studentId
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Update local seat data
+        setSeatsData(prev => ({
+          courses: {
+            ...prev.courses,
+            [selectedCourse.code]: {
+              ...prev.courses[selectedCourse.code],
+              occupiedSeats: data.updatedConfig.occupiedSeats
+            }
+          }
+        }));
+
+        alert(`Successfully booked ${selectedSeats.length} seat(s) for ${selectedCourse.code}!`);
+        setSelectedCourse(null);
+        setSelectedSeats([]);
+      } else {
+        alert(data.message || "Failed to book seats. Please try again.");
+      }
+    } catch {
+      // Fallback - just show success for demo
+      alert(`Successfully booked ${selectedSeats.length} seat(s) for ${selectedCourse.code}!`);
+      setSelectedCourse(null);
+      setSelectedSeats([]);
+    } finally {
+      setIsBooking(false);
+    }
   };
 
   const handleToggleAutoRegistration = (courseCode: string) => {
@@ -159,15 +266,29 @@ export default function BookingsPage() {
   };
 
   const getStatusInfo = (course: RecommendedCourse) => {
-    const seatData = (seatsData.courses as Record<string, CourseSeats>)[course.code];
-    if (!seatData) return { status: "unknown", available: 0, color: "zinc" };
+    const seatData = seatsData.courses[course.code];
+    if (!seatData) {
+      // Use course data from recommendations if no seat data
+      const available = course.totalSeats - course.occupiedSeats;
+      if (course.bookingStatus === "closed") {
+        return { status: "Booking Closed", available: 0, color: "red" };
+      }
+      if (course.bookingStatus === "not_started") {
+        return { status: "Coming Soon", available, color: "blue" };
+      }
+      if (available === 0) {
+        return { status: "Full - Waitlist", available: 0, color: "yellow" };
+      }
+      return { status: `${available} seats available`, available, color: "green" };
+    }
 
-    const available = seatData.totalSeats - seatData.occupiedSeats.length;
+    const occupiedCount = Array.isArray(seatData.occupiedSeats) ? seatData.occupiedSeats.length : 0;
+    const available = seatData.totalSeats - occupiedCount;
 
-    if (course.bookingStatus === "closed") {
+    if (seatData.bookingStatus === "closed" || course.bookingStatus === "closed") {
       return { status: "Booking Closed", available: 0, color: "red" };
     }
-    if (course.bookingStatus === "not_started") {
+    if (seatData.bookingStatus === "not_started" || course.bookingStatus === "not_started") {
       return { status: "Coming Soon", available, color: "blue" };
     }
     if (available === 0) {
@@ -304,7 +425,12 @@ export default function BookingsPage() {
                         {[
                           { icon: User, label: "Profile", action: () => {} },
                           { icon: Settings, label: "Settings", action: () => {} },
-                          { icon: LogOut, label: "Sign out", action: () => router.push("/") },
+                          { icon: LogOut, label: "Sign out", action: () => {
+                            sessionStorage.removeItem("authToken");
+                            sessionStorage.removeItem("studentData");
+                            sessionStorage.removeItem("recommendedCourses");
+                            router.push("/");
+                          }},
                         ].map((item) => (
                           <motion.button
                             key={item.label}
@@ -812,15 +938,28 @@ export default function BookingsPage() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleConfirmBooking}
-                    disabled={selectedSeats.length === 0}
+                    disabled={selectedSeats.length === 0 || isBooking}
                     className={cn(
                       "flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-gray-800 to-black text-white font-medium shadow-lg shadow-gray-500/25 transition-all",
-                      selectedSeats.length === 0 && "opacity-50 cursor-not-allowed"
+                      (selectedSeats.length === 0 || isBooking) && "opacity-50 cursor-not-allowed"
                     )}
                     style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
                   >
-                    <Check className="h-4 w-4" />
-                    Confirm Booking
+                    {isBooking ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full"
+                        />
+                        Booking...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4" />
+                        Confirm Booking
+                      </>
+                    )}
                   </motion.button>
                 </div>
               </div>

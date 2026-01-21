@@ -1213,3 +1213,20 @@ export default function LiveViewPage() {
     </div>
   );
 }
+
+
+
+
+// // Course 1 ===> Priority Queue ==> weight --> score (college) min thershold ==> student x 800  
+
+// 800 -> 200 
+
+// // Course 2 ===> Priority Queue ==> weight --> score - interst, marks, attendance, branch and previous subjects ==> score (college) min thershold ==> student x 800  
+
+// polling --> 200 --> user regiser => 200 filled --> vaccany seat -->
+
+
+// 1. College perspective (expects the best canidate for respective course) :: (BASIC IDEA - use a priority queue based on score(could be calculated based on several factors like interests, marks, attendance, branch and previous subjects)) -> Clash based on score and who will be let in to a coure
+
+
+// 2. Auto-registarion agent --> in case the booking has not started or all the seats have been filled students can join the waitlist -> based on score from priority_queue the students will be automatillcy registerd in case of vaccany or opening of bookings by an autonomous agent. 

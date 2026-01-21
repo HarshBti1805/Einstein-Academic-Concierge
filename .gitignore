@@ -129,3 +129,8 @@ htmlcov/
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+
+# Miscallenous
+claude.md 
+prompt.md

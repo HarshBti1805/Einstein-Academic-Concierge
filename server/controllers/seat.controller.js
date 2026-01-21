@@ -170,9 +170,18 @@ export const bookSeat = async (req, res) => {
             });
 
             if (student) {
-                await prisma.enrollment.create({
-                    data: {
-                        status: 'enrolled',
+                await prisma.enrollment.upsert({
+                    where: {
+                        courseId_studentId: {
+                            courseId: course.id,
+                            studentId: student.id
+                        }
+                    },
+                    update: {
+                        status: 'ENROLLED'
+                    },
+                    create: {
+                        status: 'ENROLLED',
                         courseId: course.id,
                         studentId: student.id
                     }

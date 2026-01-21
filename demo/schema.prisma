@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -30,33 +27,33 @@ model Student {
   dashboard          Dashboard?
   enrollments        Enrollment[]
   
-  // Registration system relations
+  // NEW: Registration system relations
   coursePreferences  CoursePreference[]
   waitlistEntries    WaitlistEntry[]
   seatBookings       SeatBooking[]
 }
 
 model AcademicRecord {
-  id                  String          @id @default(uuid())
-  studentId           String          @unique
-  student             Student         @relation(fields: [studentId], references: [id])
-  academicYear        String
-  totalCredits        Int
-  creditsThisSemester Int
-  overallGpa          Float
+  id                   String          @id @default(uuid())
+  studentId            String          @unique
+  student              Student         @relation(fields: [studentId], references: [id])
+  academicYear         String
+  totalCredits         Int
+  creditsThisSemester  Int
+  overallGpa           Float
   attendancePercentage Float
-  subjects            SubjectRecord[]
+  subjects             SubjectRecord[]
 }
 
 model SubjectRecord {
-  id              String         @id @default(uuid())
+  id               String         @id @default(uuid())
   academicRecordId String
-  academicRecord  AcademicRecord @relation(fields: [academicRecordId], references: [id])
-  name            String
-  marks           Float
-  grade           String
-  attendance      Float
-  teacherRemarks  String?
+  academicRecord   AcademicRecord @relation(fields: [academicRecordId], references: [id])
+  name             String
+  marks            Float
+  grade            String
+  attendance       Float
+  teacherRemarks   String?
 }
 
 model BehavioralRecord {
@@ -65,7 +62,7 @@ model BehavioralRecord {
   student            Student  @relation(fields: [studentId], references: [id])
   participationScore Float
   disciplineScore    Float
-  extracurricular    String[] // Stored as array of strings
+  extracurricular    String[]
 }
 
 model Instructor {
@@ -79,33 +76,34 @@ model Instructor {
 }
 
 model Course {
-  id                  String       @id @default(uuid())
-  courseId            String       @unique // e.g., CS101
-  name                String
-  category            String
-  difficulty          String
-  prerequisites       String[]
-  description         String
-  skillsDeveloped     String[]
-  careerPaths         String[]
-  idealFor            String
-  minGpaRecommended   Float
-  keywords            String[]
-  classroomNumber     String
-  schedule            Json         // Stores { weekdays: [], timings: { start, end } }
+  id                String       @id @default(uuid())
+  courseId          String       @unique // e.g., CS101
+  name              String
+  category          String
+  difficulty        String
+  prerequisites     String[]
+  description       String
+  skillsDeveloped   String[]
+  careerPaths       String[]
+  idealFor          String
+  minGpaRecommended Float
+  keywords          String[]
+  classroomNumber   String
+  schedule          Json
+
+  instructorId String
+  instructor   Instructor @relation(fields: [instructorId], references: [id])
+
+  enrollments       Enrollment[]
+  seatConfig        SeatConfig?
   
-  instructorId        String
-  instructor          Instructor   @relation(fields: [instructorId], references: [id])
-  
-  enrollments         Enrollment[]
-  seatConfig          SeatConfig?
-  
-  // Registration system relations
-  coursePreferences   CoursePreference[]
-  waitlistEntries     WaitlistEntry[]
-  seatBookings        SeatBooking[]
+  // NEW: Registration system relations
+  coursePreferences CoursePreference[]
+  waitlistEntries   WaitlistEntry[]
+  seatBookings      SeatBooking[]
 }
 
+// UPDATED: More detailed enrollment tracking
 model Enrollment {
   id           String           @id @default(uuid())
   status       EnrollmentStatus @default(PENDING)
@@ -117,7 +115,7 @@ model Enrollment {
   enrolledAt   DateTime?
   droppedAt    DateTime?
   createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @default(now()) @updatedAt
+  updatedAt    DateTime         @updatedAt
 
   @@unique([courseId, studentId])
 }
@@ -130,7 +128,7 @@ enum EnrollmentStatus {
   REJECTED
 }
 
-// Dashboard Models
+// Dashboard Models (unchanged)
 model Dashboard {
   id                String             @id @default(uuid())
   studentId         String             @unique
@@ -191,22 +189,21 @@ model RecentActivity {
   timestamp   DateTime
 }
 
-// Seat Management - Enhanced for registration system
+// UPDATED: Enhanced Seat Management
 model SeatConfig {
-  id              String        @id @default(uuid())
-  courseId        String        @unique
-  course          Course        @relation(fields: [courseId], references: [id])
-  totalSeats      Int
-  rows            Int           @default(13)    // A-M
-  seatsPerRow     Int           @default(20)    // 1-20
-  occupiedSeats   Int[]         // Legacy: Array of seat numbers for backward compatibility
-  bookingStatus   BookingStatus @default(CLOSED)
-  bookingOpensAt  DateTime?
+  id            String        @id @default(uuid())
+  courseId      String        @unique
+  course        Course        @relation(fields: [courseId], references: [id])
+  totalSeats    Int
+  rows          Int           @default(13)    // A-M
+  seatsPerRow   Int           @default(20)    // 1-20
+  bookingStatus BookingStatus @default(CLOSED)
+  bookingOpensAt DateTime?
   bookingClosesAt DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @default(now()) @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   
-  seatBookings    SeatBooking[]
+  seatBookings  SeatBooking[]
 }
 
 enum BookingStatus {
@@ -217,7 +214,7 @@ enum BookingStatus {
   COMPLETED     // No more changes
 }
 
-// Individual seat bookings for detailed tracking
+// NEW: Individual seat bookings
 model SeatBooking {
   id           String      @id @default(uuid())
   seatConfigId String
@@ -238,7 +235,7 @@ model SeatBooking {
   @@index([studentId])
 }
 
-// Student course preferences (from recommendation system)
+// NEW: Student course preferences (from recommendation system)
 model CoursePreference {
   id           String   @id @default(uuid())
   studentId    String
@@ -254,7 +251,7 @@ model CoursePreference {
   @@index([studentId])
 }
 
-// Waitlist entries with scoring for priority-based allocation
+// NEW: Waitlist entries with scoring
 model WaitlistEntry {
   id             String          @id @default(uuid())
   studentId      String
@@ -294,7 +291,7 @@ enum WaitlistStatus {
   CANCELLED   // Student cancelled
 }
 
-// Registration events for audit trail
+// NEW: Registration events for audit trail
 model RegistrationEvent {
   id          String   @id @default(uuid())
   eventType   String   // APPLIED, ALLOCATED, DROPPED, WAITLIST_MOVED, etc.

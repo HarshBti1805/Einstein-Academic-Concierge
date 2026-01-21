@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
@@ -24,8 +24,15 @@ import {
   User,
   GraduationCap,
   Eye,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Import WebSocket hook and Registration API
+import { useRegistrationSocket } from "@/hooks/useRegistrationSocket";
+import { registrationAPI, ClassroomState, SeatInfo } from "@/services/registrationAPI";
+import NotificationModal, { NotificationType } from "@/components/ui/NotificationModal";
 
 // Import test data as fallback
 import seatsDataFallback from "@/lib/test-data/seats_data.json";
@@ -68,7 +75,116 @@ export default function BookingsPage() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [seatsData, setSeatsData] = useState<{ courses: Record<string, CourseSeats> }>({ courses: {} });
   const [isBooking, setIsBooking] = useState(false);
+  const [classroomState, setClassroomState] = useState<ClassroomState | null>(null);
   const seatGridRef = useRef<HTMLDivElement>(null);
+  
+  // Modal state for notifications
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    type: NotificationType;
+    title: string;
+    message: string;
+    details?: {
+      seatNumber?: string;
+      waitlistPosition?: number;
+      score?: number;
+      courseName?: string;
+    };
+  }>({
+    isOpen: false,
+    type: "info",
+    title: "",
+    message: "",
+  });
+
+  const showNotification = useCallback((
+    type: NotificationType,
+    title: string,
+    message: string,
+    details?: typeof modalState.details
+  ) => {
+    setModalState({
+      isOpen: true,
+      type,
+      title,
+      message,
+      details,
+    });
+  }, []);
+
+  const closeNotification = useCallback(() => {
+    setModalState(prev => ({ ...prev, isOpen: false }));
+  }, []);
+
+  // WebSocket connection for real-time updates
+  const {
+    isConnected,
+    subscribeToCourse,
+    unsubscribeFromCourse,
+    onSeatBooked,
+    onSeatReleased,
+  } = useRegistrationSocket({
+    studentId,
+    onConnect: () => console.log("WebSocket connected for bookings"),
+    onDisconnect: (reason) => console.log("WebSocket disconnected:", reason),
+  });
+
+  // Handle seat booked events from WebSocket
+  const handleSeatBooked = useCallback((event: { seatNumber: string; studentId: string; studentName: string }, courseId: string) => {
+    console.log("Real-time seat booked:", event, courseId);
+    // Update local state to reflect the booking
+    if (selectedCourse && classroomState) {
+      // Parse seat number to get numeric position
+      const match = event.seatNumber.match(/^([A-Z]+)(\d+)$/i);
+      if (match) {
+        const row = match[1].charCodeAt(0) - 65; // A=0, B=1, etc.
+        const col = parseInt(match[2], 10);
+        const seatIndex = row * 10 + col; // Assuming 10 seats per row
+        
+        setClassroomState(prev => {
+          if (!prev) return prev;
+          const updatedSeats = prev.seats.map(seat => 
+            seat.seatNumber === event.seatNumber 
+              ? { ...seat, isOccupied: true, studentId: event.studentId, studentName: event.studentName }
+              : seat
+          );
+          return {
+            ...prev,
+            seats: updatedSeats,
+            occupiedSeats: prev.occupiedSeats + 1,
+            availableSeats: prev.availableSeats - 1,
+          };
+        });
+      }
+    }
+  }, [selectedCourse, classroomState]);
+
+  // Handle seat released events from WebSocket
+  const handleSeatReleased = useCallback((event: { seatNumber: string; previousStudentId: string }, courseId: string) => {
+    console.log("Real-time seat released:", event, courseId);
+    if (classroomState) {
+      setClassroomState(prev => {
+        if (!prev) return prev;
+        const updatedSeats = prev.seats.map(seat => 
+          seat.seatNumber === event.seatNumber 
+            ? { ...seat, isOccupied: false, studentId: undefined, studentName: undefined }
+            : seat
+        );
+        return {
+          ...prev,
+          seats: updatedSeats,
+          occupiedSeats: prev.occupiedSeats - 1,
+          availableSeats: prev.availableSeats + 1,
+        };
+      });
+    }
+  }, [classroomState]);
+
+  // Set up WebSocket event handlers
+  useEffect(() => {
+    onSeatBooked(handleSeatBooked);
+    onSeatReleased(handleSeatReleased);
+  }, [onSeatBooked, onSeatReleased, handleSeatBooked, handleSeatReleased]);
 
   useEffect(() => {
     const initializePage = async () => {
@@ -154,30 +270,60 @@ export default function BookingsPage() {
   }, [selectedCourse]);
 
   const handleCourseClick = async (course: RecommendedCourse) => {
-    // Try to fetch fresh seat data from API
-    const token = sessionStorage.getItem("authToken");
+    // Try to fetch fresh classroom state from registration API
     let seatData: CourseSeats | undefined;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/seats/course/${course.code}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Use the new registration API to get classroom state
+      const state = await registrationAPI.getClassroomState(course.code);
+      setClassroomState(state);
       
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          seatData = {
-            totalSeats: data.totalSeats,
-            occupiedSeats: data.occupiedSeats,
-            bookingStatus: data.bookingStatus
-          };
+      // Subscribe to real-time updates for this course
+      subscribeToCourse(course.code);
+      
+      // Convert classroom state to legacy format for compatibility
+      const occupiedSeatNumbers = state.seats
+        .filter(s => s.isOccupied)
+        .map(s => {
+          const match = s.seatNumber.match(/^([A-Z]+)(\d+)$/i);
+          if (match) {
+            const row = match[1].charCodeAt(0) - 65;
+            const col = parseInt(match[2], 10);
+            return row * 10 + col;
+          }
+          return 0;
+        });
+      
+      seatData = {
+        totalSeats: state.totalSeats,
+        occupiedSeats: occupiedSeatNumbers,
+        bookingStatus: state.bookingStatus.toLowerCase()
+      };
+    } catch (error) {
+      console.log("Using fallback seat data:", error);
+      // Fallback to legacy API
+      try {
+        const token = sessionStorage.getItem("authToken");
+        const response = await fetch(`${API_BASE_URL}/api/seats/course/${course.code}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            seatData = {
+              totalSeats: data.totalSeats,
+              occupiedSeats: data.occupiedSeats,
+              bookingStatus: data.bookingStatus
+            };
+          }
         }
+      } catch {
+        console.log("Using cached seat data");
       }
-    } catch {
-      console.log("Using cached seat data");
     }
 
     // Fallback to cached data
@@ -213,56 +359,220 @@ export default function BookingsPage() {
     if (!selectedCourse || selectedSeats.length === 0 || isBooking) return;
 
     setIsBooking(true);
-    const token = sessionStorage.getItem("authToken");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/seats/${selectedCourse.code}/book`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          seatNumbers: selectedSeats,
-          studentId: studentId
-        })
+      // Convert numeric seat positions to seat numbers (e.g., "A5", "B3")
+      const seatNumbers = selectedSeats.map(seatNum => {
+        const row = Math.floor((seatNum - 1) / 10);
+        const col = ((seatNum - 1) % 10) + 1;
+        return `${String.fromCharCode(65 + row)}${col}`;
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        // Update local seat data
-        setSeatsData(prev => ({
-          courses: {
-            ...prev.courses,
-            [selectedCourse.code]: {
-              ...prev.courses[selectedCourse.code],
-              occupiedSeats: data.updatedConfig.occupiedSeats
-            }
+      // Use registration API to book seats
+      const bookedSeats: string[] = [];
+      for (const seatNumber of seatNumbers) {
+        const result = await registrationAPI.bookSeat(studentId, selectedCourse.code, seatNumber);
+        
+        if (!result.success) {
+          // Check if user was added to waitlist instead
+          if (result.status === 'WAITLISTED') {
+            showNotification(
+              "waitlist",
+              "Added to Waitlist",
+              result.message || "The course is full. You have been added to the waitlist.",
+              {
+                courseName: selectedCourse.name,
+                waitlistPosition: result.waitlistPosition,
+                score: result.score,
+              }
+            );
+            setIsBooking(false);
+            setSelectedCourse(null);
+            setSelectedSeats([]);
+            return;
           }
-        }));
-
-        alert(`Successfully booked ${selectedSeats.length} seat(s) for ${selectedCourse.code}!`);
-        setSelectedCourse(null);
-        setSelectedSeats([]);
-      } else {
-        alert(data.message || "Failed to book seats. Please try again.");
+          
+          showNotification(
+            "error",
+            "Booking Failed",
+            result.message || `Failed to book seat ${seatNumber}. Please try again.`,
+            { courseName: selectedCourse.name }
+          );
+          setIsBooking(false);
+          return;
+        }
+        bookedSeats.push(seatNumber);
       }
-    } catch {
-      // Fallback - just show success for demo
-      alert(`Successfully booked ${selectedSeats.length} seat(s) for ${selectedCourse.code}!`);
+
+      // Update local seat data
+      setSeatsData(prev => ({
+        courses: {
+          ...prev.courses,
+          [selectedCourse.code]: {
+            ...prev.courses[selectedCourse.code],
+            occupiedSeats: [...(prev.courses[selectedCourse.code]?.occupiedSeats || []), ...selectedSeats]
+          }
+        }
+      }));
+
+      // Unsubscribe from WebSocket updates for this course
+      unsubscribeFromCourse(selectedCourse.code);
+
+      showNotification(
+        "success",
+        "Booking Confirmed!",
+        `You have successfully registered for ${selectedCourse.name}.`,
+        {
+          courseName: selectedCourse.name,
+          seatNumber: bookedSeats.join(", "),
+        }
+      );
       setSelectedCourse(null);
       setSelectedSeats([]);
+      setClassroomState(null);
+    } catch (error) {
+      console.error("Error booking seats:", error);
+      // Fallback to legacy API
+      try {
+        const token = sessionStorage.getItem("authToken");
+        const response = await fetch(`${API_BASE_URL}/api/seats/${selectedCourse.code}/book`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            seatNumbers: selectedSeats,
+            studentId: studentId
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          setSeatsData(prev => ({
+            courses: {
+              ...prev.courses,
+              [selectedCourse.code]: {
+                ...prev.courses[selectedCourse.code],
+                occupiedSeats: data.updatedConfig.occupiedSeats
+              }
+            }
+          }));
+
+          showNotification(
+            "success",
+            "Booking Confirmed!",
+            `You have successfully booked ${selectedSeats.length} seat(s) for ${selectedCourse.name}.`,
+            { courseName: selectedCourse.name }
+          );
+          setSelectedCourse(null);
+          setSelectedSeats([]);
+        } else {
+          showNotification(
+            "error",
+            "Booking Failed",
+            data.message || "Failed to book seats. Please try again.",
+            { courseName: selectedCourse.name }
+          );
+        }
+      } catch {
+        // If everything fails, show an error
+        showNotification(
+          "error",
+          "Connection Error",
+          "Unable to connect to the server. Please check your connection and try again.",
+          { courseName: selectedCourse.name }
+        );
+      }
     } finally {
       setIsBooking(false);
     }
   };
 
-  const handleToggleAutoRegistration = (courseCode: string) => {
+  const handleToggleAutoRegistration = async (courseCode: string) => {
+    const newState = !autoRegistration[courseCode];
+    const course = recommendedCourses.find(c => c.code === courseCode);
+    
     setAutoRegistration((prev) => ({
       ...prev,
-      [courseCode]: !prev[courseCode],
+      [courseCode]: newState,
     }));
+
+    // If enabling auto-registration, add to waitlist
+    if (newState) {
+      try {
+        const result = await registrationAPI.apply(studentId, courseCode, { autoRegister: true });
+        console.log("Auto-registration result:", result);
+        
+        if (result.success) {
+          if (result.status === 'ENROLLED' && result.seatNumber) {
+            // Student was immediately enrolled (seat available)
+            showNotification(
+              "success",
+              "Registered Successfully!",
+              `You have been automatically registered for ${course?.name || courseCode}.`,
+              {
+                courseName: course?.name,
+                seatNumber: result.seatNumber,
+              }
+            );
+          } else if (result.status === 'WAITLISTED') {
+            // Added to waitlist
+            showNotification(
+              "waitlist",
+              "Added to Waitlist",
+              `Auto-registration is enabled. You are on the waitlist for ${course?.name || courseCode}.`,
+              {
+                courseName: course?.name,
+                waitlistPosition: result.waitlistPosition,
+                score: result.score,
+              }
+            );
+          } else {
+            showNotification(
+              "info",
+              "Auto-Registration Enabled",
+              result.message || `Auto-registration is now active for ${courseCode}.`,
+              { courseName: course?.name }
+            );
+          }
+        } else {
+          showNotification(
+            "error",
+            "Registration Failed",
+            result.message || "Unable to enable auto-registration. Please try again.",
+            { courseName: course?.name }
+          );
+          // Revert the toggle on failure
+          setAutoRegistration((prev) => ({
+            ...prev,
+            [courseCode]: false,
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to add to waitlist:", error);
+        showNotification(
+          "error",
+          "Connection Error",
+          "Unable to connect to the server. Please try again.",
+          { courseName: course?.name }
+        );
+        // Revert the toggle on failure
+        setAutoRegistration((prev) => ({
+          ...prev,
+          [courseCode]: !newState,
+        }));
+      }
+    } else {
+      // Disabling auto-registration
+      showNotification(
+        "info",
+        "Auto-Registration Disabled",
+        `Auto-registration has been disabled for ${course?.name || courseCode}.`,
+        { courseName: course?.name }
+      );
+    }
   };
 
   const getStatusInfo = (course: RecommendedCourse) => {
@@ -376,6 +686,26 @@ export default function BookingsPage() {
 
             {/* Right Section */}
             <div className="flex items-center gap-2 sm:gap-3">
+              {/* WebSocket Connection Status */}
+              <div className={cn(
+                "hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+                isConnected 
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  : "bg-amber-50 text-amber-700 border border-amber-200"
+              )}>
+                {isConnected ? (
+                  <>
+                    <Wifi className="h-3 w-3" />
+                    <span>Live</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="h-3 w-3" />
+                    <span>Offline</span>
+                  </>
+                )}
+              </div>
+
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -1002,6 +1332,16 @@ export default function BookingsPage() {
           </div>
         </motion.div>
       )}
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={modalState.isOpen}
+        onClose={closeNotification}
+        type={modalState.type}
+        title={modalState.title}
+        message={modalState.message}
+        details={modalState.details}
+      />
     </div>
   );
 }

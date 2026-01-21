@@ -26,6 +26,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Import WebSocket hook and Registration API
+import { useRegistrationSocket, SeatBookedEvent, SeatReleasedEvent } from "@/hooks/useRegistrationSocket";
+import { registrationAPI, ClassroomState } from "@/services/registrationAPI";
+
 // Import test data as fallback
 import seatsDataFallback from "@/lib/test-data/seats_data.json";
 
@@ -55,7 +59,6 @@ export default function LiveViewPage() {
   const [studentName, setStudentName] = useState("");
   const [studentId, setStudentId] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [isConnected, setIsConnected] = useState(true);
   const [occupiedSeats, setOccupiedSeats] = useState<number[]>([]);
   const [originalOccupiedSeats, setOriginalOccupiedSeats] = useState<number[]>([]);
   const [leftSeats, setLeftSeats] = useState<number[]>([]);
@@ -67,15 +70,119 @@ export default function LiveViewPage() {
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [highlightedSeat, setHighlightedSeat] = useState<number | null>(null);
   const [courseData, setCourseData] = useState<CourseSeats | null>(null);
+  const [classroomState, setClassroomState] = useState<ClassroomState | null>(null);
   
   const seatGridRef = useRef<HTMLDivElement>(null);
   const activityEndRef = useRef<HTMLDivElement>(null);
 
+  // WebSocket connection for real-time updates
+  const {
+    isConnected,
+    subscribeToCourse,
+    unsubscribeFromCourse,
+    onSeatBooked,
+    onSeatReleased,
+  } = useRegistrationSocket({
+    studentId,
+    onConnect: () => console.log("WebSocket connected for live view"),
+    onDisconnect: (reason) => console.log("WebSocket disconnected:", reason),
+  });
+
+  // Handle real-time seat booked events
+  const handleSeatBooked = useCallback((event: SeatBookedEvent, _eventCourseId: string) => {
+    console.log("Real-time seat booked:", event);
+    
+    // Parse seat number to get numeric position
+    const match = event.seatNumber.match(/^([A-Z]+)(\d+)$/i);
+    if (match) {
+      const row = match[1].charCodeAt(0) - 65;
+      const col = parseInt(match[2], 10);
+      const seatNum = row * 10 + col;
+      
+      setOccupiedSeats(prev => [...prev, seatNum]);
+      setLeftSeats(prev => prev.filter(s => s !== seatNum));
+      setHighlightedSeat(seatNum);
+      setTimeout(() => setHighlightedSeat(null), 2000);
+      
+      const activity: RecentActivity = {
+        id: `${Date.now()}-${seatNum}`,
+        seatNumber: seatNum,
+        action: "joined",
+        timestamp: new Date(),
+        studentName: event.studentName || "Unknown",
+      };
+      
+      setRecentActivity(prev => [...prev.slice(-19), activity]);
+      setLastUpdate(new Date());
+    }
+  }, []);
+
+  // Handle real-time seat released events
+  const handleSeatReleased = useCallback((event: SeatReleasedEvent, _eventCourseId: string) => {
+    console.log("Real-time seat released:", event);
+    
+    const match = event.seatNumber.match(/^([A-Z]+)(\d+)$/i);
+    if (match) {
+      const row = match[1].charCodeAt(0) - 65;
+      const col = parseInt(match[2], 10);
+      const seatNum = row * 10 + col;
+      
+      setOccupiedSeats(prev => prev.filter(s => s !== seatNum));
+      setLeftSeats(prev => [...prev, seatNum]);
+      
+      const activity: RecentActivity = {
+        id: `${Date.now()}-${seatNum}`,
+        seatNumber: seatNum,
+        action: "left",
+        timestamp: new Date(),
+        studentName: event.newStudentName || "Unknown",
+      };
+      
+      setRecentActivity(prev => [...prev.slice(-19), activity]);
+      setLastUpdate(new Date());
+      
+      // If someone from waitlist got the seat, add another activity
+      if (event.fromWaitlist && event.newStudentName) {
+        setTimeout(() => {
+          const joinActivity: RecentActivity = {
+            id: `${Date.now()}-${seatNum}-join`,
+            seatNumber: seatNum,
+            action: "joined",
+            timestamp: new Date(),
+            studentName: event.newStudentName!,
+          };
+          setRecentActivity(prev => [...prev.slice(-19), joinActivity]);
+          setOccupiedSeats(prev => [...prev, seatNum]);
+          setLeftSeats(prev => prev.filter(s => s !== seatNum));
+        }, 500);
+      }
+    }
+  }, []);
+
+  // Set up WebSocket event handlers
+  useEffect(() => {
+    onSeatBooked(handleSeatBooked);
+    onSeatReleased(handleSeatReleased);
+  }, [onSeatBooked, onSeatReleased, handleSeatBooked, handleSeatReleased]);
+
+  // Subscribe to course updates when mounted
+  useEffect(() => {
+    if (mounted && courseCode && isConnected) {
+      subscribeToCourse(courseCode);
+      console.log("Subscribed to course:", courseCode);
+      
+      return () => {
+        unsubscribeFromCourse(courseCode);
+        console.log("Unsubscribed from course:", courseCode);
+      };
+    }
+  }, [mounted, courseCode, isConnected, subscribeToCourse, unsubscribeFromCourse]);
+
   // Derived state from courseData
   const bookingStatus = courseData?.bookingStatus || "not_started";
   const totalSeats = courseData?.totalSeats || 0;
-  const isBookingOpen = bookingStatus === "open";
-  const isBookingClosed = bookingStatus === "closed";
+  const isBookingOpen = bookingStatus === "open" || bookingStatus === "OPEN";
+  const isBookingClosed = bookingStatus === "closed" || bookingStatus === "CLOSED" || bookingStatus === "WAITLIST_ONLY";
   const isBookingNotStarted = bookingStatus === "not_started";
 
   useEffect(() => {
@@ -97,29 +204,57 @@ export default function LiveViewPage() {
         return;
       }
 
-      // Fetch seat data from API
+      // Fetch classroom state from registration API
       let seatData: CourseSeats | null = null;
       
       try {
-        const response = await fetch(`${API_BASE_URL}/api/seats/course/${courseCode}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        // Try the new registration API first
+        const state = await registrationAPI.getClassroomState(courseCode);
+        setClassroomState(state);
         
-        if (response.ok) {
-          const apiData = await response.json();
-          if (apiData.success) {
-            seatData = {
-              totalSeats: apiData.totalSeats,
-              occupiedSeats: apiData.occupiedSeats || [],
-              bookingStatus: apiData.bookingStatus
-            };
+        // Convert to legacy format for compatibility
+        const occupiedSeatNumbers = state.seats
+          .filter(s => s.isOccupied)
+          .map(s => {
+            const match = s.seatNumber.match(/^([A-Z]+)(\d+)$/i);
+            if (match) {
+              const row = match[1].charCodeAt(0) - 65;
+              const col = parseInt(match[2], 10);
+              return row * 10 + col;
+            }
+            return 0;
+          });
+        
+        seatData = {
+          totalSeats: state.totalSeats,
+          occupiedSeats: occupiedSeatNumbers,
+          bookingStatus: state.bookingStatus.toLowerCase()
+        };
+      } catch (error) {
+        console.log("Registration API not available, using legacy API:", error);
+        
+        // Fallback to legacy API
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/seats/course/${courseCode}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            const apiData = await response.json();
+            if (apiData.success) {
+              seatData = {
+                totalSeats: apiData.totalSeats,
+                occupiedSeats: apiData.occupiedSeats || [],
+                bookingStatus: apiData.bookingStatus
+              };
+            }
           }
+        } catch {
+          console.log("Using fallback seat data");
         }
-      } catch {
-        console.log("Using fallback seat data");
       }
 
       // Fallback to local data
@@ -233,33 +368,22 @@ export default function LiveViewPage() {
     }
   }, [originalOccupiedSeats, isBookingOpen, occupiedSeats, totalSeats, courseData, studentSeat]);
 
-  // Simulate real-time updates
+  // Simulate real-time updates (only when WebSocket is NOT connected as fallback demo)
   useEffect(() => {
-    if (!mounted || !isBookingOpen) return;
+    // Only simulate when WebSocket is disconnected and for demo purposes
+    // When WebSocket is connected, real updates come through the socket
+    if (!mounted || !isBookingOpen || isConnected) return;
 
     const interval = setInterval(() => {
-      if (isConnected) {
-        generateRandomActivity();
-      }
-    }, 3000 + Math.random() * 4000); // Random interval between 3-7 seconds
+      // Only generate simulated activity if WebSocket is disconnected
+      generateRandomActivity();
+    }, 5000 + Math.random() * 5000); // Slower simulation when offline
 
     return () => clearInterval(interval);
   }, [mounted, isBookingOpen, isConnected, generateRandomActivity]);
 
-  // Connection status simulation
-  useEffect(() => {
-    if (!mounted) return;
-
-    const interval = setInterval(() => {
-      // Simulate occasional connection blips
-      if (Math.random() > 0.95) {
-        setIsConnected(false);
-        setTimeout(() => setIsConnected(true), 1500);
-      }
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, [mounted]);
+  // Note: Connection status is now managed by the WebSocket hook
+  // No more simulated connection blips
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -277,26 +401,19 @@ export default function LiveViewPage() {
     if (!selectedSeatForJoin || !studentId || !courseCode || isJoining) return;
 
     setIsJoining(true);
-    const token = sessionStorage.getItem("authToken");
+
+    // Convert numeric seat to seat number (e.g., "A5")
+    const row = Math.floor((selectedSeatForJoin - 1) / 10);
+    const col = ((selectedSeatForJoin - 1) % 10) + 1;
+    const seatNumber = `${String.fromCharCode(65 + row)}${col}`;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/seats/${courseCode}/book`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          seatNumbers: [selectedSeatForJoin],
-          studentId: studentId
-        })
-      });
+      // Use registration API to book the seat
+      const result = await registrationAPI.bookSeat(studentId, courseCode, seatNumber);
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (result.success) {
         setOccupiedSeats((prev) => [...prev, selectedSeatForJoin]);
-        setLeftSeats((prev) => prev.filter((s) => s !== selectedSeatForJoin)); // Remove from left seats
+        setLeftSeats((prev) => prev.filter((s) => s !== selectedSeatForJoin));
         setStudentSeat(selectedSeatForJoin);
         setShowJoinModal(false);
         setSelectedSeatForJoin(null);
@@ -311,25 +428,65 @@ export default function LiveViewPage() {
         setRecentActivity((prev) => [...prev.slice(-19), activity]);
         setLastUpdate(new Date());
       } else {
-        alert(data.message || "Failed to join class. Please try again.");
+        alert(result.message || "Failed to join class. Please try again.");
       }
-    } catch {
-      // Fallback - just update local state for demo
-      setOccupiedSeats((prev) => [...prev, selectedSeatForJoin]);
-      setLeftSeats((prev) => prev.filter((s) => s !== selectedSeatForJoin)); // Remove from left seats
-      setStudentSeat(selectedSeatForJoin);
-      setShowJoinModal(false);
-      setSelectedSeatForJoin(null);
+    } catch (error) {
+      console.log("Registration API failed, using fallback:", error);
       
-      const activity: RecentActivity = {
-        id: `${Date.now()}-${selectedSeatForJoin}`,
-        seatNumber: selectedSeatForJoin,
-        action: "joined",
-        timestamp: new Date(),
-        studentName: studentName,
-      };
-      setRecentActivity((prev) => [...prev.slice(-19), activity]);
-      setLastUpdate(new Date());
+      // Fallback to legacy API
+      try {
+        const token = sessionStorage.getItem("authToken");
+        const response = await fetch(`${API_BASE_URL}/api/seats/${courseCode}/book`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            seatNumbers: [selectedSeatForJoin],
+            studentId: studentId
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          setOccupiedSeats((prev) => [...prev, selectedSeatForJoin]);
+          setLeftSeats((prev) => prev.filter((s) => s !== selectedSeatForJoin));
+          setStudentSeat(selectedSeatForJoin);
+          setShowJoinModal(false);
+          setSelectedSeatForJoin(null);
+          
+          const activity: RecentActivity = {
+            id: `${Date.now()}-${selectedSeatForJoin}`,
+            seatNumber: selectedSeatForJoin,
+            action: "joined",
+            timestamp: new Date(),
+            studentName: studentName,
+          };
+          setRecentActivity((prev) => [...prev.slice(-19), activity]);
+          setLastUpdate(new Date());
+        } else {
+          alert(data.message || "Failed to join class. Please try again.");
+        }
+      } catch {
+        // Last resort fallback for demo
+        setOccupiedSeats((prev) => [...prev, selectedSeatForJoin]);
+        setLeftSeats((prev) => prev.filter((s) => s !== selectedSeatForJoin));
+        setStudentSeat(selectedSeatForJoin);
+        setShowJoinModal(false);
+        setSelectedSeatForJoin(null);
+        
+        const activity: RecentActivity = {
+          id: `${Date.now()}-${selectedSeatForJoin}`,
+          seatNumber: selectedSeatForJoin,
+          action: "joined",
+          timestamp: new Date(),
+          studentName: studentName,
+        };
+        setRecentActivity((prev) => [...prev.slice(-19), activity]);
+        setLastUpdate(new Date());
+      }
     } finally {
       setIsJoining(false);
     }

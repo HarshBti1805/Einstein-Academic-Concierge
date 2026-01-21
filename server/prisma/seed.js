@@ -17,6 +17,19 @@ const prisma = new PrismaClient({ adapter });
 // Note: Adjusted paths assuming the script is run from server root
 const TEST_DATA_DIR = path.resolve(process.cwd(), 'test-data');
 
+// Map JSON bookingStatus strings to Prisma enum values
+const mapBookingStatus = (status) => {
+  const statusMap = {
+    'open': 'OPEN',
+    'closed': 'CLOSED',
+    'not_started': 'CLOSED',
+    'waitlist_only': 'WAITLIST_ONLY',
+    'started': 'STARTED',
+    'completed': 'COMPLETED'
+  };
+  return statusMap[status?.toLowerCase()] || 'CLOSED';
+};
+
 async function main() {
   console.log('Start seeding ...');
 
@@ -182,18 +195,23 @@ async function main() {
     // Seat Config
     const sData = seatsData.courses[c.course_id];
     if (sData) {
+        const bookingStatusEnum = mapBookingStatus(sData.bookingStatus);
         await prisma.seatConfig.upsert({
             where: { courseId: course.id },
             update: {
                 totalSeats: sData.totalSeats,
                 occupiedSeats: sData.occupiedSeats,
-                bookingStatus: sData.bookingStatus
+                bookingStatus: bookingStatusEnum,
+                rows: seatsData.seatConfig?.rowsPerSection || 13,
+                seatsPerRow: seatsData.seatConfig?.seatsPerRow || 20
             },
             create: {
                 courseId: course.id,
                 totalSeats: sData.totalSeats,
                 occupiedSeats: sData.occupiedSeats,
-                bookingStatus: sData.bookingStatus
+                bookingStatus: bookingStatusEnum,
+                rows: seatsData.seatConfig?.rowsPerSection || 13,
+                seatsPerRow: seatsData.seatConfig?.seatsPerRow || 20
             }
         });
     }

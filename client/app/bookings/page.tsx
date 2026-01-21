@@ -1089,7 +1089,7 @@ export default function BookingsPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setShowAdminPanel(!showAdminPanel)}
-            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-br from-gray-700 via-gray-800 to-black text-white text-sm font-semibold shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40 transition-all"
+            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-br from-gray-700 via-gray-800 to-black text-white text-sm shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40 transition-all"
             style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
           >
             <Shield className="h-4 w-4" />
@@ -1294,7 +1294,7 @@ export default function BookingsPage() {
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleCourseClick(course)}
                             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-gray-800 to-black text-white font-medium shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40 transition-all"
-                            style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
+                            style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
                           >
                             <Calendar className="h-4 w-4" />
                             Select Desk
@@ -1315,7 +1315,7 @@ export default function BookingsPage() {
                           whileTap={{ scale: 0.98 }}
                           onClick={() => router.push(`/liveview?course=${course.code}`)}
                           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all"
-                          style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
+                          style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
                         >
                           <Eye className="h-4 w-4" />
                           <span className="hidden sm:inline">Live View</span>
@@ -1327,7 +1327,7 @@ export default function BookingsPage() {
                             <Bot className="h-4 w-4 text-gray-700" />
                             <span 
                               className="text-xs text-gray-600 hidden sm:inline"
-                              style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                              style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
                             >
                               Auto-Register
                             </span>

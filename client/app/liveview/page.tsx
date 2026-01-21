@@ -23,6 +23,11 @@ import {
   Eye,
   TrendingUp,
   Circle,
+  Shield,
+  ChevronUp,
+  ChevronDown,
+  Play,
+  Square,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -71,6 +76,8 @@ export default function LiveViewPage() {
   const [highlightedSeat, setHighlightedSeat] = useState<number | null>(null);
   const [courseData, setCourseData] = useState<CourseSeats | null>(null);
   const [classroomState, setClassroomState] = useState<ClassroomState | null>(null);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const seatGridRef = useRef<HTMLDivElement>(null);
   const activityEndRef = useRef<HTMLDivElement>(null);
@@ -395,6 +402,55 @@ export default function LiveViewPage() {
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m ago`;
     return `${Math.floor(minutes / 60)}h ago`;
+  };
+
+  // Admin: Open booking for a course
+  const handleOpenBooking = async () => {
+    if (!courseCode) return;
+    setIsProcessing(true);
+    try {
+      const success = await registrationAPI.openBooking(courseCode);
+      if (success) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        try {
+          const state = await registrationAPI.getClassroomState(courseCode);
+          setCourseData(prev => prev ? {
+            ...prev,
+            bookingStatus: state.bookingStatus.toLowerCase()
+          } : null);
+        } catch (err) {
+          console.error("Failed to refresh seat data:", err);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to open booking:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Admin: Close booking for a course
+  const handleCloseBooking = async () => {
+    if (!courseCode) return;
+    setIsProcessing(true);
+    try {
+      const success = await registrationAPI.closeBooking(courseCode);
+      if (success) {
+        try {
+          const state = await registrationAPI.getClassroomState(courseCode);
+          setCourseData(prev => prev ? {
+            ...prev,
+            bookingStatus: state.bookingStatus.toLowerCase()
+          } : null);
+        } catch (err) {
+          console.error("Failed to refresh seat data:", err);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to close booking:", error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleJoinClass = async () => {
@@ -740,6 +796,122 @@ export default function LiveViewPage() {
       </motion.header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
+        {/* Admin Panel Toggle */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6"
+        >
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setShowAdminPanel(!showAdminPanel)}
+            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-br from-gray-700 via-gray-800 to-black text-white text-sm font-semibold shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40 transition-all"
+            style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+          >
+            <Shield className="h-4 w-4" />
+            Admin Controls (Testing)
+            {showAdminPanel ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </motion.button>
+        </motion.div>
+
+        {/* Admin Panel */}
+        <AnimatePresence>
+          {showAdminPanel && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="mb-6 overflow-hidden"
+            >
+              <div className="relative rounded-2xl bg-white backdrop-blur-xl border border-gray-200/60 p-6 shadow-sm overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 via-transparent to-gray-100/50 pointer-events-none" />
+                
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300">
+                      <Shield className="h-5 w-5 text-gray-700" />
+                    </div>
+                    <div>
+                      <h3 
+                        className="text-base font-bold text-gray-900"
+                        style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                      >
+                        Booking Status Controls
+                      </h3>
+                      <p 
+                        className="text-xs text-gray-500 font-medium"
+                        style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                      >
+                        Use these controls to open/close bookings for testing waitlist auto-allocation
+                      </p>
+                    </div>
+                  </div>
+
+                  {courseCode && (
+                    <div className="p-4 rounded-xl bg-gray-50/50 border border-gray-200 shadow-sm backdrop-blur-sm group hover:border-gray-300 transition-all">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p 
+                            className="font-bold text-gray-900 text-sm"
+                            style={{ fontFamily: "var(--font-space-mono), system-ui, sans-serif" }}
+                          >
+                            {courseCode}
+                          </p>
+                          <p className="text-[11px] text-gray-500 font-medium truncate mb-2">
+                            {isBookingOpen ? "Status: Receiving Applications" : "Status: Registration Paused"}
+                          </p>
+                          <span className={cn(
+                            "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                            isBookingOpen 
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
+                              : "bg-red-50 text-red-700 border border-red-200"
+                          )}>
+                            <span className={cn("h-1.5 w-1.5 rounded-full", isBookingOpen ? "bg-emerald-500 animate-pulse" : "bg-red-500")} />
+                            {isBookingOpen ? "Open" : "Closed"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 ml-4">
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleOpenBooking}
+                            disabled={isProcessing || isBookingOpen}
+                            className={cn(
+                              "p-3 rounded-xl transition-all border",
+                              isBookingOpen || isProcessing
+                                ? "bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed"
+                                : "bg-white text-emerald-600 hover:bg-emerald-50 border-emerald-200 shadow-sm"
+                            )}
+                          >
+                            <Play className="h-5 w-5 fill-current" />
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleCloseBooking}
+                            disabled={isProcessing || !isBookingOpen}
+                            className={cn(
+                              "p-3 rounded-xl transition-all border",
+                              !isBookingOpen || isProcessing
+                                ? "bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed"
+                                : "bg-white text-red-600 hover:bg-red-50 border-red-200 shadow-sm"
+                            )}
+                          >
+                            <Square className="h-5 w-5 fill-current" />
+                          </motion.button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Booking Not Started Banner */}
         {isBookingNotStarted && (
           <motion.div

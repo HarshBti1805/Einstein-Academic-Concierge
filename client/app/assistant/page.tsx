@@ -480,12 +480,12 @@ export default function AssistantPage() {
               </div>
                 <div>
                   <h1
-                    className="text-base font-bold text-gray-900 tracking-tight"
-                    style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                    className="text-2xl font-bold text-gray-900 tracking-tight"
+                    style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif" }}
                   >
                     AI Assistant
                   </h1>
-                  <div className="flex items-center gap-1.5">
+                  {/* <div className="flex items-center gap-1.5">
                     <span className="relative flex h-1.5 w-1.5">
                       <span className={cn(
                         "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
@@ -499,7 +499,7 @@ export default function AssistantPage() {
                     <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">
                       {apiConnected ? "AI Powered" : "Local Mode"}
                     </p>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
@@ -507,7 +507,7 @@ export default function AssistantPage() {
             {/* Right Section */}
             <div className="flex items-center gap-2 sm:gap-3">
               {/* Get Recommendations Button */}
-              {canRecommend && !showRecommendations && (
+              {/* {canRecommend && !showRecommendations && (
                 <motion.button
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -528,7 +528,7 @@ export default function AssistantPage() {
                   )}
                   Get Recommendations
                 </motion.button>
-              )}
+              )} */}
               
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -648,6 +648,7 @@ export default function AssistantPage() {
                         return (
                           <motion.button
                             key={action.id}
+                            style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
                             className="quick-action-btn w-full"
                             whileHover={{ scale: 1.02, x: 4 }}
                             whileTap={{ scale: 0.98 }}
@@ -675,10 +676,12 @@ export default function AssistantPage() {
                     </div>
 
                     <div className="mt-4 pt-4 border-t border-gray-100">
-                      <p className="text-xs text-gray-500 mb-2">Try asking:</p>
+                      <p style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+ className="text-xs text-gray-500 mb-2">Try asking:</p>
                       <div className="flex flex-wrap gap-2">
                         {chatData.suggestedFollowUps.slice(0, 2).map((suggestion) => (
                           <button
+                            style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
                             key={suggestion}
                             onClick={() => handleQuickAction(suggestion)}
                             className="text-xs px-2.5 py-1.5 rounded-lg bg-gray-50 border border-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-100 hover:border-gray-300 transition-all"
@@ -692,11 +695,12 @@ export default function AssistantPage() {
                     {/* Mobile Recommend Button */}
                     {canRecommend && !showRecommendations && (
                       <motion.button
+                        style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         onClick={generateCourseRecommendations}
                         disabled={isLoadingRecommendations}
-                        className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-gray-800 to-black text-white font-medium shadow-lg disabled:opacity-50"
+                        className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-gray-800 to-black text-white font-medium shadow-lg disabled:opacity-50"
                       >
                         {isLoadingRecommendations ? (
                           <motion.div
@@ -729,10 +733,10 @@ export default function AssistantPage() {
                       apiConnected ? "bg-emerald-500" : "bg-amber-500"
                     )} />
                   </div>
-                  <div>
+                  <div className="tracking-wide" style={{ fontFamily: "var(--font-violet-sans, system-ui, sans-serif" }}
+                  > 
                     <h3 
                       className="font-semibold text-gray-900"
-                      style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
                     >
                       Einstein Copilot
                     </h3>
@@ -740,7 +744,7 @@ export default function AssistantPage() {
                       <span className={cn(
                         "h-1.5 w-1.5 rounded-full animate-pulse",
                         apiConnected ? "bg-emerald-500" : "bg-amber-500"
-                      )} />
+                      )}/>
                       {apiConnected ? "AI Powered - Ready to help" : "Local Mode - Limited responses"}
                     </p>
                   </div>
@@ -765,6 +769,7 @@ export default function AssistantPage() {
                         key={message.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
+                        style={{ fontFamily: "var(--font-space-grotesk), system-ui, sans-serif" }}
                         className={cn(
                           "flex gap-3",
                           isUser ? "flex-row-reverse" : "flex-row"
@@ -850,6 +855,7 @@ export default function AssistantPage() {
                 <div className="relative z-10 p-5 border-t border-gray-100 bg-white">
                   <form onSubmit={handleSendMessage} className="relative">
                     <textarea
+                      style={{ fontFamily: "var(--font-space-mono), system-ui, sans-serif" }}
                       ref={inputRef}
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
@@ -877,7 +883,7 @@ export default function AssistantPage() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className={cn(
-                        "absolute right-3 bottom-3 p-2.5 rounded-xl",
+                        "absolute right-3 bottom-5 p-3 rounded-xl",
                         "bg-gradient-to-br from-gray-700 to-gray-900",
                         "text-white shadow-lg shadow-gray-500/25",
                         "disabled:opacity-50 disabled:cursor-not-allowed",

@@ -850,7 +850,7 @@ export default function BookingsPage() {
         <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gray-300/50 to-transparent" />
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-18 py-3">
             {/* Left Section */}
             <div className="flex items-center gap-4">
               <motion.button
@@ -863,21 +863,21 @@ export default function BookingsPage() {
               </motion.button>
 
               <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-gray-700 to-gray-900 rounded-xl blur opacity-30" />
-                <div className="relative p-2.5 rounded-xl bg-gradient-to-br from-gray-700 via-gray-800 to-black shadow-lg">
-                  <GraduationCap className="h-5 w-5 text-white" />
+                <div className="relative">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-gray-700 to-gray-900 rounded-xl blur opacity-40" />
+                  <div className="relative p-2.5 rounded-xl bg-gradient-to-br from-gray-700 via-gray-800 to-black shadow-lg">
+                    <GraduationCap className="h-5 w-5 text-white" />
+                  </div>
                 </div>
-              </div>
                 <div>
                   <h1
-                    className="text-base font-bold text-gray-900 tracking-tight"
-                    style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
+                    className="text-xl font-bold text-gray-900 tracking-tight"
+                    style={{ fontFamily: "var(--font-space-mono), system-ui, sans-serif" }}
                   >
-                    Course Bookings
+                    COURSE BOOKINGS
                   </h1>
                   <p 
-                    className="text-[10px] text-gray-500 font-medium"
+                    className="text-[10px] text-gray-500 font-medium uppercase tracking-wider"
                     style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                   >
                     Select your seats for registration
@@ -890,20 +890,22 @@ export default function BookingsPage() {
             <div className="flex items-center gap-2 sm:gap-3">
               {/* WebSocket Connection Status */}
               <div className={cn(
-                "hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+                "hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border",
                 isConnected 
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                  : "bg-amber-50 text-amber-700 border border-amber-200"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-amber-50 text-amber-700 border-amber-200"
               )}>
                 {isConnected ? (
                   <>
-                    <Wifi className="h-3 w-3" />
+                    <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+                      <Wifi className="h-3 w-3" />
+                    </motion.div>
                     <span>Live</span>
                   </>
                 ) : (
                   <>
                     <WifiOff className="h-3 w-3" />
-                    <span>Offline</span>
+                    <span>Reconnecting</span>
                   </>
                 )}
               </div>
@@ -911,13 +913,18 @@ export default function BookingsPage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative p-2.5 rounded-xl bg-gray-50 border border-gray-200/60 hover:bg-gray-100 hover:border-gray-300 transition-all"
+                className="relative p-2.5 rounded-xl bg-gray-50 border border-gray-200/60 hover:bg-gray-100 hover:border-gray-300 transition-all group"
               >
-                <Bell className="h-4 w-4 text-gray-600" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-gray-700 rounded-full animate-pulse" />
+                <Bell className="h-4 w-4 text-gray-600 group-hover:text-gray-900 transition-colors" />
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gray-500 opacity-40"></span>
+                  <span className="relative inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-gradient-to-br from-gray-700 to-gray-900 text-[9px] font-bold text-white shadow-lg">
+                    3
+                  </span>
+                </span>
               </motion.button>
 
-              <div className="hidden sm:block w-px h-8 bg-gradient-to-b from-transparent via-gray-300 to-transparent mx-1" />
+              <div className="hidden sm:block w-[1px] h-8 bg-gradient-to-b from-transparent via-gray-300 to-transparent mx-1" />
 
               <div className="relative">
                 <motion.button
@@ -931,51 +938,108 @@ export default function BookingsPage() {
                     showUserMenu && "bg-gray-100 border-gray-300"
                   )}
                 >
-                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-semibold text-sm">
-                    {studentName.charAt(0)}
+                  <div className="relative">
+                    <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-gray-700 via-gray-800 to-black flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-gray-500/20">
+                      {studentName.charAt(0)}
+                    </div>
+                    <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-white flex items-center justify-center">
+                      <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50" />
+                    </div>
                   </div>
                   <div className="hidden sm:block text-left">
                     <p 
-                      className="text-sm font-medium text-gray-900"
+                      className="text-sm font-semibold text-gray-900 leading-tight"
                       style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
                     >
-                      {studentName}
+                      {studentName.split(' ')[0]}
                     </p>
-                    <p className="text-xs text-gray-500">Student</p>
+                    <p className="text-[10px] text-gray-600 font-medium">Student</p>
                   </div>
                 </motion.button>
 
                 <AnimatePresence>
                   {showUserMenu && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-48 rounded-xl bg-white backdrop-blur-xl border border-gray-200 shadow-2xl shadow-gray-200/50 overflow-hidden"
-                    >
-                      <div className="p-2">
-                        {[
-                          { icon: User, label: "Profile", action: () => {} },
-                          { icon: Settings, label: "Settings", action: () => {} },
-                          { icon: LogOut, label: "Sign out", action: () => {
-                            sessionStorage.removeItem("authToken");
-                            sessionStorage.removeItem("studentData");
-                            sessionStorage.removeItem("recommendedCourses");
-                            router.push("/");
-                          }},
-                        ].map((item) => (
+                    <>
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowUserMenu(false)}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="absolute right-0 mt-2 w-72 rounded-2xl bg-white backdrop-blur-2xl border border-gray-200 shadow-2xl shadow-gray-200/50 overflow-hidden z-50"
+                      >
+                        <div className="p-4 bg-gradient-to-br from-gray-100 to-transparent">
+                          <div className="flex items-center gap-3">
+                            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-gray-700 via-gray-800 to-black flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-gray-500/30">
+                              {studentName.charAt(0)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p 
+                                className="text-base font-bold text-gray-900 truncate"
+                                style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                              >
+                                {studentName}
+                              </p>
+                              <p className="text-xs text-gray-500 truncate">Course Bookings</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-2">
+                          {[
+                            { icon: User, label: "My Profile", description: "View and edit profile", action: () => {} },
+                            { icon: Settings, label: "Settings", description: "Preferences & privacy", action: () => {} },
+                          ].map((item, index) => (
+                            <motion.button
+                              key={item.label}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                              whileHover={{ x: 4 }}
+                              onClick={item.action}
+                              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-gray-50 transition-all group"
+                            >
+                              <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-gray-200 transition-colors">
+                                <item.icon className="h-4 w-4 text-gray-500 group-hover:text-gray-900 transition-colors" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{item.label}</p>
+                                <p className="text-xs text-gray-500">{item.description}</p>
+                              </div>
+                            </motion.button>
+                          ))}
+                        </div>
+
+                        <div className="mx-3 h-[1px] bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
+
+                        <div className="p-2">
                           <motion.button
-                            key={item.label}
                             whileHover={{ x: 4 }}
-                            onClick={item.action}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all"
+                            onClick={() => {
+                              sessionStorage.removeItem("authToken");
+                              sessionStorage.removeItem("studentData");
+                              sessionStorage.removeItem("recommendedCourses");
+                              router.push("/");
+                            }}
+                            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-red-50 transition-all group"
                           >
-                            <item.icon className="h-4 w-4" />
-                            {item.label}
+                            <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-red-100 transition-colors">
+                              <LogOut className="h-4 w-4 text-gray-500 group-hover:text-red-600 transition-colors" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-700 group-hover:text-red-600 transition-colors">Sign Out</p>
+                              <p className="text-xs text-gray-500">End your session</p>
+                            </div>
                           </motion.button>
-                        ))}
-                      </div>
-                    </motion.div>
+                        </div>
+                      </motion.div>
+                    </>
                   )}
                 </AnimatePresence>
               </div>
@@ -989,24 +1053,27 @@ export default function BookingsPage() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 rounded-xl bg-gray-100 border border-gray-300"
+          className="mb-6 relative rounded-2xl bg-white backdrop-blur-xl border border-gray-200/60 p-5 shadow-sm overflow-hidden"
         >
-          <div className="flex items-start gap-3">
-            <Info className="h-5 w-5 text-gray-700 mt-0.5 flex-shrink-0" />
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 via-transparent to-gray-100/50 pointer-events-none" />
+          <div className="relative z-10 flex items-start gap-4">
+            <div className="p-3 rounded-xl bg-gray-100 border border-gray-200">
+              <Info className="h-5 w-5 text-gray-700 flex-shrink-0" />
+            </div>
             <div>
               <h3 
-                className="text-sm font-semibold text-gray-800 mb-1"
+                className="text-base font-bold text-gray-900 mb-1"
                 style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
               >
                 How to Book
               </h3>
               <ul 
-                className="text-xs text-gray-700/80 space-y-1"
+                className="text-xs text-gray-600 space-y-1.5 font-medium"
                 style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
               >
                 <li>• Click on a course to view available desks and select your preferred position</li>
-                <li>• For full courses or courses with booking not started, enable Auto-Registration Agent</li>
-                <li>• Green desks are available, red desks are occupied, selected desks glow purple</li>
+                <li>• For full courses or courses with booking not started, enable <span className="font-bold text-gray-900 underline decoration-gray-300">Auto-Registration Agent</span></li>
+                <li>• Green desks are available, red desks are occupied, selected desks glow dark gray</li>
               </ul>
             </div>
           </div>
@@ -1018,14 +1085,17 @@ export default function BookingsPage() {
           animate={{ opacity: 1 }}
           className="mb-4"
         >
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setShowAdminPanel(!showAdminPanel)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-medium shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all"
+            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-br from-gray-700 via-gray-800 to-black text-white text-sm font-semibold shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40 transition-all"
+            style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
           >
             <Shield className="h-4 w-4" />
             Admin Controls (Testing)
             {showAdminPanel ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </button>
+          </motion.button>
         </motion.div>
 
         {/* Admin Panel */}
@@ -1035,67 +1105,107 @@ export default function BookingsPage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               className="mb-6 overflow-hidden"
             >
-              <div className="p-4 rounded-xl bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200">
-                <div className="flex items-center gap-2 mb-4">
-                  <Shield className="h-5 w-5 text-purple-600" />
-                  <h3 className="text-sm font-semibold text-purple-800">
-                    Booking Status Controls (For Testing)
-                  </h3>
-                </div>
-                <p className="text-xs text-purple-600/80 mb-4">
-                  Use these controls to open/close bookings for testing waitlist auto-allocation.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {recommendedCourses.map((course) => {
-                    const statusInfo = getStatusInfo(course);
-                    const isOpen = statusInfo.status !== "Booking Closed" && statusInfo.status !== "Coming Soon";
-                    
-                    return (
-                      <div 
-                        key={`admin-${course.code}`}
-                        className="flex items-center justify-between p-3 rounded-lg bg-white border border-purple-100 shadow-sm"
+              <div className="relative rounded-2xl bg-white backdrop-blur-xl border border-gray-200/60 p-6 shadow-sm overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 via-transparent to-gray-100/50 pointer-events-none" />
+                
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300">
+                      <Shield className="h-5 w-5 text-gray-700" />
+                    </div>
+                    <div>
+                      <h3 
+                        className="text-base font-bold text-gray-900"
+                        style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
                       >
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-800 text-sm truncate">{course.code}</p>
-                          <p className="text-xs text-gray-500 truncate">{course.name}</p>
-                          <span className={cn(
-                            "inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium",
-                            isOpen ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-                          )}>
-                            {isOpen ? "Open" : "Closed"}
-                          </span>
+                        Booking Status Controls
+                      </h3>
+                      <p 
+                        className="text-xs text-gray-500 font-medium"
+                        style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                      >
+                        Use these controls to open/close bookings for testing waitlist auto-allocation
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {recommendedCourses.map((course) => {
+                      const statusInfo = getStatusInfo(course);
+                      const isOpen = statusInfo.status !== "Booking Closed" && statusInfo.status !== "Coming Soon";
+                      
+                      return (
+                        <div 
+                          key={`admin-${course.code}`}
+                          className="p-4 rounded-xl bg-gray-50/50 border border-gray-200 shadow-sm backdrop-blur-sm group hover:border-gray-300 transition-all"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <p 
+                                className="font-bold text-gray-900 text-sm"
+                                style={{ fontFamily: "var(--font-space-mono), system-ui, sans-serif" }}
+                              >
+                                {course.code}
+                              </p>
+                              <p className="text-[10px] text-gray-500 font-medium truncate mb-2">{course.name}</p>
+                              <span className={cn(
+                                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                                isOpen 
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
+                                  : "bg-red-50 text-red-700 border border-red-200"
+                              )}>
+                                <span className={cn("h-1.5 w-1.5 rounded-full", isOpen ? "bg-emerald-500 animate-pulse" : "bg-red-500")} />
+                                {isOpen ? "Open" : "Closed"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 ml-2">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleOpenBooking(course.code)}
+                                disabled={isProcessing === course.code || isOpen}
+                                className={cn(
+                                  "p-2.5 rounded-xl transition-all border",
+                                  isOpen || isProcessing === course.code
+                                    ? "bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed"
+                                    : "bg-white text-emerald-600 hover:bg-emerald-50 border-emerald-200 shadow-sm"
+                                )}
+                                title="Open Booking"
+                              >
+                                {isProcessing === course.code ? (
+                                  <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                    className="h-4 w-4 border-2 border-emerald-300 border-t-emerald-600 rounded-full"
+                                  />
+                                ) : (
+                                  <Play className="h-4 w-4 fill-current" />
+                                )}
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleCloseBooking(course.code)}
+                                disabled={isProcessing === course.code || !isOpen}
+                                className={cn(
+                                  "p-2.5 rounded-xl transition-all border",
+                                  !isOpen || isProcessing === course.code
+                                    ? "bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed"
+                                    : "bg-white text-red-600 hover:bg-red-50 border-red-200 shadow-sm"
+                                )}
+                                title="Close Booking"
+                              >
+                                <Pause className="h-4 w-4 fill-current" />
+                              </motion.button>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 ml-2">
-                          <button
-                            onClick={() => handleOpenBooking(course.code)}
-                            disabled={isProcessing === course.code}
-                            className="p-2 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors disabled:opacity-50"
-                            title="Open Booking"
-                          >
-                            {isProcessing === course.code ? (
-                              <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                className="h-4 w-4 border-2 border-emerald-300 border-t-emerald-600 rounded-full"
-                              />
-                            ) : (
-                              <Play className="h-4 w-4" />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => handleCloseBooking(course.code)}
-                            disabled={isProcessing === course.code}
-                            className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors disabled:opacity-50"
-                            title="Close Booking"
-                          >
-                            <Pause className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -1116,8 +1226,8 @@ export default function BookingsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-              >
-                <div className="relative rounded-2xl bg-white backdrop-blur-xl border border-gray-200/60 p-6 overflow-hidden shadow-sm hover:shadow-md transition-all">
+                              >
+                                <div className="relative rounded-2xl bg-white backdrop-blur-xl border border-gray-200/60 p-6 overflow-hidden shadow-sm hover:shadow-md transition-all">
                   <div className="relative z-10">
                     <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                       {/* Course Info */}
@@ -1275,10 +1385,10 @@ export default function BookingsPage() {
                             <motion.div
                               animate={{ rotate: 360 }}
                               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                            >
+                                                          >
                               <Sparkles className="h-4 w-4" />
                             </motion.div>
-                            <span style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}>
+                            <span                               style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}>
                               Auto-registration agent is monitoring this course. You&apos;ll be registered automatically when a desk becomes available.
                             </span>
                           </div>
@@ -1299,55 +1409,59 @@ export default function BookingsPage() {
           transition={{ delay: 0.5 }}
           className="mt-8"
         >
-          <div className="relative rounded-2xl bg-white backdrop-blur-xl border border-gray-200/60 p-6 overflow-hidden shadow-sm">
+          <div className="relative rounded-2xl bg-white backdrop-blur-xl border border-gray-200 group hover:border-gray-400 p-6 overflow-hidden shadow-sm transition-all">
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 via-transparent to-gray-100/50 pointer-events-none" />
             <div className="relative z-10">
               <h3 
-                className="text-lg font-semibold text-gray-900 mb-4"
+                className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2"
                 style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
               >
-                Booking Summary
+                <div className="p-1.5 rounded-lg bg-gray-100">
+                  <Bot className="h-4 w-4 text-gray-700" />
+                </div>
+                Registration Summary
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl bg-gray-100 border border-gray-300">
+                <div className="p-5 rounded-2xl bg-gray-50 border border-gray-200 shadow-sm backdrop-blur-sm">
                   <div 
-                    className="text-2xl font-bold text-gray-700"
-                    style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                    className="text-3xl font-bold text-gray-900 mb-1"
+                    style={{ fontFamily: "var(--font-space-mono), system-ui, sans-serif" }}
                   >
                     {recommendedCourses.length}
                   </div>
                   <div 
-                    className="text-sm text-gray-600"
+                    className="text-xs font-bold text-gray-500 uppercase tracking-wider"
                     style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                   >
-                    Recommended Courses
+                    Matched Courses
                   </div>
                 </div>
-                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+                <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-100 shadow-sm backdrop-blur-sm">
                   <div 
-                    className="text-2xl font-bold text-emerald-700"
-                    style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                    className="text-3xl font-bold text-emerald-700 mb-1"
+                    style={{ fontFamily: "var(--font-space-mono), system-ui, sans-serif" }}
                   >
                     {recommendedCourses.filter((c) => c.bookingStatus === "open" && getStatusInfo(c).available > 0).length}
                   </div>
                   <div 
-                    className="text-sm text-gray-600"
+                    className="text-xs font-bold text-emerald-600 uppercase tracking-wider"
                     style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                   >
-                    Available for Booking
+                    Directly Available
                   </div>
                 </div>
-                <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                <div className="p-5 rounded-2xl bg-gray-900 text-white border border-gray-800 shadow-lg backdrop-blur-sm">
                   <div 
-                    className="text-2xl font-bold text-gray-700"
-                    style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                    className="text-3xl font-bold text-white mb-1"
+                    style={{ fontFamily: "var(--font-space-mono), system-ui, sans-serif" }}
                   >
                     {Object.values(autoRegistration).filter(Boolean).length}
                   </div>
                   <div 
-                    className="text-sm text-gray-600"
+                    className="text-xs font-bold text-gray-400 uppercase tracking-wider"
                     style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
                   >
-                    Auto-Registration Active
+                    Agents Active
                   </div>
                 </div>
               </div>

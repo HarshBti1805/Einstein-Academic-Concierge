@@ -76,18 +76,44 @@ class RegistrationService {
       return this.failResult(studentId, courseId, 'Course seat configuration not found');
     }
 
-    // Route based on booking status
+    const availableSeats = await this.getAvailableSeatsCount(courseId);
+    console.log(`[applyForCourse] Course ${courseId}, status: ${seatConfig.bookingStatus}, autoRegister: ${autoRegister}, available: ${availableSeats}`);
+
+    // If autoRegister is true, always add to waitlist (user wants system to handle it)
+    // They will be auto-enrolled when:
+    // 1. Admin opens booking and processes waitlist
+    // 2. A seat becomes available and they're top of waitlist
+    if (autoRegister) {
+      console.log(`[applyForCourse] Auto-register mode - adding to waitlist`);
+      const entry = await this.waitlistService.addToWaitlist(studentId, courseId, preferredSeat);
+      await this.logEvent('APPLIED', studentId, courseId, { status: 'waitlisted_auto_register', bookingStatus: seatConfig.bookingStatus });
+
+      return {
+        studentId,
+        courseId,
+        success: true,
+        status: 'WAITLISTED',
+        message: `Added to waitlist for auto-registration. Position: ${entry.position}`,
+        waitlistPosition: entry.position,
+        score: entry.compositeScore,
+      };
+    }
+
+    // Manual registration flow - route based on booking status
     switch (seatConfig.bookingStatus) {
       case 'CLOSED':
+        // Booking closed - cannot manually register, add to waitlist
+        console.log(`[applyForCourse] Booking CLOSED - adding to waitlist`);
         return this.handleBookingClosed(studentId, courseId, preferredSeat);
 
       case 'OPEN':
-        if (preferredSeat && !autoRegister) {
-          // Manual seat selection
-          return this.bookSpecificSeat(studentId, courseId, preferredSeat);
-        } else {
-          // Add to waitlist for batch allocation
+        // Booking open - book seat immediately if available
+        console.log(`[applyForCourse] Booking OPEN - attempting to book seat`);
+        if (availableSeats > 0) {
           return this.handleBookingOpen(studentId, courseId, preferredSeat);
+        } else {
+          // No seats available, add to waitlist
+          return this.handleWaitlistOnly(studentId, courseId, preferredSeat);
         }
 
       case 'WAITLIST_ONLY':
@@ -100,7 +126,8 @@ class RegistrationService {
         return this.failResult(studentId, courseId, 'Course registration is closed');
 
       default:
-        return this.failResult(studentId, courseId, 'Invalid booking status');
+        // For any unknown status, add to waitlist only
+        return this.handleBookingClosed(studentId, courseId, preferredSeat);
     }
   }
 
@@ -123,24 +150,43 @@ class RegistrationService {
   }
 
   /**
-   * Handle application when booking is open
+   * Handle application when booking is open - AUTO-ALLOCATE a seat immediately
    */
   async handleBookingOpen(studentId, courseId, preferredSeat) {
     const available = await this.getAvailableSeatsCount(courseId);
 
     if (available > 0) {
+      // Auto-allocate a seat immediately since booking is open
+      const seatNumber = preferredSeat || await this.getFirstAvailableSeat(courseId);
+      
+      if (seatNumber) {
+        // Book the seat directly
+        const result = await this.bookSeatInternal(studentId, courseId, seatNumber);
+        if (result.success) {
+          return {
+            studentId,
+            courseId,
+            success: true,
+            status: 'ENROLLED',
+            message: `Successfully registered! Your seat is ${seatNumber}.`,
+            seatNumber: result.seatNumber,
+          };
+        }
+      }
+      
+      // Fallback to waitlist if booking failed
       const entry = await this.waitlistService.addToWaitlist(studentId, courseId, preferredSeat);
-
       return {
         studentId,
         courseId,
         success: true,
         status: 'WAITLISTED',
-        message: 'Application received. You can select a seat or wait for auto-allocation.',
+        message: 'Added to waitlist. Will be auto-allocated when available.',
         waitlistPosition: entry.position,
         score: entry.compositeScore,
       };
     } else {
+      // No seats available, add to waitlist
       const entry = await this.waitlistService.addToWaitlist(studentId, courseId, preferredSeat);
 
       return {
@@ -148,7 +194,7 @@ class RegistrationService {
         courseId,
         success: true,
         status: 'WAITLISTED',
-        message: 'Course is full. Added to waitlist.',
+        message: 'Course is full. Added to waitlist for auto-registration.',
         waitlistPosition: entry.position,
         score: entry.compositeScore,
       };
@@ -656,10 +702,11 @@ class RegistrationService {
   // ==================== BOOKING STATUS MANAGEMENT ====================
 
   /**
-   * Open booking for a course
+   * Open booking for a course - also processes waitlisted students
    */
   async openBooking(courseId) {
     try {
+      // Update booking status
       await this.prisma.seatConfig.update({
         where: { courseId },
         data: {
@@ -671,7 +718,7 @@ class RegistrationService {
       // Set booking open time for scoring
       this.scoringService.setBookingOpenTime(courseId, new Date());
 
-      // Broadcast
+      // Broadcast status change
       if (this.wsService) {
         this.wsService.broadcastToCourse(courseId, {
           type: 'BOOKING_STATUS_CHANGED',
@@ -681,10 +728,124 @@ class RegistrationService {
         });
       }
 
+      // Process waitlisted students - auto-allocate seats to top candidates
+      await this.processWaitlistOnOpen(courseId);
+
       return true;
     } catch (error) {
       console.error('Error opening booking:', error);
       return false;
+    }
+  }
+
+  /**
+   * Process waitlist when booking opens - allocate seats to top candidates
+   */
+  async processWaitlistOnOpen(courseId) {
+    try {
+      // Get available seats count
+      let availableSeats = await this.getAvailableSeatsCount(courseId);
+      console.log(`Processing waitlist for course ${courseId}, available seats: ${availableSeats}`);
+
+      if (availableSeats <= 0) {
+        console.log('No available seats to allocate');
+        return;
+      }
+
+      // Get waitlisted students ordered by composite score (highest first)
+      const waitlistedStudents = await this.prisma.waitlistEntry.findMany({
+        where: {
+          courseId,
+          status: 'WAITING'
+        },
+        orderBy: {
+          compositeScore: 'desc'
+        },
+        include: {
+          student: {
+            select: { id: true, studentId: true, name: true }
+          }
+        }
+      });
+
+      console.log(`Found ${waitlistedStudents.length} waitlisted students`);
+
+      let allocatedCount = 0;
+      for (const entry of waitlistedStudents) {
+        if (availableSeats <= 0) break;
+
+        // Get an available seat (prefer their preferred seat if available)
+        let seatNumber = entry.preferredSeat;
+        
+        // Check if preferred seat is available
+        if (seatNumber) {
+          const existing = await this.prisma.seatBooking.findFirst({
+            where: {
+              courseId,
+              seatNumber,
+              isActive: true
+            }
+          });
+          if (existing) {
+            seatNumber = null; // Preferred seat not available
+          }
+        }
+
+        // Get first available seat if no preferred or preferred not available
+        if (!seatNumber) {
+          seatNumber = await this.getFirstAvailableSeat(courseId);
+        }
+
+        if (!seatNumber) {
+          console.log('No more available seats');
+          break;
+        }
+
+        // Book the seat for this student
+        console.log(`Allocating seat ${seatNumber} to student ${entry.student.studentId}`);
+        const result = await this.bookSeatInternal(entry.student.id, courseId, seatNumber);
+        
+        if (result.success) {
+          allocatedCount++;
+          availableSeats--;
+          
+          // Notify the student via WebSocket
+          if (this.wsService) {
+            this.wsService.sendToStudent(entry.student.id, {
+              type: 'STUDENT_AUTO_ENROLLED',
+              courseId,
+              payload: {
+                seatNumber,
+                studentId: entry.student.studentId,
+                studentName: entry.student.name,
+                message: `You have been auto-enrolled! Your seat is ${seatNumber}.`
+              },
+              timestamp: new Date(),
+            });
+          }
+        }
+      }
+
+      console.log(`Allocated ${allocatedCount} seats from waitlist`);
+
+      // Broadcast waitlist update
+      if (this.wsService && allocatedCount > 0) {
+        const remainingWaitlist = await this.prisma.waitlistEntry.count({
+          where: { courseId, status: 'WAITING' }
+        });
+        
+        this.wsService.broadcastToCourse(courseId, {
+          type: 'WAITLIST_UPDATED',
+          courseId,
+          payload: {
+            waitlistSize: remainingWaitlist,
+            allocatedCount,
+          },
+          timestamp: new Date(),
+        });
+      }
+    } catch (error) {
+      console.error('Error processing waitlist on open:', error);
     }
   }
 
@@ -718,6 +879,122 @@ class RegistrationService {
   }
 
   // ==================== HELPER METHODS ====================
+
+  /**
+   * Internal method to book a seat (used by auto-allocation)
+   */
+  async bookSeatInternal(studentId, courseId, seatNumber) {
+    try {
+      const course = await this.prisma.course.findUnique({
+        where: { id: courseId },
+        include: { seatConfig: true }
+      });
+
+      if (!course?.seatConfig) {
+        return { success: false, message: 'Course not found' };
+      }
+
+      // Check if seat is available
+      const existingBooking = await this.prisma.seatBooking.findFirst({
+        where: {
+          seatConfigId: course.seatConfig.id,
+          seatNumber,
+          isActive: true
+        }
+      });
+
+      if (existingBooking) {
+        return { success: false, message: 'Seat is already taken' };
+      }
+
+      // Check if student already has a seat
+      const existingSeatForStudent = await this.prisma.seatBooking.findFirst({
+        where: {
+          courseId,
+          studentId,
+          isActive: true
+        }
+      });
+
+      if (existingSeatForStudent) {
+        return { success: false, message: 'Already have a seat', seatNumber: existingSeatForStudent.seatNumber };
+      }
+
+      // Parse seat number
+      const { row, column } = this.parseSeatNumber(seatNumber);
+
+      // Book the seat in a transaction
+      await this.prisma.$transaction(async (tx) => {
+        // Create seat booking
+        await tx.seatBooking.create({
+          data: {
+            seatConfigId: course.seatConfig.id,
+            courseId,
+            studentId,
+            seatNumber,
+            row,
+            column,
+            isActive: true,
+          }
+        });
+
+        // Create/update enrollment
+        await tx.enrollment.upsert({
+          where: {
+            courseId_studentId: { courseId, studentId }
+          },
+          update: {
+            status: 'ENROLLED',
+            seatNumber,
+            enrolledAt: new Date(),
+          },
+          create: {
+            courseId,
+            studentId,
+            status: 'ENROLLED',
+            seatNumber,
+            enrolledAt: new Date(),
+          }
+        });
+
+        // Remove from waitlist if present
+        await tx.waitlistEntry.updateMany({
+          where: {
+            studentId,
+            courseId,
+            status: 'WAITING'
+          },
+          data: {
+            status: 'ALLOCATED',
+            processedAt: new Date()
+          }
+        });
+      });
+
+      // Log event
+      await this.logEvent('SEAT_BOOKED', studentId, courseId, { seatNumber, autoAllocated: true });
+
+      // Get student name for broadcast
+      const student = await this.prisma.student.findUnique({
+        where: { id: studentId },
+        select: { name: true, studentId: true }
+      });
+
+      // Broadcast via WebSocket
+      if (this.wsService) {
+        this.wsService.broadcastSeatBooked(courseId, {
+          seatNumber,
+          studentId: student?.studentId || studentId,
+          studentName: student?.name || 'Unknown'
+        });
+      }
+
+      return { success: true, seatNumber };
+    } catch (error) {
+      console.error('Error in bookSeatInternal:', error);
+      return { success: false, message: error.message };
+    }
+  }
 
   async getAvailableSeatsCount(courseId) {
     const seatConfig = await this.prisma.seatConfig.findUnique({

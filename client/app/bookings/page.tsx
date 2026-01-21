@@ -26,6 +26,12 @@ import {
   Eye,
   Wifi,
   WifiOff,
+  Trash2,
+  Play,
+  Pause,
+  Shield,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +83,9 @@ export default function BookingsPage() {
   const [isBooking, setIsBooking] = useState(false);
   const [classroomState, setClassroomState] = useState<ClassroomState | null>(null);
   const seatGridRef = useRef<HTMLDivElement>(null);
+  const [enrolledCourses, setEnrolledCourses] = useState<Set<string>>(new Set());
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [isProcessing, setIsProcessing] = useState<string | null>(null);
   
   // Modal state for notifications
   const [modalState, setModalState] = useState<{
@@ -508,6 +517,32 @@ export default function BookingsPage() {
         if (result.success) {
           if (result.status === 'ENROLLED' && result.seatNumber) {
             // Student was immediately enrolled (seat available)
+            setEnrolledCourses(prev => new Set([...prev, courseCode]));
+            
+            // Update seat data to reflect the booking
+            setSeatsData(prev => {
+              const currentData = prev.courses[courseCode];
+              if (currentData) {
+                // Parse seat number to get position (e.g., "A5" -> 5)
+                const match = result.seatNumber.match(/^([A-Z]+)(\d+)$/i);
+                if (match) {
+                  const row = match[1].charCodeAt(0) - 65;
+                  const col = parseInt(match[2], 10);
+                  const seatNum = row * 20 + col;
+                  return {
+                    courses: {
+                      ...prev.courses,
+                      [courseCode]: {
+                        ...currentData,
+                        occupiedSeats: [...(currentData.occupiedSeats || []), seatNum]
+                      }
+                    }
+                  };
+                }
+              }
+              return prev;
+            });
+            
             showNotification(
               "success",
               "Registered Successfully!",
@@ -572,6 +607,173 @@ export default function BookingsPage() {
         `Auto-registration has been disabled for ${course?.name || courseCode}.`,
         { courseName: course?.name }
       );
+    }
+  };
+
+  // Drop/Leave a course
+  const handleDropCourse = async (courseCode: string) => {
+    const course = recommendedCourses.find(c => c.code === courseCode);
+    setIsProcessing(courseCode);
+    
+    try {
+      const result = await registrationAPI.dropCourse(studentId, courseCode);
+      
+      if (result.success) {
+        // Remove from enrolled courses
+        setEnrolledCourses(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(courseCode);
+          return newSet;
+        });
+        
+        // Disable auto-registration
+        setAutoRegistration(prev => ({
+          ...prev,
+          [courseCode]: false,
+        }));
+        
+        showNotification(
+          "success",
+          "Course Dropped",
+          `You have successfully dropped ${course?.name || courseCode}.`,
+          { courseName: course?.name }
+        );
+      } else {
+        showNotification(
+          "error",
+          "Drop Failed",
+          result.message || "Unable to drop the course. Please try again.",
+          { courseName: course?.name }
+        );
+      }
+    } catch (error) {
+      console.error("Failed to drop course:", error);
+      showNotification(
+        "error",
+        "Connection Error",
+        "Unable to connect to the server. Please try again.",
+        { courseName: course?.name }
+      );
+    } finally {
+      setIsProcessing(null);
+    }
+  };
+
+  // Admin: Open booking for a course
+  const handleOpenBooking = async (courseCode: string) => {
+    setIsProcessing(courseCode);
+    try {
+      console.log(`Opening booking for ${courseCode}...`);
+      const success = await registrationAPI.openBooking(courseCode);
+      console.log(`Open booking result: ${success}`);
+      
+      if (success) {
+        // Wait a moment for server to process waitlist
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Refresh seat data to show updated state
+        try {
+          const state = await registrationAPI.getClassroomState(courseCode);
+          console.log("New classroom state:", state);
+          
+          // Convert seat info to numeric positions
+          const occupiedPositions: number[] = [];
+          state.seats.forEach((seat) => {
+            if (seat.isOccupied) {
+              const match = seat.seatNumber.match(/^([A-Z]+)(\d+)$/i);
+              if (match) {
+                const row = match[1].charCodeAt(0) - 65;
+                const col = parseInt(match[2], 10);
+                occupiedPositions.push(row * 20 + col);
+              }
+            }
+          });
+          
+          setSeatsData(prev => ({
+            courses: {
+              ...prev.courses,
+              [courseCode]: {
+                totalSeats: state.totalSeats,
+                occupiedSeats: occupiedPositions,
+                bookingStatus: state.bookingStatus
+              }
+            }
+          }));
+        } catch (err) {
+          console.error("Failed to refresh seat data:", err);
+        }
+        
+        showNotification(
+          "success",
+          "Booking Opened",
+          `Booking is now open for ${courseCode}. Waitlisted students have been auto-enrolled.`,
+          { courseName: courseCode }
+        );
+      } else {
+        showNotification("error", "Failed", "Could not open booking. Check server logs.");
+      }
+    } catch (error) {
+      console.error("Failed to open booking:", error);
+      showNotification("error", "Error", "Failed to open booking. Check console for details.");
+    } finally {
+      setIsProcessing(null);
+    }
+  };
+
+  // Admin: Close booking for a course
+  const handleCloseBooking = async (courseCode: string) => {
+    setIsProcessing(courseCode);
+    try {
+      console.log(`Closing booking for ${courseCode}...`);
+      const success = await registrationAPI.closeBooking(courseCode);
+      console.log(`Close booking result: ${success}`);
+      
+      if (success) {
+        // Refresh seat data
+        try {
+          const state = await registrationAPI.getClassroomState(courseCode);
+          
+          // Convert seat info to numeric positions
+          const occupiedPositions: number[] = [];
+          state.seats.forEach((seat) => {
+            if (seat.isOccupied) {
+              const match = seat.seatNumber.match(/^([A-Z]+)(\d+)$/i);
+              if (match) {
+                const row = match[1].charCodeAt(0) - 65;
+                const col = parseInt(match[2], 10);
+                occupiedPositions.push(row * 20 + col);
+              }
+            }
+          });
+          
+          setSeatsData(prev => ({
+            courses: {
+              ...prev.courses,
+              [courseCode]: {
+                totalSeats: state.totalSeats,
+                occupiedSeats: occupiedPositions,
+                bookingStatus: state.bookingStatus
+              }
+            }
+          }));
+        } catch (err) {
+          console.error("Failed to refresh seat data:", err);
+        }
+        
+        showNotification(
+          "info",
+          "Booking Closed",
+          `Booking has been closed for ${courseCode}. New students will be added to waitlist.`,
+          { courseName: courseCode }
+        );
+      } else {
+        showNotification("error", "Failed", "Could not close booking. Check server logs.");
+      }
+    } catch (error) {
+      console.error("Failed to close booking:", error);
+      showNotification("error", "Error", "Failed to close booking. Check console for details.");
+    } finally {
+      setIsProcessing(null);
     }
   };
 
@@ -810,13 +1012,103 @@ export default function BookingsPage() {
           </div>
         </motion.div>
 
+        {/* Admin Panel Toggle */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mb-4"
+        >
+          <button
+            onClick={() => setShowAdminPanel(!showAdminPanel)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-medium shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all"
+          >
+            <Shield className="h-4 w-4" />
+            Admin Controls (Testing)
+            {showAdminPanel ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+        </motion.div>
+
+        {/* Admin Panel */}
+        <AnimatePresence>
+          {showAdminPanel && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-6 overflow-hidden"
+            >
+              <div className="p-4 rounded-xl bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200">
+                <div className="flex items-center gap-2 mb-4">
+                  <Shield className="h-5 w-5 text-purple-600" />
+                  <h3 className="text-sm font-semibold text-purple-800">
+                    Booking Status Controls (For Testing)
+                  </h3>
+                </div>
+                <p className="text-xs text-purple-600/80 mb-4">
+                  Use these controls to open/close bookings for testing waitlist auto-allocation.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {recommendedCourses.map((course) => {
+                    const statusInfo = getStatusInfo(course);
+                    const isOpen = statusInfo.status !== "Booking Closed" && statusInfo.status !== "Coming Soon";
+                    
+                    return (
+                      <div 
+                        key={`admin-${course.code}`}
+                        className="flex items-center justify-between p-3 rounded-lg bg-white border border-purple-100 shadow-sm"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-800 text-sm truncate">{course.code}</p>
+                          <p className="text-xs text-gray-500 truncate">{course.name}</p>
+                          <span className={cn(
+                            "inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium",
+                            isOpen ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                          )}>
+                            {isOpen ? "Open" : "Closed"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 ml-2">
+                          <button
+                            onClick={() => handleOpenBooking(course.code)}
+                            disabled={isProcessing === course.code}
+                            className="p-2 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors disabled:opacity-50"
+                            title="Open Booking"
+                          >
+                            {isProcessing === course.code ? (
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                className="h-4 w-4 border-2 border-emerald-300 border-t-emerald-600 rounded-full"
+                              />
+                            ) : (
+                              <Play className="h-4 w-4" />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleCloseBooking(course.code)}
+                            disabled={isProcessing === course.code}
+                            className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors disabled:opacity-50"
+                            title="Close Booking"
+                          >
+                            <Pause className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Courses Grid */}
         <div className="space-y-4">
           {recommendedCourses.map((course, index) => {
             const statusInfo = getStatusInfo(course);
             const isAutoEnabled = autoRegistration[course.code];
-            const canBook = course.bookingStatus === "open" && statusInfo.available > 0;
-            const needsAutoReg = course.bookingStatus !== "open" || statusInfo.available === 0;
+            // Allow booking if there are available seats (backend allows CLOSED and STARTED status now)
+            const canBook = statusInfo.available > 0;
 
             return (
               <motion.div
@@ -919,31 +1211,53 @@ export default function BookingsPage() {
                           <span className="hidden sm:inline">Live View</span>
                         </motion.button>
 
-                        {needsAutoReg && (
-                          <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200">
-                            <div className="flex items-center gap-2">
-                              <Bot className="h-4 w-4 text-gray-700" />
-                              <span 
-                                className="text-xs text-gray-600 hidden sm:inline"
-                                style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
-                              >
-                                Auto-Register
-                              </span>
-                            </div>
-                            <button
-                              onClick={() => handleToggleAutoRegistration(course.code)}
-                              className={cn(
-                                "relative h-6 w-11 rounded-full transition-colors",
-                                isAutoEnabled ? "bg-gray-700" : "bg-gray-300"
-                              )}
+                        {/* Auto-Register Toggle - always show */}
+                        <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200">
+                          <div className="flex items-center gap-2">
+                            <Bot className="h-4 w-4 text-gray-700" />
+                            <span 
+                              className="text-xs text-gray-600 hidden sm:inline"
+                              style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
                             >
-                              <motion.div
-                                className="absolute top-1 h-4 w-4 rounded-full bg-white shadow-lg"
-                                animate={{ left: isAutoEnabled ? 24 : 4 }}
-                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                              />
-                            </button>
+                              Auto-Register
+                            </span>
                           </div>
+                          <button
+                            onClick={() => handleToggleAutoRegistration(course.code)}
+                            className={cn(
+                              "relative h-6 w-11 rounded-full transition-colors",
+                              isAutoEnabled ? "bg-emerald-500" : "bg-gray-300"
+                            )}
+                          >
+                            <motion.div
+                              className="absolute top-1 h-4 w-4 rounded-full bg-white shadow-lg"
+                              animate={{ left: isAutoEnabled ? 24 : 4 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                            />
+                          </button>
+                        </div>
+
+                        {/* Drop Course Button */}
+                        {(isAutoEnabled || enrolledCourses.has(course.code)) && (
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleDropCourse(course.code)}
+                            disabled={isProcessing === course.code}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-all disabled:opacity-50"
+                            style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
+                          >
+                            {isProcessing === course.code ? (
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                className="h-4 w-4 border-2 border-red-300 border-t-red-600 rounded-full"
+                              />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                            <span className="hidden sm:inline">Drop</span>
+                          </motion.button>
                         )}
                       </div>
                     </div>

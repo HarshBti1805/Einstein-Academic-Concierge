@@ -762,8 +762,8 @@ export default function BookingsPage() {
         
         showNotification(
           "info",
-          "Booking Closed",
-          `Booking has been closed for ${courseCode}. New students will be added to waitlist.`,
+          "Bookings Not Yet Open",
+          `Bookings have not been opened yet for ${courseCode}. New students will be added to waitlist.`,
           { courseName: courseCode }
         );
       } else {
@@ -783,7 +783,7 @@ export default function BookingsPage() {
       // Use course data from recommendations if no seat data
       const available = course.totalSeats - course.occupiedSeats;
       if (course.bookingStatus === "closed") {
-        return { status: "Booking Closed", available: 0, color: "red" };
+        return { status: "Not Yet Open", available: 0, color: "red" };
       }
       if (course.bookingStatus === "not_started") {
         return { status: "Coming Soon", available, color: "blue" };
@@ -798,7 +798,7 @@ export default function BookingsPage() {
     const available = seatData.totalSeats - occupiedCount;
 
     if (seatData.bookingStatus === "closed" || course.bookingStatus === "closed") {
-      return { status: "Booking Closed", available: 0, color: "red" };
+      return { status: "Not Yet Open", available: 0, color: "red" };
     }
     if (seatData.bookingStatus === "not_started" || course.bookingStatus === "not_started") {
       return { status: "Coming Soon", available, color: "blue" };
@@ -1135,7 +1135,7 @@ export default function BookingsPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {recommendedCourses.map((course) => {
                       const statusInfo = getStatusInfo(course);
-                      const isOpen = statusInfo.status !== "Booking Closed" && statusInfo.status !== "Coming Soon";
+                      const isOpen = statusInfo.status !== "Not Yet Open" && statusInfo.status !== "Coming Soon";
                       
                       return (
                         <div 

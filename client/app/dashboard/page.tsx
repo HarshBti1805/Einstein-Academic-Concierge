@@ -27,6 +27,10 @@ import {
   CheckCircle2,
   AlertCircle,
   Flame,
+  ChevronLeft,
+  CalendarDays,
+  MapPin,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -113,6 +117,110 @@ interface Course {
   schedule: string;
   status: string;
 }
+
+// Timetable interfaces
+interface ScheduledClass {
+  id: string;
+  courseCode: string;
+  courseName: string;
+  instructor: string;
+  room: string;
+  startTime: string; // HH:MM format
+  endTime: string; // HH:MM format
+  color: string;
+}
+
+
+// Sample timetable data based on courses
+const generateTimetableData = (subjects: Subject[]): Record<string, ScheduledClass[]> => {
+  const colors = [
+    "bg-blue-100 border-blue-300 text-blue-800",
+    "bg-emerald-100 border-emerald-300 text-emerald-800",
+    "bg-purple-100 border-purple-300 text-purple-800",
+    "bg-amber-100 border-amber-300 text-amber-800",
+    "bg-rose-100 border-rose-300 text-rose-800",
+    "bg-cyan-100 border-cyan-300 text-cyan-800",
+    "bg-indigo-100 border-indigo-300 text-indigo-800",
+    "bg-orange-100 border-orange-300 text-orange-800",
+  ];
+
+  const schedules: { weekdays: string[]; start: string; end: string }[] = [
+    { weekdays: ["Monday", "Wednesday", "Friday"], start: "09:00", end: "10:30" },
+    { weekdays: ["Tuesday", "Thursday"], start: "10:00", end: "11:30" },
+    { weekdays: ["Monday", "Wednesday"], start: "11:00", end: "12:30" },
+    { weekdays: ["Tuesday", "Thursday"], start: "14:00", end: "15:30" },
+    { weekdays: ["Monday", "Wednesday", "Friday"], start: "13:00", end: "14:30" },
+    { weekdays: ["Tuesday", "Thursday"], start: "09:00", end: "10:30" },
+    { weekdays: ["Wednesday", "Friday"], start: "15:00", end: "16:30" },
+    { weekdays: ["Monday", "Thursday"], start: "16:00", end: "17:30" },
+  ];
+
+  const rooms = ["Room 101", "Room 205", "Lab 301", "Hall A", "Room 112", "Lab 204", "Room 308", "Hall B"];
+  const instructors = ["Dr. Smith", "Prof. Johnson", "Dr. Williams", "Prof. Brown", "Dr. Davis", "Prof. Miller", "Dr. Wilson", "Prof. Moore"];
+
+  const timetable: Record<string, ScheduledClass[]> = {
+    Monday: [],
+    Tuesday: [],
+    Wednesday: [],
+    Thursday: [],
+    Friday: [],
+  };
+
+  subjects.forEach((subject, index) => {
+    const schedule = schedules[index % schedules.length];
+    const color = colors[index % colors.length];
+    const room = rooms[index % rooms.length];
+    const instructor = instructors[index % instructors.length];
+
+    schedule.weekdays.forEach((day) => {
+      if (timetable[day]) {
+        timetable[day].push({
+          id: `${subject.name}-${day}`,
+          courseCode: `SUBJ${(index + 1).toString().padStart(3, "0")}`,
+          courseName: subject.name,
+          instructor,
+          room,
+          startTime: schedule.start,
+          endTime: schedule.end,
+          color,
+        });
+      }
+    });
+  });
+
+  // Sort classes by start time for each day
+  Object.keys(timetable).forEach((day) => {
+    timetable[day].sort((a, b) => a.startTime.localeCompare(b.startTime));
+  });
+
+  return timetable;
+};
+
+// Time slots for the calendar (8 AM to 6 PM)
+const timeSlots = [
+  "08:00", "09:00", "10:00", "11:00", "12:00",
+  "13:00", "14:00", "15:00", "16:00", "17:00"
+];
+
+const formatTime = (time: string): string => {
+  const [hours, minutes] = time.split(":");
+  const hour = parseInt(hours, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${minutes} ${ampm}`;
+};
+
+const getTimePosition = (time: string): number => {
+  const [hours, minutes] = time.split(":").map(Number);
+  const startHour = 8; // Calendar starts at 8 AM
+  return ((hours - startHour) * 60 + minutes) / 60;
+};
+
+const getClassHeight = (startTime: string, endTime: string): number => {
+  const start = getTimePosition(startTime);
+  const end = getTimePosition(endTime);
+  return (end - start) * 60; // 60px per hour
+};
 
 // Custom Progress Ring Component
 const ProgressRing = ({
@@ -375,6 +483,10 @@ export default function Dashboard() {
     left: string;
   }>>([]);
 
+  // Timetable state
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [showMiniCalendar, setShowMiniCalendar] = useState(false);
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       const token = sessionStorage.getItem("authToken");
@@ -565,6 +677,78 @@ export default function Dashboard() {
   }));
 
   const totalCredits = currentStudent.academic_data.creditsThisSemester;
+
+  // Generate timetable data from subjects
+  const timetableData = generateTimetableData(currentStudent.academic_data.subjects);
+
+  // Week navigation helpers
+  const getWeekDates = (date: Date): Date[] => {
+    const week: Date[] = [];
+    const startOfWeek = new Date(date);
+    const day = startOfWeek.getDay();
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+    startOfWeek.setDate(diff);
+    
+    for (let i = 0; i < 5; i++) { // Monday to Friday
+      const weekDay = new Date(startOfWeek);
+      weekDay.setDate(startOfWeek.getDate() + i);
+      week.push(weekDay);
+    }
+    return week;
+  };
+
+  const weekDates = getWeekDates(selectedDate);
+  const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
+  const navigateWeek = (direction: "prev" | "next") => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + (direction === "next" ? 7 : -7));
+    setSelectedDate(newDate);
+  };
+
+  const goToToday = () => {
+    setSelectedDate(new Date());
+  };
+
+  const isToday = (date: Date): boolean => {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  };
+
+  const getMonthName = (): string => {
+    const firstDay = weekDates[0];
+    const lastDay = weekDates[4];
+    
+    if (firstDay.getMonth() === lastDay.getMonth()) {
+      return firstDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    }
+    return `${firstDay.toLocaleDateString("en-US", { month: "short" })} - ${lastDay.toLocaleDateString("en-US", { month: "short", year: "numeric" })}`;
+  };
+
+  // Mini calendar helpers
+  const getMonthDays = (date: Date): (Date | null)[] => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const days: (Date | null)[] = [];
+    
+    // Add empty slots for days before the first day of the month
+    const startDay = firstDay.getDay() || 7; // Convert Sunday from 0 to 7
+    for (let i = 1; i < startDay; i++) {
+      days.push(null);
+    }
+    
+    // Add all days of the month
+    for (let i = 1; i <= lastDay.getDate(); i++) {
+      days.push(new Date(year, month, i));
+    }
+    
+    return days;
+  };
+
+  const miniCalendarMonth = new Date(selectedDate);
+  const monthDays = getMonthDays(miniCalendarMonth);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -984,8 +1168,8 @@ export default function Dashboard() {
                       whileHover={{ scale: 1.05, y: -3 }}
                       whileTap={{ scale: 0.97 }}
                       onClick={() => router.push("/assistant")}
-                      className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-gray-900 font-bold rounded-2xl shadow-2xl shadow-gray-900/30 hover:shadow-gray-800/40 transition-all duration-300 overflow-hidden"
-                      style={{ fontFamily: "var(--font-space-mono), system-ui, sans-serif" }}
+                      className="group relative inline-flex items-center gap-3 px-6 py-4 bg-white text-gray-900 font-bold rounded-2xl shadow-2xl shadow-gray-900/30 hover:shadow-gray-800/40 transition-all duration-300 overflow-hidden"
+                      style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
                     >
                       <motion.div
                         className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-200/50 to-transparent -skew-x-12"
@@ -1495,6 +1679,329 @@ export default function Dashboard() {
               </GradientCard>
             </motion.div>
           </div>
+
+          {/* Weekly Timetable */}
+          <motion.div variants={itemVariants} className="mb-8">
+            <GradientCard delay={0.75}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h3
+                    className="text-lg font-semibold text-gray-900"
+                    style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                  >
+                    Weekly Schedule
+                  </h3>
+                  <p
+                    className="text-sm text-gray-500"
+                    style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                  >
+                    {getMonthName()}
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  {/* Today Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={goToToday}
+                    className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 border border-gray-200 transition-all"
+                    style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                  >
+                    Today
+                  </motion.button>
+                  
+                  {/* Week Navigation */}
+                  <div className="flex items-center gap-1">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => navigateWeek("prev")}
+                      className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 border border-gray-200 transition-all"
+                    >
+                      <ChevronLeft className="h-4 w-4 text-gray-700" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => navigateWeek("next")}
+                      className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 border border-gray-200 transition-all"
+                    >
+                      <ChevronRight className="h-4 w-4 text-gray-700" />
+                    </motion.button>
+                  </div>
+                  
+                  {/* Calendar Picker */}
+                  <div className="relative">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowMiniCalendar(!showMiniCalendar)}
+                      className={cn(
+                        "p-2 rounded-xl border transition-all",
+                        showMiniCalendar 
+                          ? "bg-gray-800 border-gray-800 text-white" 
+                          : "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-700"
+                      )}
+                    >
+                      <CalendarDays className="h-4 w-4" />
+                    </motion.button>
+                    
+                    <AnimatePresence>
+                      {showMiniCalendar && (
+                        <>
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-40"
+                            onClick={() => setShowMiniCalendar(false)}
+                          />
+                          <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                            className="absolute right-0 mt-2 w-72 rounded-2xl bg-white border border-gray-200 shadow-2xl shadow-gray-200/50 overflow-hidden z-50 p-4"
+                          >
+                            {/* Mini Calendar Header */}
+                            <div className="flex items-center justify-between mb-4">
+                              <button
+                                onClick={() => {
+                                  const newDate = new Date(miniCalendarMonth);
+                                  newDate.setMonth(newDate.getMonth() - 1);
+                                  setSelectedDate(newDate);
+                                }}
+                                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                              >
+                                <ChevronLeft className="h-4 w-4 text-gray-600" />
+                              </button>
+                              <span 
+                                className="text-sm font-semibold text-gray-900"
+                                style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                              >
+                                {miniCalendarMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                              </span>
+                              <button
+                                onClick={() => {
+                                  const newDate = new Date(miniCalendarMonth);
+                                  newDate.setMonth(newDate.getMonth() + 1);
+                                  setSelectedDate(newDate);
+                                }}
+                                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                              >
+                                <ChevronRight className="h-4 w-4 text-gray-600" />
+                              </button>
+                            </div>
+                            
+                            {/* Weekday Headers */}
+                            <div className="grid grid-cols-7 gap-1 mb-2">
+                              {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((day) => (
+                                <div key={day} className="text-center text-xs font-medium text-gray-500 py-1">
+                                  {day}
+                                </div>
+                              ))}
+                            </div>
+                            
+                            {/* Calendar Days */}
+                            <div className="grid grid-cols-7 gap-1">
+                              {monthDays.map((day, index) => (
+                                <button
+                                  key={index}
+                                  onClick={() => {
+                                    if (day) {
+                                      setSelectedDate(day);
+                                      setShowMiniCalendar(false);
+                                    }
+                                  }}
+                                  disabled={!day}
+                                  className={cn(
+                                    "h-8 w-8 rounded-lg text-sm font-medium transition-all",
+                                    !day && "invisible",
+                                    day && isToday(day) && "bg-gray-800 text-white",
+                                    day && !isToday(day) && "hover:bg-gray-100 text-gray-700",
+                                    day && weekDates.some(d => d.toDateString() === day.toDateString()) && !isToday(day) && "bg-gray-100"
+                                  )}
+                                >
+                                  {day?.getDate()}
+                                </button>
+                              ))}
+                            </div>
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timetable Grid */}
+              <div className="overflow-x-auto -mx-6 px-6">
+                <div className="min-w-[800px]">
+                  {/* Header Row with Days */}
+                  <div className="grid grid-cols-[70px_repeat(5,1fr)] border-b border-gray-100">
+                    <div className="p-3 text-center">
+                      <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Time</span>
+                    </div>
+                    {weekDates.map((date, index) => (
+                      <div 
+                        key={dayNames[index]} 
+                        className={cn(
+                          "p-3 text-center border-l border-gray-100",
+                          isToday(date) && "bg-gray-50"
+                        )}
+                      >
+                        <div 
+                          className={cn(
+                            "text-xs font-medium uppercase tracking-wider mb-1",
+                            isToday(date) ? "text-gray-900" : "text-gray-500"
+                          )}
+                          style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                        >
+                          {dayNames[index].slice(0, 3)}
+                        </div>
+                        <div 
+                          className={cn(
+                            "text-lg font-bold",
+                            isToday(date) 
+                              ? "bg-gray-800 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto" 
+                              : "text-gray-900"
+                          )}
+                          style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                        >
+                          {date.getDate()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Time Slots and Classes */}
+                  <div className="relative">
+                    {/* Time slot rows */}
+                    {timeSlots.map((time) => (
+                      <div 
+                        key={time} 
+                        className="grid grid-cols-[70px_repeat(5,1fr)] border-b border-gray-50"
+                        style={{ height: "60px" }}
+                      >
+                        <div className="p-2 flex items-start justify-center">
+                          <span 
+                            className="text-[11px] font-medium text-gray-400 -mt-2"
+                            style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                          >
+                            {formatTime(time)}
+                          </span>
+                        </div>
+                        {dayNames.map((day, dayIndex) => (
+                          <div 
+                            key={`${time}-${day}`} 
+                            className={cn(
+                              "border-l border-gray-50 relative",
+                              isToday(weekDates[dayIndex]) && "bg-gray-50/50"
+                            )}
+                          />
+                        ))}
+                      </div>
+                    ))}
+
+                    {/* Overlay classes on the grid */}
+                    <div className="absolute inset-0 grid grid-cols-[70px_repeat(5,1fr)] pointer-events-none">
+                      <div /> {/* Time column spacer */}
+                      {dayNames.map((day) => (
+                        <div key={day} className="relative border-l border-transparent">
+                          {timetableData[day]?.map((classItem, classIndex) => {
+                            const topPosition = getTimePosition(classItem.startTime) * 60;
+                            const height = getClassHeight(classItem.startTime, classItem.endTime);
+                            
+                            return (
+                              <motion.div
+                                key={classItem.id}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.05 * classIndex + 0.3 }}
+                                className={cn(
+                                  "absolute left-1 right-1 rounded-xl border-l-4 p-2 overflow-hidden cursor-pointer pointer-events-auto",
+                                  "hover:shadow-md transition-shadow",
+                                  classItem.color
+                                )}
+                                style={{
+                                  top: `${topPosition}px`,
+                                  height: `${height - 4}px`,
+                                }}
+                                whileHover={{ scale: 1.02 }}
+                              >
+                                <p 
+                                  className="text-xs font-bold truncate"
+                                  style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                                >
+                                  {classItem.courseName}
+                                </p>
+                                <p className="text-[10px] opacity-80 truncate mt-0.5">
+                                  {classItem.courseCode}
+                                </p>
+                                {height > 50 && (
+                                  <>
+                                    <div className="flex items-center gap-1 mt-1">
+                                      <MapPin className="h-3 w-3 opacity-70" />
+                                      <span className="text-[10px] opacity-80">{classItem.room}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Users className="h-3 w-3 opacity-70" />
+                                      <span className="text-[10px] opacity-80 truncate">{classItem.instructor}</span>
+                                    </div>
+                                  </>
+                                )}
+                                <div className="absolute bottom-1 right-2 text-[9px] opacity-60">
+                                  {formatTime(classItem.startTime)} - {formatTime(classItem.endTime)}
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Legend */}
+              <div className="mt-6 pt-4 border-t border-gray-100">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span 
+                    className="text-xs font-medium text-gray-500"
+                    style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                  >
+                    Classes today:
+                  </span>
+                  {(() => {
+                    const today = new Date();
+                    const todayName = dayNames[today.getDay() - 1];
+                    const todayClasses = timetableData[todayName] || [];
+                    
+                    if (todayClasses.length === 0) {
+                      return (
+                        <span className="text-xs text-gray-400">No classes scheduled</span>
+                      );
+                    }
+                    
+                    return todayClasses.slice(0, 4).map((classItem) => (
+                      <div
+                        key={classItem.id}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-1.5 rounded-lg border",
+                          classItem.color
+                        )}
+                      >
+                        <Clock className="h-3 w-3" />
+                        <span className="text-xs font-medium">{classItem.courseName}</span>
+                        <span className="text-[10px] opacity-70">{formatTime(classItem.startTime)}</span>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+            </GradientCard>
+          </motion.div>
 
           {/* Courses Table */}
           <motion.div variants={itemVariants}>

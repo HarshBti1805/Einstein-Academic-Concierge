@@ -1,8 +1,68 @@
 import prisma from "../db.js";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key-change-in-production";
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-super-secret-jwt-key-change-in-production";
 const JWT_EXPIRES_IN = "7d";
+
+/**
+ * Returning student login: email + rollNumber + university
+ */
+export const returningLogin = async (req, res) => {
+  try {
+    const { email, rollNumber, university } = req.body;
+    if (!email || !rollNumber || !university) {
+      return res.status(400).json({
+        success: false,
+        message: "Email, roll number, and university are required.",
+      });
+    }
+    const student = await prisma.student.findFirst({
+      where: {
+        email: { equals: email.trim(), mode: "insensitive" },
+        rollNumber: { equals: String(rollNumber).trim(), mode: "insensitive" },
+        universityName: {
+          equals: String(university).trim(),
+          mode: "insensitive",
+        },
+      },
+    });
+    if (!student) {
+      return res.status(401).json({
+        success: false,
+        message:
+          "No account found with that email, roll number, and university.",
+      });
+    }
+    const token = jwt.sign(
+      {
+        studentId: student.studentId,
+        id: student.id,
+        name: student.name,
+        email: student.email,
+      },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN },
+    );
+    res.json({
+      success: true,
+      message: "Welcome back!",
+      token,
+      student: {
+        student_id: student.studentId,
+        name: student.name,
+        email: student.email,
+        rollNumber: student.rollNumber,
+      },
+    });
+  } catch (error) {
+    console.error("Returning login error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error during login.",
+    });
+  }
+};
 
 /**
  * Login/Register a student by validating their credentials against the database
@@ -21,10 +81,18 @@ export const loginStudent = async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!name || !rollNumber || !email || !university || !yearOfStudy || !passoutYear || !branch) {
-      return res.status(400).json({ 
+    if (
+      !name ||
+      !rollNumber ||
+      !email ||
+      !university ||
+      !yearOfStudy ||
+      !passoutYear ||
+      !branch
+    ) {
+      return res.status(400).json({
         success: false,
-        message: "All fields are required" 
+        message: "All fields are required",
       });
     }
 
@@ -42,46 +110,47 @@ export const loginStudent = async (req, res) => {
       where: {
         name: {
           equals: name,
-          mode: 'insensitive'
+          mode: "insensitive",
         },
         rollNumber: {
           equals: rollNumber,
-          mode: 'insensitive'
+          mode: "insensitive",
         },
         email: {
           equals: email,
-          mode: 'insensitive'
+          mode: "insensitive",
         },
         universityName: {
           equals: university,
-          mode: 'insensitive'
+          mode: "insensitive",
         },
         yearOfStudy: parsedYearOfStudy,
         expectedGraduation: parsedPassoutYear,
         branch: {
           equals: branch,
-          mode: 'insensitive'
-        }
-      }
+          mode: "insensitive",
+        },
+      },
     });
 
     if (!student) {
       return res.status(401).json({
         success: false,
-        message: "Invalid credentials. Please check your information and try again."
+        message:
+          "Invalid credentials. Please check your information and try again.",
       });
     }
 
     // Generate JWT token
     const token = jwt.sign(
-      { 
+      {
         studentId: student.studentId,
         id: student.id,
         name: student.name,
-        email: student.email 
+        email: student.email,
       },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
+      { expiresIn: JWT_EXPIRES_IN },
     );
 
     // Return success with token and basic student info
@@ -97,15 +166,14 @@ export const loginStudent = async (req, res) => {
         universityName: student.universityName,
         branch: student.branch,
         yearOfStudy: student.yearOfStudy,
-        expectedGraduation: student.expectedGraduation
-      }
+        expectedGraduation: student.expectedGraduation,
+      },
     });
-
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: "Server error during authentication" 
+      message: "Server error during authentication",
     });
   }
 };
@@ -119,25 +187,27 @@ export const loginUniversity = async (req, res) => {
 
     if (!accessCode) {
       return res.status(400).json({
-        error: "Access code is required"
+        error: "Access code is required",
       });
     }
 
     // For now, use a simple access code validation
     // In production, this should be stored in a database with proper security
-    const validAccessCodes = process.env.UNIVERSITY_ACCESS_CODES 
-      ? process.env.UNIVERSITY_ACCESS_CODES.split(',').map(code => code.trim())
-      : ['UNIV2024', 'ADMIN123', 'EINSTEIN2024']; // Default fallback codes
+    const validAccessCodes = process.env.UNIVERSITY_ACCESS_CODES
+      ? process.env.UNIVERSITY_ACCESS_CODES.split(",").map((code) =>
+          code.trim(),
+        )
+      : ["UNIV2024", "ADMIN123", "EINSTEIN2024"]; // Default fallback codes
 
     if (!validAccessCodes.includes(accessCode)) {
       return res.status(401).json({
-        error: "Invalid access code"
+        error: "Invalid access code",
       });
     }
 
     // Get unique university name from access code or use a default
     // In production, this should query a University table
-    const universityName = accessCode.startsWith('UNIV') 
+    const universityName = accessCode.startsWith("UNIV")
       ? `University ${accessCode.slice(4)}`
       : `University (${accessCode})`;
 
@@ -147,14 +217,13 @@ export const loginUniversity = async (req, res) => {
       university: {
         accessCode,
         name: universityName,
-        authenticated: true
-      }
+        authenticated: true,
+      },
     });
-
   } catch (error) {
     console.error("University login error:", error);
     res.status(500).json({
-      error: "Server error during authentication"
+      error: "Server error during authentication",
     });
   }
 };
@@ -165,28 +234,28 @@ export const loginUniversity = async (req, res) => {
 export const verifyToken = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ 
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
         success: false,
-        message: "No token provided" 
+        message: "No token provided",
       });
     }
 
-    const token = authHeader.split(' ')[1];
-    
+    const token = authHeader.split(" ")[1];
+
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
-      
+
       // Fetch current student data
       const student = await prisma.student.findUnique({
-        where: { studentId: decoded.studentId }
+        where: { studentId: decoded.studentId },
       });
 
       if (!student) {
-        return res.status(404).json({ 
+        return res.status(404).json({
           success: false,
-          message: "Student not found" 
+          message: "Student not found",
         });
       }
 
@@ -200,22 +269,20 @@ export const verifyToken = async (req, res) => {
           universityName: student.universityName,
           branch: student.branch,
           yearOfStudy: student.yearOfStudy,
-          expectedGraduation: student.expectedGraduation
-        }
+          expectedGraduation: student.expectedGraduation,
+        },
       });
-
     } catch (jwtError) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        message: "Invalid or expired token" 
+        message: "Invalid or expired token",
       });
     }
-
   } catch (error) {
     console.error("Token verification error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: "Server error" 
+      message: "Server error",
     });
   }
 };

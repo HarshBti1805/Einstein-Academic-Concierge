@@ -31,6 +31,13 @@ import {
   CalendarDays,
   MapPin,
   Users,
+  TrendingDown,
+  Activity,
+  Lightbulb,
+  BookMarked,
+  FileText,
+  ArrowUpRight,
+  ArrowDownRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -130,9 +137,10 @@ interface ScheduledClass {
   color: string;
 }
 
-
 // Sample timetable data based on courses
-const generateTimetableData = (subjects: Subject[]): Record<string, ScheduledClass[]> => {
+const generateTimetableData = (
+  subjects: Subject[],
+): Record<string, ScheduledClass[]> => {
   const colors = [
     "bg-blue-100 border-blue-300 text-blue-800",
     "bg-emerald-100 border-emerald-300 text-emerald-800",
@@ -145,18 +153,44 @@ const generateTimetableData = (subjects: Subject[]): Record<string, ScheduledCla
   ];
 
   const schedules: { weekdays: string[]; start: string; end: string }[] = [
-    { weekdays: ["Monday", "Wednesday", "Friday"], start: "09:00", end: "10:30" },
+    {
+      weekdays: ["Monday", "Wednesday", "Friday"],
+      start: "09:00",
+      end: "10:30",
+    },
     { weekdays: ["Tuesday", "Thursday"], start: "10:00", end: "11:30" },
     { weekdays: ["Monday", "Wednesday"], start: "11:00", end: "12:30" },
     { weekdays: ["Tuesday", "Thursday"], start: "14:00", end: "15:30" },
-    { weekdays: ["Monday", "Wednesday", "Friday"], start: "13:00", end: "14:30" },
+    {
+      weekdays: ["Monday", "Wednesday", "Friday"],
+      start: "13:00",
+      end: "14:30",
+    },
     { weekdays: ["Tuesday", "Thursday"], start: "09:00", end: "10:30" },
     { weekdays: ["Wednesday", "Friday"], start: "15:00", end: "16:30" },
     { weekdays: ["Monday", "Thursday"], start: "16:00", end: "17:30" },
   ];
 
-  const rooms = ["Room 101", "Room 205", "Lab 301", "Hall A", "Room 112", "Lab 204", "Room 308", "Hall B"];
-  const instructors = ["Dr. Smith", "Prof. Johnson", "Dr. Williams", "Prof. Brown", "Dr. Davis", "Prof. Miller", "Dr. Wilson", "Prof. Moore"];
+  const rooms = [
+    "Room 101",
+    "Room 205",
+    "Lab 301",
+    "Hall A",
+    "Room 112",
+    "Lab 204",
+    "Room 308",
+    "Hall B",
+  ];
+  const instructors = [
+    "Dr. Smith",
+    "Prof. Johnson",
+    "Dr. Williams",
+    "Prof. Brown",
+    "Dr. Davis",
+    "Prof. Miller",
+    "Dr. Wilson",
+    "Prof. Moore",
+  ];
 
   const timetable: Record<string, ScheduledClass[]> = {
     Monday: [],
@@ -198,8 +232,16 @@ const generateTimetableData = (subjects: Subject[]): Record<string, ScheduledCla
 
 // Time slots for the calendar (8 AM to 6 PM)
 const timeSlots = [
-  "08:00", "09:00", "10:00", "11:00", "12:00",
-  "13:00", "14:00", "15:00", "16:00", "17:00"
+  "08:00",
+  "09:00",
+  "10:00",
+  "11:00",
+  "12:00",
+  "13:00",
+  "14:00",
+  "15:00",
+  "16:00",
+  "17:00",
 ];
 
 const formatTime = (time: string): string => {
@@ -315,7 +357,7 @@ const AnimatedCard = ({
         "before:absolute before:inset-0 before:rounded-2xl before:bg-gradient-to-br before:from-gray-500/5 before:to-transparent before:opacity-0 before:transition-opacity before:duration-300",
         "hover:before:opacity-100 hover:border-gray-400/40 hover:shadow-lg hover:shadow-gray-500/5",
         "transition-all duration-300",
-        className
+        className,
       )}
     >
       <div className="relative z-10">{children}</div>
@@ -340,7 +382,7 @@ const GradientCard = ({
       transition={{ delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
         "relative group rounded-2xl overflow-hidden bg-white border border-gray-200/60 shadow-sm hover:shadow-lg hover:shadow-gray-500/5 transition-all duration-300",
-        className
+        className,
       )}
     >
       <div className="relative z-10 p-6">{children}</div>
@@ -386,7 +428,7 @@ const AnimatedProgressBar = ({
           className={cn(
             "h-full rounded-full bg-gradient-to-r shadow-lg",
             colorMap[color],
-            glowMap[color]
+            glowMap[color],
           )}
         />
       </div>
@@ -470,18 +512,26 @@ export default function Dashboard() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [studentInfo, setStudentInfo] = useState<StudentInfo | null>(null);
-  const [currentStudent, setCurrentStudent] = useState<StudentData | null>(null);
-  const [currentDashboardData, setCurrentDashboardData] = useState<DashboardData | null>(null);
+  const [currentStudent, setCurrentStudent] = useState<StudentData | null>(
+    null,
+  );
+  const [currentDashboardData, setCurrentDashboardData] =
+    useState<DashboardData | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  type NavKey = "dashboard" | "courses" | "schedule" | "grades";
+  const [activeNav, setActiveNav] = useState<NavKey>("dashboard");
   const heroRef = useRef<HTMLDivElement>(null);
 
-  const [particles, setParticles] = useState<Array<{
-    x: number;
-    y: number;
-    duration: number;
-    delay: number;
-    left: string;
-  }>>([]);
+  const [particles, setParticles] = useState<
+    Array<{
+      x: number;
+      y: number;
+      duration: number;
+      delay: number;
+      left: string;
+    }>
+  >([]);
 
   // Timetable state
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -491,7 +541,7 @@ export default function Dashboard() {
     const fetchDashboardData = async () => {
       const token = sessionStorage.getItem("authToken");
       const data = sessionStorage.getItem("studentData");
-      
+
       if (!token || !data) {
         router.push("/");
         return;
@@ -500,14 +550,17 @@ export default function Dashboard() {
       try {
         const parsed = JSON.parse(data);
         setStudentInfo(parsed);
-        
+
         // Fetch dashboard data from API
-        const response = await fetch(`${API_BASE_URL}/api/students/${parsed.student_id}/dashboard`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
+        const response = await fetch(
+          `${API_BASE_URL}/api/students/${parsed.student_id}/dashboard`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           },
-        });
+        );
 
         if (!response.ok) {
           if (response.status === 401) {
@@ -517,11 +570,11 @@ export default function Dashboard() {
             router.push("/");
             return;
           }
-          throw new Error('Failed to fetch dashboard data');
+          throw new Error("Failed to fetch dashboard data");
         }
 
         const result = await response.json();
-        
+
         if (result.success && result.student) {
           // Transform API response to match frontend types
           const studentData: StudentData = {
@@ -541,24 +594,24 @@ export default function Dashboard() {
               creditsThisSemester: 0,
               overall_gpa: 0,
               attendance_percentage: 0,
-              subjects: []
+              subjects: [],
             },
             behavioral_data: result.student.behavioral_data || {
               participation_score: 0,
               discipline_score: 0,
-              extracurricular: []
-            }
+              extracurricular: [],
+            },
           };
-          
+
           setCurrentStudent(studentData);
-          
+
           if (result.dashboard) {
             setCurrentDashboardData(result.dashboard);
           }
-          
+
           setMounted(true);
         } else {
-          throw new Error('Invalid response data');
+          throw new Error("Invalid response data");
         }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -571,7 +624,7 @@ export default function Dashboard() {
   }, [router]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       setParticles(
         Array.from({ length: 20 }, () => ({
           x: Math.random() * window.innerWidth,
@@ -579,7 +632,7 @@ export default function Dashboard() {
           duration: 12 + Math.random() * 8,
           delay: Math.random() * 12,
           left: `${Math.random() * 100}%`,
-        }))
+        })),
       );
     }
   }, []);
@@ -634,29 +687,47 @@ export default function Dashboard() {
     totalCredits: currentStudent.academic_data.totalCredits,
     creditsThisSemester: currentStudent.academic_data.creditsThisSemester,
     academicYear: currentStudent.academic_data.academic_year,
-    standing: currentStudent.academic_data.overall_gpa >= 3.5 ? "Good Standing" : "Regular Standing",
+    standing:
+      currentStudent.academic_data.overall_gpa >= 3.5
+        ? "Good Standing"
+        : "Regular Standing",
   };
 
   // Map subjects to courses format for display
-  const courses: Course[] = currentStudent.academic_data.subjects.map((subject, index) => ({
-    code: `SUBJ${(index + 1).toString().padStart(3, '0')}`,
-    name: subject.name,
-    credits: 3, // Default credits per subject
-    grade: subject.grade,
-    gradePoints: subject.marks >= 90 ? 4.0 : subject.marks >= 80 ? 3.5 : subject.marks >= 70 ? 3.0 : subject.marks >= 60 ? 2.5 : 2.0,
-    attendance: subject.attendance,
-    instructor: "Faculty", // Generic instructor
-    schedule: "TBD",
-    status: "active",
-  }));
+  const courses: Course[] = currentStudent.academic_data.subjects.map(
+    (subject, index) => ({
+      code: `SUBJ${(index + 1).toString().padStart(3, "0")}`,
+      name: subject.name,
+      credits: 3, // Default credits per subject
+      grade: subject.grade,
+      gradePoints:
+        subject.marks >= 90
+          ? 4.0
+          : subject.marks >= 80
+            ? 3.5
+            : subject.marks >= 70
+              ? 3.0
+              : subject.marks >= 60
+                ? 2.5
+                : 2.0,
+      attendance: subject.attendance,
+      instructor: "Faculty", // Generic instructor
+      schedule: "TBD",
+      status: "active",
+    }),
+  );
 
   // Get dashboard-specific data
-  const { upcomingDeadlines, achievements, semesterProgress } = currentDashboardData;
+  const { upcomingDeadlines, achievements, semesterProgress } =
+    currentDashboardData;
 
-  const gradeDistribution = courses.reduce((acc, course) => {
-    acc[course.grade] = (acc[course.grade] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const gradeDistribution = courses.reduce(
+    (acc, course) => {
+      acc[course.grade] = (acc[course.grade] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   const gradeColors: Record<string, string> = {
     "A+": "#16a34a",
@@ -679,7 +750,9 @@ export default function Dashboard() {
   const totalCredits = currentStudent.academic_data.creditsThisSemester;
 
   // Generate timetable data from subjects
-  const timetableData = generateTimetableData(currentStudent.academic_data.subjects);
+  const timetableData = generateTimetableData(
+    currentStudent.academic_data.subjects,
+  );
 
   // Week navigation helpers
   const getWeekDates = (date: Date): Date[] => {
@@ -688,8 +761,9 @@ export default function Dashboard() {
     const day = startOfWeek.getDay();
     const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
     startOfWeek.setDate(diff);
-    
-    for (let i = 0; i < 5; i++) { // Monday to Friday
+
+    for (let i = 0; i < 5; i++) {
+      // Monday to Friday
       const weekDay = new Date(startOfWeek);
       weekDay.setDate(startOfWeek.getDate() + i);
       week.push(weekDay);
@@ -718,9 +792,12 @@ export default function Dashboard() {
   const getMonthName = (): string => {
     const firstDay = weekDates[0];
     const lastDay = weekDates[4];
-    
+
     if (firstDay.getMonth() === lastDay.getMonth()) {
-      return firstDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+      return firstDay.toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      });
     }
     return `${firstDay.toLocaleDateString("en-US", { month: "short" })} - ${lastDay.toLocaleDateString("en-US", { month: "short", year: "numeric" })}`;
   };
@@ -732,23 +809,29 @@ export default function Dashboard() {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const days: (Date | null)[] = [];
-    
+
     // Add empty slots for days before the first day of the month
     const startDay = firstDay.getDay() || 7; // Convert Sunday from 0 to 7
     for (let i = 1; i < startDay; i++) {
       days.push(null);
     }
-    
+
     // Add all days of the month
     for (let i = 1; i <= lastDay.getDate(); i++) {
       days.push(new Date(year, month, i));
     }
-    
+
     return days;
   };
 
   const miniCalendarMonth = new Date(selectedDate);
   const monthDays = getMonthDays(miniCalendarMonth);
+
+  const scrollToSection = (id: string, navKey: NavKey) => {
+    setActiveNav(navKey);
+    const el = document.getElementById(id);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -775,7 +858,9 @@ export default function Dashboard() {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100 relative overflow-x-hidden ${fontVariables}`}>
+    <div
+      className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100 relative overflow-x-hidden ${fontVariables}`}
+    >
       {/* Background Elements */}
       <div className="fixed inset-0 pointer-events-none">
         <div
@@ -788,7 +873,7 @@ export default function Dashboard() {
             backgroundSize: "60px 60px",
           }}
         />
-        
+
         <div className="orb-1 absolute top-0 right-0 w-[600px] h-[600px] bg-gray-200/30 rounded-full blur-[150px]" />
         <div className="orb-2 absolute bottom-0 left-0 w-[500px] h-[500px] bg-gray-300/30 rounded-full blur-[120px]" />
         <div className="orb-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gray-100/40 rounded-full blur-[180px]" />
@@ -830,31 +915,36 @@ export default function Dashboard() {
       >
         <div className="absolute inset-0 bg-white/80 backdrop-blur-2xl" />
         <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-gray-300/50 to-transparent" />
-        
+
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-20 left-1/4 w-60 h-20 bg-gray-200/20 rounded-full blur-3xl" />
           <div className="absolute -top-20 right-1/3 w-40 h-20 bg-gray-300/20 rounded-full blur-3xl" />
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-18 py-3">
-            
+          <div className="flex items-center justify-between min-h-[72px] py-3">
             <div className="flex items-center gap-8">
-              <motion.div 
-                className="flex items-center gap-3 cursor-pointer group"
+              <motion.button
+                type="button"
+                onClick={() => scrollToSection("section-hero", "dashboard")}
+                className="flex items-center gap-3 cursor-pointer group border-0 bg-transparent p-0 text-left"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                aria-label="Go to dashboard home"
               >
                 <div className="relative">
                   <div className="absolute -inset-1 bg-gradient-to-r from-gray-700 to-gray-900 rounded-xl blur opacity-40 group-hover:opacity-70 transition-opacity" />
-                  <div className="relative p-2.5 rounded-xl bg-gradient-to-br from-gray-700 via-gray-800 to-black shadow-lg">
+                  <div className="relative p-3 rounded-xl bg-gradient-to-br from-gray-700 via-gray-800 to-black shadow-lg">
                     <GraduationCap className="h-5 w-5 text-white" />
                   </div>
                 </div>
                 <div className="hidden sm:block">
                   <h1
-                    className="text-base font-bold text-gray-900 tracking-tight"
-                    style={{ fontFamily: "var(--font-space-mono), system-ui, sans-serif" }}
+                    className="text-2xl font-bold text-gray-900 tracking-tight"
+                    style={{
+                      fontFamily:
+                        "var(--font-montserrat), system-ui, sans-serif",
+                    }}
                   >
                     Dashboard
                   </h1>
@@ -863,31 +953,65 @@ export default function Dashboard() {
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                     </span>
-                    <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Online</p>
+                    <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">
+                      Online
+                    </p>
                   </div>
                 </div>
-              </motion.div>
+              </motion.button>
 
-              <nav className="hidden lg:flex items-center">
-                <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100/80 border border-gray-200/60">
+              <nav className="hidden lg:flex items-center" aria-label="Main">
+                <div
+                  className="flex items-center gap-1 p-1 rounded-xl bg-gray-100/80 border border-gray-200/60"
+                  style={{
+                    fontFamily: "var(--font-montserrat), system-ui, sans-serif",
+                  }}
+                >
                   {[
-                    { label: "Dashboard", icon: LayoutDashboard, active: true },
-                    { label: "Courses", icon: BookOpen, active: false },
-                    { label: "Schedule", icon: Calendar, active: false },
-                    { label: "Grades", icon: BarChart3, active: false },
+                    {
+                      label: "Main",
+                      icon: LayoutDashboard,
+                      id: "section-hero" as const,
+                      key: "dashboard" as const,
+                    },
+                    {
+                      label: "Courses",
+                      icon: BookOpen,
+                      id: "section-courses" as const,
+                      key: "courses" as const,
+                    },
+                    {
+                      label: "Schedule",
+                      icon: Calendar,
+                      id: "section-schedule" as const,
+                      key: "schedule" as const,
+                    },
+                    {
+                      label: "Grades",
+                      icon: BarChart3,
+                      id: "section-grades" as const,
+                      key: "grades" as const,
+                    },
                   ].map((item) => (
                     <motion.button
-                      key={item.label}
+                      key={item.key}
+                      type="button"
+                      onClick={() => scrollToSection(item.id, item.key)}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className={cn(
                         "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                        item.active
+                        activeNav === item.key
                           ? "bg-white text-gray-900 border border-gray-300/60 shadow-sm"
-                          : "text-gray-600 hover:text-gray-900 hover:bg-white/60"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-white/60",
                       )}
                     >
-                      <item.icon className={cn("h-4 w-4", item.active && "text-gray-900")} />
+                      <item.icon
+                        className={cn(
+                          "h-4 w-4",
+                          activeNav === item.key && "text-gray-900",
+                        )}
+                      />
                       {item.label}
                     </motion.button>
                   ))}
@@ -898,42 +1022,123 @@ export default function Dashboard() {
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="flex items-center gap-1">
                 <motion.button
+                  type="button"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => router.push("/assistant")}
                   className="relative p-2.5 rounded-xl bg-gray-100 border border-gray-200/60 hover:border-gray-400 transition-all group"
+                  aria-label="Open course assistant"
                 >
                   <Sparkles className="h-4 w-4 text-gray-700 group-hover:text-gray-900 transition-colors" />
                   <div className="absolute inset-0 rounded-xl bg-gray-200/30 blur-md opacity-0 group-hover:opacity-100 transition-opacity -z-10" />
                 </motion.button>
 
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="relative p-2.5 rounded-xl bg-gray-50 border border-gray-200/60 hover:bg-gray-100 hover:border-gray-300 transition-all group"
-                >
-                  <Bell className="h-4 w-4 text-gray-600 group-hover:text-gray-900 transition-colors" />
-                    <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center">
+                <div className="relative">
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      setShowNotifications((prev) => !prev);
+                    }}
+                    className={cn(
+                      "relative p-2.5 rounded-xl border transition-all group",
+                      showNotifications
+                        ? "bg-gray-100 border-gray-300"
+                        : "bg-gray-50 border-gray-200/60 hover:bg-gray-100 hover:border-gray-300",
+                    )}
+                    aria-label="Notifications"
+                    title="Notifications"
+                    aria-expanded={showNotifications}
+                  >
+                    <Bell className="h-4 w-4 text-gray-600 group-hover:text-gray-900 transition-colors" />
+                    <span
+                      className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center"
+                      aria-hidden
+                    >
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gray-500 opacity-40"></span>
                       <span className="relative inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-gradient-to-br from-gray-700 to-gray-900 text-[9px] font-bold text-white shadow-lg">
                         3
                       </span>
                     </span>
-                </motion.button>
+                  </motion.button>
+                  <AnimatePresence>
+                    {showNotifications && (
+                      <>
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="fixed inset-0 z-40"
+                          onClick={() => setShowNotifications(false)}
+                          aria-hidden
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          transition={{
+                            duration: 0.2,
+                            ease: [0.16, 1, 0.3, 1],
+                          }}
+                          className="absolute right-0 mt-2 w-80 rounded-2xl bg-white border border-gray-200 shadow-2xl shadow-gray-200/50 overflow-hidden z-50 p-4"
+                          role="menu"
+                          aria-label="Notifications"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-semibold text-gray-900">
+                              Notifications
+                            </span>
+                          </div>
+                          {upcomingDeadlines.length === 0 ? (
+                            <div className="text-sm text-gray-500 py-4 text-center">
+                              No new notifications
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {upcomingDeadlines.slice(0, 3).map((d) => (
+                                <div
+                                  key={d.id}
+                                  className="py-2 px-3 rounded-lg bg-gray-50 border border-gray-100 text-left"
+                                >
+                                  <p className="text-xs font-medium text-gray-900 truncate">
+                                    {d.title}
+                                  </p>
+                                  <p className="text-[11px] text-gray-500">
+                                    {d.course} ·{" "}
+                                    {new Date(d.dueDate).toLocaleDateString(
+                                      "en-US",
+                                      { month: "short", day: "numeric" },
+                                    )}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
 
               <div className="hidden sm:block w-[1px] h-8 bg-gradient-to-b from-transparent via-gray-300 to-transparent mx-1" />
 
               <div className="relative">
                 <motion.button
+                  type="button"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  onClick={() => {
+                    setShowNotifications(false);
+                    setShowUserMenu((prev) => !prev);
+                  }}
                   className={cn(
                     "flex items-center gap-3 p-1.5 pr-3 rounded-xl transition-all",
                     "bg-gray-50 border border-gray-200/60",
                     "hover:bg-gray-100 hover:border-gray-300",
-                    showUserMenu && "bg-gray-100 border-gray-300"
+                    showUserMenu && "bg-gray-100 border-gray-300",
                   )}
                 >
                   <div className="relative">
@@ -944,21 +1149,28 @@ export default function Dashboard() {
                       <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50" />
                     </div>
                   </div>
-                  
+
                   <div className="hidden sm:block text-left">
-                    <p 
+                    <p
                       className="text-sm font-semibold text-gray-900 leading-tight"
-                      style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-manrope), system-ui, sans-serif",
+                      }}
                     >
-                      {studentInfo.name.split(' ')[0]}
+                      {studentInfo.name.split(" ")[0]}
                     </p>
-                    <p className="text-[10px] text-gray-600 font-medium">Student</p>
+                    <p className="text-[10px] text-gray-600 font-medium">
+                      Student
+                    </p>
                   </div>
-                  
-                  <ChevronDown className={cn(
-                    "hidden sm:block h-4 w-4 text-gray-400 transition-transform duration-300",
-                    showUserMenu && "rotate-180"
-                  )} />
+
+                  <ChevronDown
+                    className={cn(
+                      "hidden sm:block h-4 w-4 text-gray-400 transition-transform duration-300",
+                      showUserMenu && "rotate-180",
+                    )}
+                  />
                 </motion.button>
 
                 <AnimatePresence>
@@ -971,7 +1183,7 @@ export default function Dashboard() {
                         className="fixed inset-0 z-40"
                         onClick={() => setShowUserMenu(false)}
                       />
-                      
+
                       <motion.div
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -985,13 +1197,18 @@ export default function Dashboard() {
                               {studentInfo.name.charAt(0)}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p 
+                              <p
                                 className="text-base font-bold text-gray-900 truncate"
-                                style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                                style={{
+                                  fontFamily:
+                                    "var(--font-syne), system-ui, sans-serif",
+                                }}
                               >
                                 {studentInfo.name}
                               </p>
-                              <p className="text-xs text-gray-500 truncate">{studentInfo.email}</p>
+                              <p className="text-xs text-gray-500 truncate">
+                                {studentInfo.email}
+                              </p>
                             </div>
                           </div>
                           <div className="mt-3 flex items-center gap-2">
@@ -1008,12 +1225,31 @@ export default function Dashboard() {
 
                         <div className="p-2">
                           {[
-                            { icon: User, label: "My Profile", description: "View and edit profile", action: () => {} },
-                            { icon: Settings, label: "Settings", description: "Preferences & privacy", action: () => {} },
-                            { icon: HelpCircle, label: "Help Center", description: "Get support", action: () => {} },
+                            {
+                              icon: User,
+                              label: "My Profile",
+                              description: "View and edit profile",
+                              action: () => setShowUserMenu(false),
+                            },
+                            {
+                              icon: Settings,
+                              label: "Settings",
+                              description: "Preferences & privacy",
+                              action: () => setShowUserMenu(false),
+                            },
+                            {
+                              icon: HelpCircle,
+                              label: "Help Center",
+                              description: "Get support",
+                              action: () => {
+                                setShowUserMenu(false);
+                                router.push("/assistant");
+                              },
+                            },
                           ].map((item, index) => (
                             <motion.button
                               key={item.label}
+                              type="button"
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: index * 0.05 }}
@@ -1025,8 +1261,12 @@ export default function Dashboard() {
                                 <item.icon className="h-4 w-4 text-gray-500 group-hover:text-gray-900 transition-colors" />
                               </div>
                               <div>
-                                <p className="text-sm font-medium text-gray-900">{item.label}</p>
-                                <p className="text-xs text-gray-500">{item.description}</p>
+                                <p className="text-sm font-medium text-gray-900">
+                                  {item.label}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {item.description}
+                                </p>
                               </div>
                             </motion.button>
                           ))}
@@ -1048,8 +1288,12 @@ export default function Dashboard() {
                               <LogOut className="h-4 w-4 text-gray-500 group-hover:text-red-600 transition-colors" />
                             </div>
                             <div>
-                              <p className="text-sm font-medium text-gray-700 group-hover:text-red-600 transition-colors">Sign Out</p>
-                              <p className="text-xs text-gray-500">End your session</p>
+                              <p className="text-sm font-medium text-gray-700 group-hover:text-red-600 transition-colors">
+                                Sign Out
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                End your session
+                              </p>
                             </div>
                           </motion.button>
                         </div>
@@ -1071,42 +1315,47 @@ export default function Dashboard() {
           animate="visible"
         >
           {/* Hero Section */}
-          <motion.div variants={itemVariants} ref={heroRef} className="mb-8">
-            <motion.div 
+          <motion.div
+            id="section-hero"
+            variants={itemVariants}
+            ref={heroRef}
+            className="mb-8"
+          >
+            <motion.div
               className="relative overflow-hidden rounded-3xl"
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-black" />
-              
+
               <div className="absolute inset-0 overflow-hidden">
-                <motion.div 
+                <motion.div
                   className="absolute top-0 right-0 w-[600px] h-[600px] bg-gray-400/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3"
-                  animate={{ 
+                  animate={{
                     scale: [1, 1.2, 1],
                     opacity: [0.15, 0.25, 0.15],
                   }}
-                  transition={{ 
+                  transition={{
                     duration: 8,
                     repeat: Infinity,
-                    ease: "easeInOut"
+                    ease: "easeInOut",
                   }}
                 />
-                <motion.div 
+                <motion.div
                   className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gray-500/25 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/3"
-                  animate={{ 
+                  animate={{
                     scale: [1, 1.15, 1],
                     opacity: [0.2, 0.3, 0.2],
                   }}
-                  transition={{ 
+                  transition={{
                     duration: 6,
                     repeat: Infinity,
                     ease: "easeInOut",
-                    delay: 1
+                    delay: 1,
                   }}
                 />
-                
+
                 <div
                   className="absolute inset-0 opacity-[0.1]"
                   style={{
@@ -1115,8 +1364,10 @@ export default function Dashboard() {
                       linear-gradient(90deg, rgba(255, 255, 255, 0.3) 1px, transparent 1px)
                     `,
                     backgroundSize: "50px 50px",
-                    maskImage: "radial-gradient(ellipse at center, black 30%, transparent 80%)",
-                    WebkitMaskImage: "radial-gradient(ellipse at center, black 30%, transparent 80%)",
+                    maskImage:
+                      "radial-gradient(ellipse at center, black 30%, transparent 80%)",
+                    WebkitMaskImage:
+                      "radial-gradient(ellipse at center, black 30%, transparent 80%)",
                   }}
                 />
               </div>
@@ -1127,7 +1378,11 @@ export default function Dashboard() {
                     <motion.div
                       initial={{ opacity: 0, y: 20, scale: 0.9 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
+                      transition={{
+                        delay: 0.2,
+                        type: "spring",
+                        stiffness: 100,
+                      }}
                       className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/20 text-white/90 text-sm mb-5"
                     >
                       <motion.div
@@ -1136,31 +1391,48 @@ export default function Dashboard() {
                       >
                         <Flame className="h-4 w-4 text-amber-300" />
                       </motion.div>
-                      <span style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}>
+                      <span
+                        style={{
+                          fontFamily:
+                            "var(--font-manrope), system-ui, sans-serif",
+                        }}
+                      >
                         5 day streak!
                       </span>
                     </motion.div>
-                    
+
                     <motion.h2
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                      transition={{
+                        delay: 0.3,
+                        duration: 0.6,
+                        ease: [0.16, 1, 0.3, 1],
+                      }}
                       className="text-3xl lg:text-5xl font-bold text-white mb-4"
-                      style={{ fontFamily: "var(--font-vonique), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-vonique), system-ui, sans-serif",
+                      }}
                     >
-                      <span className="inline-block">Hello, {studentInfo.name.split(" ")[0]}!</span>
+                      <span className="inline-block">
+                        Hello, {studentInfo.name.split(" ")[0]}!
+                      </span>
                     </motion.h2>
-                    
+
                     <motion.p
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.4, duration: 0.5 }}
                       className="text-white/80 text-lg mb-8 max-w-md"
-                      style={{ fontFamily: "var(--font-vonique), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-vonique), system-ui, sans-serif",
+                      }}
                     >
                       Ready to book your next courses?
                     </motion.p>
-                    
+
                     <motion.button
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -1169,7 +1441,10 @@ export default function Dashboard() {
                       whileTap={{ scale: 0.97 }}
                       onClick={() => router.push("/assistant")}
                       className="group relative inline-flex items-center gap-3 px-6 py-4 bg-white text-gray-900 font-bold rounded-2xl shadow-2xl shadow-gray-900/30 hover:shadow-gray-800/40 transition-all duration-300 overflow-hidden"
-                      style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-bogita-mono), system-ui, sans-serif",
+                      }}
                     >
                       <motion.div
                         className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-200/50 to-transparent -skew-x-12"
@@ -1187,48 +1462,78 @@ export default function Dashboard() {
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8, y: 30 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
-                      transition={{ delay: 0.5, type: "spring", stiffness: 100, damping: 12 }}
+                      transition={{
+                        delay: 0.5,
+                        type: "spring",
+                        stiffness: 100,
+                        damping: 12,
+                      }}
                       whileHover={{ y: -6, scale: 1.03 }}
                       className="relative bg-white/15 backdrop-blur-xl rounded-2xl p-6 text-center min-w-[140px] border border-white/20 overflow-hidden group"
                     >
                       <div className="absolute inset-0 bg-gradient-to-br from-gray-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <motion.div
                         className="text-4xl font-bold text-white mb-2 relative z-10"
-                        style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                        style={{
+                          fontFamily:
+                            "var(--font-raleway), system-ui, sans-serif",
+                        }}
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        transition={{ delay: 0.7, type: "spring", stiffness: 200 }}
+                        transition={{
+                          delay: 0.7,
+                          type: "spring",
+                          stiffness: 200,
+                        }}
                       >
                         {academicStats.currentGPA}
                       </motion.div>
-                      <div 
+                      <div
                         className="text-white/70 text-sm relative z-10"
-                        style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                        style={{
+                          fontFamily:
+                            "var(--font-raleway), system-ui, sans-serif",
+                        }}
                       >
                         Current GPA
                       </div>
                     </motion.div>
-                    
+
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8, y: 30 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
-                      transition={{ delay: 0.6, type: "spring", stiffness: 100, damping: 12 }}
+                      transition={{
+                        delay: 0.6,
+                        type: "spring",
+                        stiffness: 100,
+                        damping: 12,
+                      }}
                       whileHover={{ y: -6, scale: 1.03 }}
                       className="relative bg-white/15 backdrop-blur-xl rounded-2xl p-6 text-center min-w-[140px] border border-white/20 overflow-hidden group"
                     >
                       <div className="absolute inset-0 bg-gradient-to-br from-gray-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <motion.div
                         className="text-4xl font-bold text-white mb-2 relative z-10"
-                        style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                        style={{
+                          fontFamily:
+                            "var(--font-raleway), system-ui, sans-serif",
+                        }}
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+                        transition={{
+                          delay: 0.8,
+                          type: "spring",
+                          stiffness: 200,
+                        }}
                       >
                         {academicStats.overallAttendance}%
                       </motion.div>
-                      <div 
+                      <div
                         className="text-white/70 text-sm relative z-10"
-                        style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                        style={{
+                          fontFamily:
+                            "var(--font-raleway), system-ui, sans-serif",
+                        }}
                       >
                         Attendance
                       </div>
@@ -1272,7 +1577,8 @@ export default function Dashboard() {
                 icon: Award,
                 label: "Academic Standing",
                 value: academicStats.standing,
-                badge: academicStats.currentGPA >= 3.5 ? "Dean's List" : "Regular",
+                badge:
+                  academicStats.currentGPA >= 3.5 ? "Dean's List" : "Regular",
                 badgeColor: "text-amber-600",
                 color: "amber",
                 delay: 0.25,
@@ -1287,7 +1593,7 @@ export default function Dashboard() {
                         stat.color === "purple" && "bg-gray-100",
                         stat.color === "green" && "bg-emerald-100",
                         stat.color === "blue" && "bg-blue-100",
-                        stat.color === "amber" && "bg-amber-100"
+                        stat.color === "amber" && "bg-amber-100",
                       )}
                     >
                       <stat.icon
@@ -1296,29 +1602,37 @@ export default function Dashboard() {
                           stat.color === "purple" && "text-gray-900",
                           stat.color === "green" && "text-emerald-600",
                           stat.color === "blue" && "text-blue-600",
-                          stat.color === "amber" && "text-amber-600"
+                          stat.color === "amber" && "text-amber-600",
                         )}
                       />
                     </div>
                     <span
                       className={cn(
                         "text-xs font-medium flex items-center gap-1",
-                        stat.badgeColor === "text-purple-600" ? "text-gray-600" : (stat.badgeColor || "text-gray-500")
+                        stat.badgeColor === "text-purple-600"
+                          ? "text-gray-600"
+                          : stat.badgeColor || "text-gray-500",
                       )}
                     >
-                      {stat.badge.includes("+") && <TrendingUp className="h-3 w-3" />}
+                      {stat.badge.includes("+") && (
+                        <TrendingUp className="h-3 w-3" />
+                      )}
                       {stat.badge}
                     </span>
                   </div>
                   <div
                     className="text-2xl font-bold text-gray-900 mb-1"
-                    style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                    }}
                   >
                     {stat.value}
                   </div>
                   <div
                     className="text-sm text-gray-500"
-                    style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                    }}
                   >
                     {stat.label}
                   </div>
@@ -1335,13 +1649,19 @@ export default function Dashboard() {
                   <div>
                     <h3
                       className="text-lg font-semibold text-gray-900"
-                      style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-raleway), system-ui, sans-serif",
+                      }}
                     >
                       Subject Attendance
                     </h3>
                     <p
                       className="text-sm text-gray-500"
-                      style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-raleway), system-ui, sans-serif",
+                      }}
                     >
                       Your attendance by subject
                     </p>
@@ -1351,26 +1671,28 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="space-y-5">
-                  {currentStudent.academic_data.subjects.slice(0, 6).map((subject, index) => (
-                    <motion.div
-                      key={subject.name}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 * index + 0.3 }}
-                    >
-                      <AnimatedProgressBar
-                        value={subject.attendance}
-                        label={subject.name}
-                        color={
-                          subject.attendance >= 90
-                            ? "green"
-                            : subject.attendance >= 80
-                            ? "yellow"
-                            : "red"
-                        }
-                      />
-                    </motion.div>
-                  ))}
+                  {currentStudent.academic_data.subjects
+                    .slice(0, 6)
+                    .map((subject, index) => (
+                      <motion.div
+                        key={subject.name}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 * index + 0.3 }}
+                      >
+                        <AnimatedProgressBar
+                          value={subject.attendance}
+                          label={subject.name}
+                          color={
+                            subject.attendance >= 90
+                              ? "green"
+                              : subject.attendance >= 80
+                                ? "yellow"
+                                : "red"
+                          }
+                        />
+                      </motion.div>
+                    ))}
                 </div>
               </GradientCard>
             </motion.div>
@@ -1381,20 +1703,30 @@ export default function Dashboard() {
                   <div>
                     <h3
                       className="text-lg font-semibold text-gray-900"
-                      style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-raleway), system-ui, sans-serif",
+                      }}
                     >
                       Grade Distribution
                     </h3>
                     <p
                       className="text-sm text-gray-500"
-                      style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-raleway), system-ui, sans-serif",
+                      }}
                     >
                       This semester
                     </p>
                   </div>
                 </div>
                 <div className="flex justify-center mb-6">
-                  <AnimatedDonutChart data={donutData} size={180} strokeWidth={24} />
+                  <AnimatedDonutChart
+                    data={donutData}
+                    size={180}
+                    strokeWidth={24}
+                  />
                 </div>
                 <div className="flex flex-wrap justify-center gap-3">
                   {donutData.map((item) => (
@@ -1417,12 +1749,17 @@ export default function Dashboard() {
           </div>
 
           {/* Performance & Progress */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div
+            id="section-grades"
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8"
+          >
             <motion.div variants={itemVariants}>
               <GradientCard delay={0.4}>
                 <h3
                   className="text-lg font-semibold text-gray-900 mb-8"
-                  style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                  style={{
+                    fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                  }}
                 >
                   Key Metrics
                 </h3>
@@ -1453,13 +1790,19 @@ export default function Dashboard() {
                   <div>
                     <h3
                       className="text-lg font-semibold text-gray-900"
-                      style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-raleway), system-ui, sans-serif",
+                      }}
                     >
                       GPA Trend
                     </h3>
                     <p
                       className="text-sm text-gray-500"
-                      style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-raleway), system-ui, sans-serif",
+                      }}
                     >
                       Your progress over semesters
                     </p>
@@ -1477,7 +1820,7 @@ export default function Dashboard() {
                     <span>1.0</span>
                     <span>0.0</span>
                   </div>
-                  
+
                   {/* Chart container */}
                   <div className="ml-8 flex items-end justify-between gap-3 h-48 px-2 pb-8 border-b border-gray-200">
                     {semesterProgress.map((sem, index) => {
@@ -1485,7 +1828,7 @@ export default function Dashboard() {
                       const isLast = index === semesterProgress.length - 1;
                       const maxHeight = 192; // h-48 = 192px
                       const barHeight = (heightPercentage / 100) * maxHeight;
-                      
+
                       return (
                         <div
                           key={sem.semester}
@@ -1495,30 +1838,42 @@ export default function Dashboard() {
                             <motion.div
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: barHeight, opacity: 1 }}
-                              transition={{ delay: 0.1 * index + 0.3, duration: 0.8, ease: "easeOut" }}
+                              transition={{
+                                delay: 0.1 * index + 0.3,
+                                duration: 0.8,
+                                ease: "easeOut",
+                              }}
                               className={cn(
                                 "w-full rounded-t-xl relative overflow-hidden flex items-start justify-center pt-2",
                                 "min-h-[40px]",
                                 isLast
                                   ? "bg-gradient-to-t from-gray-800 via-gray-700 to-gray-600 shadow-lg shadow-gray-500/30"
-                                  : "bg-gradient-to-t from-gray-300 via-gray-200 to-gray-100 hover:from-gray-400 hover:via-gray-300 hover:to-gray-200 transition-all"
+                                  : "bg-gradient-to-t from-gray-300 via-gray-200 to-gray-100 hover:from-gray-400 hover:via-gray-300 hover:to-gray-200 transition-all",
                               )}
-                              style={{ minHeight: `${Math.max(barHeight, 40)}px` }}
+                              style={{
+                                minHeight: `${Math.max(barHeight, 40)}px`,
+                              }}
                             >
                               <span
                                 className={cn(
                                   "text-xs font-bold whitespace-nowrap",
-                                  isLast ? "text-white" : "text-gray-700"
+                                  isLast ? "text-white" : "text-gray-700",
                                 )}
-                                style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                                style={{
+                                  fontFamily:
+                                    "var(--font-raleway), system-ui, sans-serif",
+                                }}
                               >
                                 {sem.gpa}
                               </span>
                             </motion.div>
                           </div>
-                          <span 
+                          <span
                             className="text-[11px] text-gray-500 text-center whitespace-nowrap font-medium"
-                            style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                            style={{
+                              fontFamily:
+                                "var(--font-raleway), system-ui, sans-serif",
+                            }}
                           >
                             {sem.semester.split(" ")[0].slice(0, 2)}{" "}
                             {sem.semester.split(" ")[1]?.slice(2)}
@@ -1540,13 +1895,19 @@ export default function Dashboard() {
                   <div>
                     <h3
                       className="text-lg font-semibold text-gray-900"
-                      style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-raleway), system-ui, sans-serif",
+                      }}
                     >
                       Upcoming Deadlines
                     </h3>
                     <p
                       className="text-sm text-gray-500"
-                      style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-raleway), system-ui, sans-serif",
+                      }}
                     >
                       Next 2 weeks
                     </p>
@@ -1566,7 +1927,7 @@ export default function Dashboard() {
                       className={cn(
                         "flex items-center gap-4 p-4 rounded-xl cursor-pointer",
                         "bg-gray-50 border border-gray-100",
-                        "hover:bg-gray-100 hover:border-gray-300 transition-all"
+                        "hover:bg-gray-100 hover:border-gray-300 transition-all",
                       )}
                     >
                       <div
@@ -1575,8 +1936,8 @@ export default function Dashboard() {
                           deadline.priority === "high"
                             ? "bg-red-100"
                             : deadline.priority === "medium"
-                            ? "bg-amber-100"
-                            : "bg-emerald-100"
+                              ? "bg-amber-100"
+                              : "bg-emerald-100",
                         )}
                       >
                         {deadline.priority === "high" ? (
@@ -1587,7 +1948,7 @@ export default function Dashboard() {
                               "h-5 w-5",
                               deadline.priority === "medium"
                                 ? "text-amber-600"
-                                : "text-emerald-600"
+                                : "text-emerald-600",
                             )}
                           />
                         )}
@@ -1595,17 +1956,25 @@ export default function Dashboard() {
                       <div className="flex-1 min-w-0">
                         <p
                           className="text-sm font-medium text-gray-900 truncate"
-                          style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                          style={{
+                            fontFamily:
+                              "var(--font-manrope), system-ui, sans-serif",
+                          }}
                         >
                           {deadline.title}
                         </p>
-                        <p className="text-xs text-gray-500">{deadline.course}</p>
+                        <p className="text-xs text-gray-500">
+                          {deadline.course}
+                        </p>
                       </div>
                       <span className="text-xs text-gray-600 whitespace-nowrap px-2.5 py-1 rounded-lg bg-white border border-gray-200">
-                        {new Date(deadline.dueDate).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        })}
+                        {new Date(deadline.dueDate).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                          },
+                        )}
                       </span>
                     </motion.div>
                   ))}
@@ -1619,13 +1988,19 @@ export default function Dashboard() {
                   <div>
                     <h3
                       className="text-lg font-semibold text-gray-900"
-                      style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-raleway), system-ui, sans-serif",
+                      }}
                     >
                       Achievements
                     </h3>
                     <p
                       className="text-sm text-gray-500"
-                      style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-raleway), system-ui, sans-serif",
+                      }}
                     >
                       Your accomplishments
                     </p>
@@ -1641,12 +2016,16 @@ export default function Dashboard() {
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.1 * index + 0.4 }}
-                      whileHover={achievement.unlocked ? { scale: 1.03, y: -2 } : undefined}
+                      whileHover={
+                        achievement.unlocked
+                          ? { scale: 1.03, y: -2 }
+                          : undefined
+                      }
                       className={cn(
                         "flex flex-col items-center p-4 rounded-xl text-center transition-all",
                         achievement.unlocked
                           ? "bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 cursor-pointer"
-                          : "bg-gray-50 border border-gray-100 opacity-50"
+                          : "bg-gray-50 border border-gray-100 opacity-50",
                       )}
                     >
                       <div
@@ -1654,19 +2033,24 @@ export default function Dashboard() {
                           "h-12 w-12 rounded-xl flex items-center justify-center mb-3",
                           achievement.unlocked
                             ? "bg-gradient-to-br from-amber-200/50 to-orange-200/50"
-                            : "bg-gray-100"
+                            : "bg-gray-100",
                         )}
                       >
                         <Award
                           className={cn(
                             "h-6 w-6",
-                            achievement.unlocked ? "text-amber-600" : "text-gray-400"
+                            achievement.unlocked
+                              ? "text-amber-600"
+                              : "text-gray-400",
                           )}
                         />
                       </div>
                       <p
                         className="text-sm font-semibold text-gray-900 mb-1"
-                        style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                        style={{
+                          fontFamily:
+                            "var(--font-manrope), system-ui, sans-serif",
+                        }}
                       >
                         {achievement.title}
                       </p>
@@ -1681,24 +2065,32 @@ export default function Dashboard() {
           </div>
 
           {/* Weekly Timetable */}
-          <motion.div variants={itemVariants} className="mb-8">
+          <motion.div
+            id="section-schedule"
+            variants={itemVariants}
+            className="mb-8"
+          >
             <GradientCard delay={0.75}>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <div>
                   <h3
                     className="text-lg font-semibold text-gray-900"
-                    style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                    }}
                   >
                     Weekly Schedule
                   </h3>
                   <p
                     className="text-sm text-gray-500"
-                    style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                    }}
                   >
                     {getMonthName()}
                   </p>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   {/* Today Button */}
                   <motion.button
@@ -1706,11 +2098,13 @@ export default function Dashboard() {
                     whileTap={{ scale: 0.98 }}
                     onClick={goToToday}
                     className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 border border-gray-200 transition-all"
-                    style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily: "var(--font-manrope), system-ui, sans-serif",
+                    }}
                   >
                     Today
                   </motion.button>
-                  
+
                   {/* Week Navigation */}
                   <div className="flex items-center gap-1">
                     <motion.button
@@ -1730,7 +2124,7 @@ export default function Dashboard() {
                       <ChevronRight className="h-4 w-4 text-gray-700" />
                     </motion.button>
                   </div>
-                  
+
                   {/* Calendar Picker */}
                   <div className="relative">
                     <motion.button
@@ -1739,14 +2133,14 @@ export default function Dashboard() {
                       onClick={() => setShowMiniCalendar(!showMiniCalendar)}
                       className={cn(
                         "p-2 rounded-xl border transition-all",
-                        showMiniCalendar 
-                          ? "bg-gray-800 border-gray-800 text-white" 
-                          : "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-700"
+                        showMiniCalendar
+                          ? "bg-gray-800 border-gray-800 text-white"
+                          : "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-700",
                       )}
                     >
                       <CalendarDays className="h-4 w-4" />
                     </motion.button>
-                    
+
                     <AnimatePresence>
                       {showMiniCalendar && (
                         <>
@@ -1761,7 +2155,10 @@ export default function Dashboard() {
                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                            transition={{
+                              duration: 0.2,
+                              ease: [0.16, 1, 0.3, 1],
+                            }}
                             className="absolute right-0 mt-2 w-72 rounded-2xl bg-white border border-gray-200 shadow-2xl shadow-gray-200/50 overflow-hidden z-50 p-4"
                           >
                             {/* Mini Calendar Header */}
@@ -1776,11 +2173,17 @@ export default function Dashboard() {
                               >
                                 <ChevronLeft className="h-4 w-4 text-gray-600" />
                               </button>
-                              <span 
+                              <span
                                 className="text-sm font-semibold text-gray-900"
-                                style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                                style={{
+                                  fontFamily:
+                                    "var(--font-manrope), system-ui, sans-serif",
+                                }}
                               >
-                                {miniCalendarMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                                {miniCalendarMonth.toLocaleDateString("en-US", {
+                                  month: "long",
+                                  year: "numeric",
+                                })}
                               </span>
                               <button
                                 onClick={() => {
@@ -1793,16 +2196,21 @@ export default function Dashboard() {
                                 <ChevronRight className="h-4 w-4 text-gray-600" />
                               </button>
                             </div>
-                            
+
                             {/* Weekday Headers */}
                             <div className="grid grid-cols-7 gap-1 mb-2">
-                              {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((day) => (
-                                <div key={day} className="text-center text-xs font-medium text-gray-500 py-1">
-                                  {day}
-                                </div>
-                              ))}
+                              {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map(
+                                (day) => (
+                                  <div
+                                    key={day}
+                                    className="text-center text-xs font-medium text-gray-500 py-1"
+                                  >
+                                    {day}
+                                  </div>
+                                ),
+                              )}
                             </div>
-                            
+
                             {/* Calendar Days */}
                             <div className="grid grid-cols-7 gap-1">
                               {monthDays.map((day, index) => (
@@ -1818,9 +2226,20 @@ export default function Dashboard() {
                                   className={cn(
                                     "h-8 w-8 rounded-lg text-sm font-medium transition-all",
                                     !day && "invisible",
-                                    day && isToday(day) && "bg-gray-800 text-white",
-                                    day && !isToday(day) && "hover:bg-gray-100 text-gray-700",
-                                    day && weekDates.some(d => d.toDateString() === day.toDateString()) && !isToday(day) && "bg-gray-100"
+                                    day &&
+                                      isToday(day) &&
+                                      "bg-gray-800 text-white",
+                                    day &&
+                                      !isToday(day) &&
+                                      "hover:bg-gray-100 text-gray-700",
+                                    day &&
+                                      weekDates.some(
+                                        (d) =>
+                                          d.toDateString() ===
+                                          day.toDateString(),
+                                      ) &&
+                                      !isToday(day) &&
+                                      "bg-gray-100",
                                   )}
                                 >
                                   {day?.getDate()}
@@ -1841,33 +2260,41 @@ export default function Dashboard() {
                   {/* Header Row with Days */}
                   <div className="grid grid-cols-[70px_repeat(5,1fr)] border-b border-gray-100">
                     <div className="p-3 text-center">
-                      <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Time</span>
+                      <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                        Time
+                      </span>
                     </div>
                     {weekDates.map((date, index) => (
-                      <div 
-                        key={dayNames[index]} 
+                      <div
+                        key={dayNames[index]}
                         className={cn(
                           "p-3 text-center border-l border-gray-100",
-                          isToday(date) && "bg-gray-50"
+                          isToday(date) && "bg-gray-50",
                         )}
                       >
-                        <div 
+                        <div
                           className={cn(
                             "text-xs font-medium uppercase tracking-wider mb-1",
-                            isToday(date) ? "text-gray-900" : "text-gray-500"
+                            isToday(date) ? "text-gray-900" : "text-gray-500",
                           )}
-                          style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                          style={{
+                            fontFamily:
+                              "var(--font-manrope), system-ui, sans-serif",
+                          }}
                         >
                           {dayNames[index].slice(0, 3)}
                         </div>
-                        <div 
+                        <div
                           className={cn(
                             "text-lg font-bold",
-                            isToday(date) 
-                              ? "bg-gray-800 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto" 
-                              : "text-gray-900"
+                            isToday(date)
+                              ? "bg-gray-800 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto"
+                              : "text-gray-900",
                           )}
-                          style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                          style={{
+                            fontFamily:
+                              "var(--font-raleway), system-ui, sans-serif",
+                          }}
                         >
                           {date.getDate()}
                         </div>
@@ -1879,25 +2306,28 @@ export default function Dashboard() {
                   <div className="relative">
                     {/* Time slot rows */}
                     {timeSlots.map((time) => (
-                      <div 
-                        key={time} 
+                      <div
+                        key={time}
                         className="grid grid-cols-[70px_repeat(5,1fr)] border-b border-gray-50"
                         style={{ height: "60px" }}
                       >
                         <div className="p-2 flex items-start justify-center">
-                          <span 
+                          <span
                             className="text-[11px] font-medium text-gray-400 -mt-2"
-                            style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                            style={{
+                              fontFamily:
+                                "var(--font-manrope), system-ui, sans-serif",
+                            }}
                           >
                             {formatTime(time)}
                           </span>
                         </div>
                         {dayNames.map((day, dayIndex) => (
-                          <div 
-                            key={`${time}-${day}`} 
+                          <div
+                            key={`${time}-${day}`}
                             className={cn(
                               "border-l border-gray-50 relative",
-                              isToday(weekDates[dayIndex]) && "bg-gray-50/50"
+                              isToday(weekDates[dayIndex]) && "bg-gray-50/50",
                             )}
                           />
                         ))}
@@ -1908,11 +2338,18 @@ export default function Dashboard() {
                     <div className="absolute inset-0 grid grid-cols-[70px_repeat(5,1fr)] pointer-events-none">
                       <div /> {/* Time column spacer */}
                       {dayNames.map((day) => (
-                        <div key={day} className="relative border-l border-transparent">
+                        <div
+                          key={day}
+                          className="relative border-l border-transparent"
+                        >
                           {timetableData[day]?.map((classItem, classIndex) => {
-                            const topPosition = getTimePosition(classItem.startTime) * 60;
-                            const height = getClassHeight(classItem.startTime, classItem.endTime);
-                            
+                            const topPosition =
+                              getTimePosition(classItem.startTime) * 60;
+                            const height = getClassHeight(
+                              classItem.startTime,
+                              classItem.endTime,
+                            );
+
                             return (
                               <motion.div
                                 key={classItem.id}
@@ -1922,7 +2359,7 @@ export default function Dashboard() {
                                 className={cn(
                                   "absolute left-1 right-1 rounded-xl border-l-4 p-2 overflow-hidden cursor-pointer pointer-events-auto",
                                   "hover:shadow-md transition-shadow",
-                                  classItem.color
+                                  classItem.color,
                                 )}
                                 style={{
                                   top: `${topPosition}px`,
@@ -1930,9 +2367,12 @@ export default function Dashboard() {
                                 }}
                                 whileHover={{ scale: 1.02 }}
                               >
-                                <p 
+                                <p
                                   className="text-xs font-bold truncate"
-                                  style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                                  style={{
+                                    fontFamily:
+                                      "var(--font-manrope), system-ui, sans-serif",
+                                  }}
                                 >
                                   {classItem.courseName}
                                 </p>
@@ -1943,16 +2383,21 @@ export default function Dashboard() {
                                   <>
                                     <div className="flex items-center gap-1 mt-1">
                                       <MapPin className="h-3 w-3 opacity-70" />
-                                      <span className="text-[10px] opacity-80">{classItem.room}</span>
+                                      <span className="text-[10px] opacity-80">
+                                        {classItem.room}
+                                      </span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                       <Users className="h-3 w-3 opacity-70" />
-                                      <span className="text-[10px] opacity-80 truncate">{classItem.instructor}</span>
+                                      <span className="text-[10px] opacity-80 truncate">
+                                        {classItem.instructor}
+                                      </span>
                                     </div>
                                   </>
                                 )}
                                 <div className="absolute bottom-1 right-2 text-[9px] opacity-60">
-                                  {formatTime(classItem.startTime)} - {formatTime(classItem.endTime)}
+                                  {formatTime(classItem.startTime)} -{" "}
+                                  {formatTime(classItem.endTime)}
                                 </div>
                               </motion.div>
                             );
@@ -1967,9 +2412,11 @@ export default function Dashboard() {
               {/* Legend */}
               <div className="mt-6 pt-4 border-t border-gray-100">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span 
+                  <span
                     className="text-xs font-medium text-gray-500"
-                    style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily: "var(--font-manrope), system-ui, sans-serif",
+                    }}
                   >
                     Classes today:
                   </span>
@@ -1977,24 +2424,30 @@ export default function Dashboard() {
                     const today = new Date();
                     const todayName = dayNames[today.getDay() - 1];
                     const todayClasses = timetableData[todayName] || [];
-                    
+
                     if (todayClasses.length === 0) {
                       return (
-                        <span className="text-xs text-gray-400">No classes scheduled</span>
+                        <span className="text-xs text-gray-400">
+                          No classes scheduled
+                        </span>
                       );
                     }
-                    
+
                     return todayClasses.slice(0, 4).map((classItem) => (
                       <div
                         key={classItem.id}
                         className={cn(
                           "flex items-center gap-2 px-3 py-1.5 rounded-lg border",
-                          classItem.color
+                          classItem.color,
                         )}
                       >
                         <Clock className="h-3 w-3" />
-                        <span className="text-xs font-medium">{classItem.courseName}</span>
-                        <span className="text-[10px] opacity-70">{formatTime(classItem.startTime)}</span>
+                        <span className="text-xs font-medium">
+                          {classItem.courseName}
+                        </span>
+                        <span className="text-[10px] opacity-70">
+                          {formatTime(classItem.startTime)}
+                        </span>
                       </div>
                     ));
                   })()}
@@ -2004,19 +2457,23 @@ export default function Dashboard() {
           </motion.div>
 
           {/* Courses Table */}
-          <motion.div variants={itemVariants}>
+          <motion.div id="section-courses" variants={itemVariants}>
             <GradientCard delay={0.8}>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <div>
                   <h3
                     className="text-lg font-semibold text-gray-900"
-                    style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                    }}
                   >
                     My Subjects
                   </h3>
                   <p
                     className="text-sm text-gray-500"
-                    style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                    }}
                   >
                     Current semester performance
                   </p>
@@ -2026,7 +2483,9 @@ export default function Dashboard() {
                   whileTap={{ scale: 0.97 }}
                   onClick={() => router.push("/assistant")}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 border border-gray-300 transition-all"
-                  style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                  style={{
+                    fontFamily: "var(--font-manrope), system-ui, sans-serif",
+                  }}
                 >
                   <BookOpen className="h-4 w-4" />
                   Book More
@@ -2037,82 +2496,97 @@ export default function Dashboard() {
                 <table className="w-full min-w-[600px]">
                   <thead>
                     <tr className="border-b border-gray-100">
-                      {["Subject", "Marks", "Grade", "Attendance", "Remarks"].map(
-                        (header) => (
-                          <th
-                            key={header}
-                            className="text-left py-4 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider"
-                            style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
-                          >
-                            {header}
-                          </th>
-                        )
-                      )}
+                      {[
+                        "Subject",
+                        "Marks",
+                        "Grade",
+                        "Attendance",
+                        "Remarks",
+                      ].map((header) => (
+                        <th
+                          key={header}
+                          className="text-left py-4 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                          style={{
+                            fontFamily:
+                              "var(--font-manrope), system-ui, sans-serif",
+                          }}
+                        >
+                          {header}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {currentStudent.academic_data.subjects.map((subject, index) => (
-                      <motion.tr
-                        key={subject.name}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.05 * index + 0.5 }}
-                        className="border-b border-gray-50 hover:bg-gray-100/50 transition-colors group"
-                      >
-                        <td className="py-4 px-4">
-                          <p
-                            className="font-semibold text-gray-900 group-hover:text-gray-700 transition-colors"
-                            style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
-                          >
-                            {subject.name}
-                          </p>
-                        </td>
-                        <td className="py-4 px-4 text-sm text-gray-700 font-medium">
-                          {subject.marks}/100
-                        </td>
-                        <td className="py-4 px-4">
-                          <span
-                            className={cn(
-                              "inline-flex px-3 py-1.5 rounded-lg text-xs font-semibold",
-                              subject.grade.startsWith("A")
-                                ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                                : subject.grade.startsWith("B")
-                                ? "bg-amber-100 text-amber-700 border border-amber-200"
-                                : "bg-red-100 text-red-700 border border-red-200"
-                            )}
-                          >
-                            {subject.grade}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-20 h-2 bg-gray-100 rounded-full overflow-hidden">
-                              <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${subject.attendance}%` }}
-                                transition={{ delay: 0.6, duration: 0.8 }}
-                                className={cn(
-                                  "h-full rounded-full",
-                                  subject.attendance >= 90
-                                    ? "bg-gradient-to-r from-emerald-500 to-green-400"
-                                    : subject.attendance >= 80
-                                    ? "bg-gradient-to-r from-amber-500 to-yellow-400"
-                                    : "bg-gradient-to-r from-red-500 to-rose-400"
-                                )}
-                              />
-                            </div>
-                            <span className="text-sm text-gray-700 font-medium">
-                              {subject.attendance}%
+                    {currentStudent.academic_data.subjects.map(
+                      (subject, index) => (
+                        <motion.tr
+                          key={subject.name}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.05 * index + 0.5 }}
+                          className="border-b border-gray-50 hover:bg-gray-100/50 transition-colors group"
+                        >
+                          <td className="py-4 px-4">
+                            <p
+                              className="font-semibold text-gray-900 group-hover:text-gray-700 transition-colors"
+                              style={{
+                                fontFamily:
+                                  "var(--font-manrope), system-ui, sans-serif",
+                              }}
+                            >
+                              {subject.name}
+                            </p>
+                          </td>
+                          <td className="py-4 px-4 text-sm text-gray-700 font-medium">
+                            {subject.marks}/100
+                          </td>
+                          <td className="py-4 px-4">
+                            <span
+                              className={cn(
+                                "inline-flex px-3 py-1.5 rounded-lg text-xs font-semibold",
+                                subject.grade.startsWith("A")
+                                  ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                                  : subject.grade.startsWith("B")
+                                    ? "bg-amber-100 text-amber-700 border border-amber-200"
+                                    : "bg-red-100 text-red-700 border border-red-200",
+                              )}
+                            >
+                              {subject.grade}
                             </span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <p className="text-xs text-gray-500 max-w-[200px] truncate" title={subject.teacher_remarks}>
-                            {subject.teacher_remarks}
-                          </p>
-                        </td>
-                      </motion.tr>
-                    ))}
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-20 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <motion.div
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${subject.attendance}%` }}
+                                  transition={{ delay: 0.6, duration: 0.8 }}
+                                  className={cn(
+                                    "h-full rounded-full",
+                                    subject.attendance >= 90
+                                      ? "bg-gradient-to-r from-emerald-500 to-green-400"
+                                      : subject.attendance >= 80
+                                        ? "bg-gradient-to-r from-amber-500 to-yellow-400"
+                                        : "bg-gradient-to-r from-red-500 to-rose-400",
+                                  )}
+                                />
+                              </div>
+                              <span className="text-sm text-gray-700 font-medium">
+                                {subject.attendance}%
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <p
+                              className="text-xs text-gray-500 max-w-[200px] truncate"
+                              title={subject.teacher_remarks}
+                            >
+                              {subject.teacher_remarks}
+                            </p>
+                          </td>
+                        </motion.tr>
+                      ),
+                    )}
                   </tbody>
                 </table>
               </div>

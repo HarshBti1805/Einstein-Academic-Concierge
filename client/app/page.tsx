@@ -1,656 +1,285 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import gsap from "gsap";
+import { motion } from "framer-motion";
 import { fontVariables } from "@/lib/fonts";
-import { 
-  GraduationCap, 
-  User, 
-  Hash, 
-  Mail, 
-  Building2, 
-  ArrowRight, 
+import {
+  GraduationCap,
+  UserPlus,
+  LogIn,
   Sparkles,
-  Calendar,
-  BookOpen,
-  MessageSquare,
-  ChevronDown,
-  Check,
-  Loader2,
-  AlertCircle
+  Shield,
+  ArrowRight,
 } from "lucide-react";
 
-// API base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-
-// API response type
-interface LoginResponse {
-  success: boolean;
-  message: string;
-  token?: string;
-  student?: {
-    student_id: string;
-    name: string;
-    email: string;
-    rollNumber: string;
-    universityName: string;
-    branch: string;
-    yearOfStudy: number;
-    expectedGraduation: number;
-  };
-}
-
-export default function Home() {
+export default function WelcomePage() {
   const router = useRouter();
-  const formRef = useRef<HTMLFormElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    rollNumber: "",
-    email: "",
-    university: "",
-    yearOfStudy: "",
-    passoutYear: "",
-    branch: "",
-    aboutYourself: "",
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [particles, setParticles] = useState<
+    Array<{ left: string; duration: number; delay: number; size: number }>
+  >([]);
 
-  // API login function
-  const loginWithAPI = async (data: typeof formData): Promise<LoginResponse> => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: data.name.trim(),
-        rollNumber: data.rollNumber.trim(),
-        email: data.email.trim(),
-        university: data.university.trim(),
-        yearOfStudy: data.yearOfStudy,
-        passoutYear: data.passoutYear,
-        branch: data.branch.trim(),
-      }),
-    });
-    
-    return response.json();
-  };
-  
-  // Generate particle data only on client-side after mount to avoid hydration mismatch
-  const [particles, setParticles] = useState<Array<{
-    x: number;
-    y: number;
-    duration: number;
-    delay: number;
-    left: string;
-  }>>([]);
-
-  // Generate particles only on client-side after mount to avoid hydration mismatch
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window === "undefined") return;
+    const id = setTimeout(() => {
       setParticles(
-        Array.from({ length: 15 }, () => ({
-          x: Math.random() * window.innerWidth,
-          y: window.innerHeight + 10,
-          duration: 10 + Math.random() * 10,
-          delay: Math.random() * 10,
+        Array.from({ length: 18 }, () => ({
           left: `${Math.random() * 100}%`,
-        }))
+          duration: 12 + Math.random() * 10,
+          delay: Math.random() * 10,
+          size: Math.random() > 0.6 ? 2 : 1,
+        })),
       );
-    }
+    }, 0);
+    return () => clearTimeout(id);
   }, []);
-
-  useEffect(() => {
-    // GSAP animations
-    if (titleRef.current) {
-      gsap.fromTo(
-        titleRef.current,
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 1, ease: "power3.out" }
-      );
-    }
-
-    // Floating animation for the icon (delayed to start after Framer Motion animation)
-    gsap.to(".float-icon", {
-      y: -8,
-      duration: 2.5,
-      repeat: -1,
-      yoyo: true,
-      ease: "power1.inOut",
-      delay: 0.5,
-    });
-
-    // Subtle card float
-    if (cardRef.current) {
-      gsap.to(cardRef.current, {
-        y: -5,
-        duration: 4,
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut",
-      });
-    }
-
-    // Animate gradient orbs
-    gsap.to(".orb-1", {
-      x: 30,
-      y: -20,
-      duration: 8,
-      repeat: -1,
-      yoyo: true,
-      ease: "sine.inOut",
-    });
-    gsap.to(".orb-2", {
-      x: -30,
-      y: 20,
-      duration: 10,
-      repeat: -1,
-      yoyo: true,
-      ease: "sine.inOut",
-    });
-    gsap.to(".orb-3", {
-      scale: 1.1,
-      duration: 6,
-      repeat: -1,
-      yoyo: true,
-      ease: "sine.inOut",
-    });
-  }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    // Clear error when user starts typing
-    if (error) setError(null);
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // Call the login API
-      const response = await loginWithAPI(formData);
-      
-      if (!response.success || !response.token || !response.student) {
-        setIsLoading(false);
-        setError(response.message || "Invalid credentials. Please check your information and try again.");
-        return;
-      }
-      
-      setIsLoading(false);
-      setIsSuccess(true);
-
-      // Animate out after success
-      setTimeout(() => {
-        if (formRef.current) {
-          gsap.to(formRef.current, {
-            opacity: 0,
-            y: -20,
-            duration: 0.3,
-            onComplete: () => {
-              // Store token and student data
-              sessionStorage.setItem("authToken", response.token!);
-              sessionStorage.setItem("studentData", JSON.stringify({
-                student_id: response.student!.student_id,
-                name: response.student!.name,
-                email: response.student!.email,
-                rollNumber: response.student!.rollNumber,
-              }));
-              router.push("/dashboard");
-            },
-          });
-        }
-      }, 1000);
-      
-    } catch (err) {
-      setIsLoading(false);
-      setError("Unable to connect to server. Please try again later.");
-      console.error("Login error:", err);
-    }
-  };
-
-  const leftColumnFields = [
-    { name: "name", label: "Full Name", type: "text", icon: User, placeholder: "Alex Thompson" },
-    { name: "rollNumber", label: "Roll Number", type: "text", icon: Hash, placeholder: "CS2024-001" },
-    { name: "email", label: "Email Address", type: "email", icon: Mail, placeholder: "alex.thompson@university.edu" },
-    { name: "university", label: "University Name", type: "text", icon: Building2, placeholder: "Metropolitan State University" },
-  ];
-
-  const rightColumnFields = [
-    { name: "yearOfStudy", label: "Year of Study", type: "select", icon: Calendar, placeholder: "Select year", options: ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"] },
-    { name: "passoutYear", label: "Expected Graduation Year", type: "select", icon: GraduationCap, placeholder: "Select year", options: ["2024", "2025", "2026", "2027", "2028", "2029"] },
-    { name: "branch", label: "Branch / Major", type: "text", icon: BookOpen, placeholder: "Computer Science" },
-  ];
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.08,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring" as const,
-        stiffness: 100,
-        damping: 12,
-      },
-    },
-  };
 
   return (
-    <div className={`min-h-screen flex items-center justify-center relative overflow-hidden py-8 bg-gradient-to-br from-slate-50 via-white to-gray-100 ${fontVariables}`}>
-      {/* Animated Grid Background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div 
-          className="absolute inset-0 opacity-[0.4]"
-          style={{
-            backgroundImage: `
-              linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px)
-            `,
-            backgroundSize: '60px 60px',
-          }}
-        />
-      </div>
+    <div
+      className={`min-h-screen flex items-center justify-center relative overflow-hidden py-8 px-4 sm:px-6 ${fontVariables}`}
+      style={{
+        background:
+          "linear-gradient(165deg, #f8fafc 0%, #f1f5f9 35%, #e2e8f0 70%, #f1f5f9 100%)",
+      }}
+    >
+      {/* Grid */}
+      <div
+        className="absolute inset-0 opacity-[0.5]"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px)
+          `,
+          backgroundSize: "48px 48px",
+        }}
+      />
 
-      {/* Gradient orbs - Light version */}
-      <div className="orb-1 absolute top-1/4 -left-32 w-[500px] h-[500px] bg-gray-200/40 rounded-full blur-[120px] pointer-events-none" />
-      <div className="orb-2 absolute bottom-1/4 -right-32 w-[400px] h-[400px] bg-gray-300/40 rounded-full blur-[100px] pointer-events-none" />
-      <div className="orb-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gray-100/50 rounded-full blur-[150px] pointer-events-none" />
+      {/* Orbs */}
+      <div
+        className="absolute top-0 right-0 w-[560px] h-[560px] rounded-full blur-[120px] pointer-events-none opacity-60 -translate-y-1/4 translate-x-1/4"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(148,163,184,0.35) 0%, transparent 70%)",
+        }}
+      />
+      <div
+        className="absolute bottom-0 left-0 w-[480px] h-[480px] rounded-full blur-[100px] pointer-events-none opacity-50 translate-y-1/4 -translate-x-1/4"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(148,163,184,0.3) 0%, transparent 70%)",
+        }}
+      />
+      <div
+        className="absolute top-1/2 left-1/2 w-[640px] h-[640px] rounded-full blur-[140px] pointer-events-none opacity-30 -translate-x-1/2 -translate-y-1/2"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(226,232,240,0.8) 0%, transparent 65%)",
+        }}
+      />
 
-      {/* Floating particles - Light version */}
+      {/* Particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {particles.map((particle, i) => (
+        {particles.map((p, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-gray-400/40 rounded-full"
-            initial={{
-              x: particle.x,
-              y: particle.y,
+            className="absolute rounded-full bottom-0 bg-slate-400/50"
+            style={{
+              left: p.left,
+              width: p.size,
+              height: p.size,
             }}
             animate={{
-              y: -10,
-              opacity: [0, 0.5, 0],
+              y: "-100vh",
+              opacity: [0, 0.6, 0],
             }}
             transition={{
-              duration: particle.duration,
+              duration: p.duration,
               repeat: Infinity,
-              delay: particle.delay,
+              delay: p.delay,
               ease: "linear",
-            }}
-            style={{
-              left: particle.left,
             }}
           />
         ))}
       </div>
 
-      <div className="relative z-10 w-full max-w-4xl px-4 sm:px-6">
+      <div className="relative z-10 w-full max-w-xl">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          initial={{ opacity: 0, y: 32 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="relative"
         >
-          {/* Card glow effect */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-gray-200/50 via-gray-300/50 to-gray-200/50 rounded-[28px] blur-xl opacity-70" />
-          
-          {/* Main card */}
-          <div 
-            ref={cardRef}
-            className="relative bg-white/90 backdrop-blur-2xl rounded-[26px] p-6 sm:p-8 md:p-10 border border-gray-200/60 shadow-xl shadow-gray-500/5"
-          >
-            {/* Header */}
-            <div className="text-center mb-10">
-              <motion.div
-                initial={{ scale: 0, rotate: -180, opacity: 0 }}
-                animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                transition={{ 
-                  type: "spring", 
-                  stiffness: 200, 
-                  damping: 15, 
-                  delay: 0.1,
-                  opacity: { duration: 0.3, delay: 0.1 }
-                }}
-                className="float-icon inline-flex items-center justify-center rounded-2xl bg-gradient-to-br from-gray-800 via-gray-900 to-black shadow-lg shadow-gray-900/30 mb-6 p-4 relative"
-                style={{ opacity: 1 }}
-              >
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent" />
-                <GraduationCap className="h-10 w-10 text-white relative z-10" />
-              </motion.div>
-              
-              <motion.h1
-                ref={titleRef}
-                initial={{ opacity: 0, y: 20 }}
+          {/* Card glow */}
+          <div
+            className="absolute -inset-px rounded-[28px] opacity-60"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(148,163,184,0.4) 0%, rgba(226,232,240,0.5) 50%, rgba(148,163,184,0.4) 100%)",
+              filter: "blur(20px)",
+            }}
+          />
+
+          <div className="relative rounded-[26px] border border-slate-200/80 bg-white/95 backdrop-blur-2xl shadow-xl shadow-slate-400/10 text-center overflow-hidden">
+            {/* Top highlight */}
+            <div
+              className="absolute inset-x-0 top-0 h-px"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent)",
+              }}
+            />
+
+            <div className="relative p-8 sm:p-10 md:p-12">
+              {/* Badge */}
+              {/* <motion.div
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.6 }}
-                className="text-3xl sm:text-4xl mb-3 bg-gradient-to-r from-gray-800 via-gray-900 to-black bg-clip-text text-transparent"
-                style={{ fontFamily: "var(--font-vonique), system-ui, sans-serif" }}
+                transition={{ delay: 0.15, duration: 0.4 }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100/80 text-slate-600 text-xs font-medium tracking-wide mb-6"
+                style={{
+                  fontFamily:
+                    "var(--font-space-grotesk), system-ui, sans-serif",
+                }}
               >
-                STUDENT PORTAL
+                <Sparkles className="h-3.5 w-3.5 text-slate-500" />
+                AI-Powered Registration
+              </motion.div> */}
+
+              {/* Icon */}
+              <motion.div
+                initial={{ scale: 0, rotate: -12, opacity: 0 }}
+                animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 200,
+                  damping: 18,
+                  delay: 0.2,
+                }}
+                className="relative inline-flex mb-6"
+              >
+                <div
+                  className="absolute -inset-3 rounded-3xl opacity-40"
+                  style={{
+                    background:
+                      "radial-gradient(circle, rgba(71,85,105,0.2) 0%, transparent 70%)",
+                    filter: "blur(12px)",
+                  }}
+                />
+                <div className="relative flex items-center justify-center rounded-2xl bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 p-4 shadow-lg shadow-slate-900/25 ring-1 ring-white/10">
+                  <GraduationCap
+                    className="h-11 w-11 text-white"
+                    strokeWidth={1.5}
+                  />
+                </div>
+              </motion.div>
+
+              {/* Title */}
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35, duration: 0.45 }}
+                className="text-slate-500 text-sm font-medium tracking-widest uppercase mb-2"
+                style={{
+                  fontFamily:
+                    "var(--font-space-grotesk), system-ui, sans-serif",
+                }}
+              >
+                Welcome to
+              </motion.p>
+              <motion.h1
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+                className="text-3xl sm:text-4xl md:text-[3rem] font-semibold tracking-tight mb-3 bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 bg-clip-text text-transparent"
+                style={{
+                  fontFamily: "var(--font-vonique), system-ui, sans-serif",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                Student Portal
               </motion.h1>
-              
-              <motion.p 
+              <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-gray-500 text-lg flex items-center justify-center gap-2"
-                style={{ fontFamily: "var(--font-space-grotesk), system-ui, sans-serif" }}
+                transition={{ delay: 0.5, duration: 0.4 }}
+                className="text-slate-500 text-base max-w-sm mx-auto mb-10"
+                style={{
+                  fontFamily: "var(--font-manrope), system-ui, sans-serif",
+                }}
               >
-                <motion.span
-                  animate={{ rotate: [0, 15, -15, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                >
-                  <Sparkles className="h-4 w-4 text-gray-700" />
-                </motion.span>
-                AI-Powered Registration System
+                Sign in or create an account to access your dashboard and
+                courses.
               </motion.p>
-            </div>
 
-            {/* Form */}
-            <motion.form 
-              ref={formRef} 
-              onSubmit={handleSubmit}
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 lg:gap-x-8 gap-y-5">
-                {/* Left Column */}
-                <div className="space-y-5">
-                  {leftColumnFields.map((field) => (
-                    <motion.div key={field.name} variants={itemVariants}>
-                      <label
-                        htmlFor={field.name}
-                        className={`block text-sm font-medium mb-2 transition-colors duration-300 ${
-                          focusedField === field.name ? 'text-gray-900' : 'text-gray-600'
-                        }`}
-                        style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
-                      >
-                        {field.label}
-                      </label>
-                      <div className="relative group">
-                        {/* Input glow on focus */}
-                        <div className={`absolute -inset-0.5 bg-gradient-to-r from-gray-600 to-gray-800 rounded-xl opacity-0 blur transition-opacity duration-300 ${
-                          focusedField === field.name ? 'opacity-20' : 'group-hover:opacity-10'
-                        }`} />
-                        
-                        <div className="relative flex items-center">
-                          <div className={`absolute left-4 transition-all duration-300 ${
-                            focusedField === field.name 
-                              ? 'text-gray-900 scale-110' 
-                              : 'text-gray-400 group-hover:text-gray-500'
-                          }`}>
-                            <field.icon className="h-[18px] w-[18px]" />
-                          </div>
-                          <input
-                            type={field.type}
-                            id={field.name}
-                            name={field.name}
-                            value={formData[field.name as keyof typeof formData]}
-                            onChange={handleChange}
-                            onFocus={() => setFocusedField(field.name)}
-                            onBlur={() => setFocusedField(null)}
-                            required
-                            className="w-full pl-12 pr-4 py-3.5 text-gray-900 placeholder-gray-400 bg-gray-50/80 border border-gray-200 rounded-xl focus:border-gray-400 focus:bg-white focus:ring-2 focus:ring-gray-500/20 outline-none transition-all duration-300"
-                            placeholder={field.placeholder}
-                            style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
-                          />
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                {/* Right Column */}
-                <div className="space-y-5">
-                  {rightColumnFields.map((field) => (
-                    <motion.div key={field.name} variants={itemVariants}>
-                      <label
-                        htmlFor={field.name}
-                        className={`block text-sm font-medium mb-2 transition-colors duration-300 ${
-                          focusedField === field.name ? 'text-gray-900' : 'text-gray-600'
-                        }`}
-                        style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
-                      >
-                        {field.label}
-                      </label>
-                      <div className="relative group">
-                        {/* Input glow on focus */}
-                        <div className={`absolute -inset-0.5 bg-gradient-to-r from-gray-600 to-gray-800 rounded-xl opacity-0 blur transition-opacity duration-300 ${
-                          focusedField === field.name ? 'opacity-20' : 'group-hover:opacity-10'
-                        }`} />
-                        
-                        <div className="relative flex items-center">
-                          <div className={`absolute left-4 transition-all duration-300 z-10 ${
-                            focusedField === field.name 
-                              ? 'text-gray-900 scale-110' 
-                              : 'text-gray-400 group-hover:text-gray-500'
-                          }`}>
-                            <field.icon className="h-[18px] w-[18px]" />
-                          </div>
-                          
-                          {field.type === "select" ? (
-                            <>
-                              <select
-                                id={field.name}
-                                name={field.name}
-                                value={formData[field.name as keyof typeof formData]}
-                                onChange={handleChange}
-                                onFocus={() => setFocusedField(field.name)}
-                                onBlur={() => setFocusedField(null)}
-                                required
-                                className="w-full pl-12 pr-10 py-3.5 text-gray-900 bg-gray-50/80 border border-gray-200 rounded-xl focus:border-gray-400 focus:bg-white focus:ring-2 focus:ring-gray-500/20 outline-none transition-all duration-300 appearance-none cursor-pointer"
-                                style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
-                              >
-                                <option value="" disabled className="bg-white text-gray-400">
-                                  {field.placeholder}
-                                </option>
-                                {field.options?.map((option) => (
-                                  <option key={option} value={option} className="bg-white text-gray-900 py-2">
-                                    {option}
-                                  </option>
-                                ))}
-                              </select>
-                              <ChevronDown className={`absolute right-4 h-4 w-4 pointer-events-none transition-all duration-300 ${
-                                focusedField === field.name ? 'text-gray-900 rotate-180' : 'text-gray-400'
-                              }`} />
-                            </>
-                          ) : (
-                            <input
-                              type={field.type}
-                              id={field.name}
-                              name={field.name}
-                              value={formData[field.name as keyof typeof formData]}
-                              onChange={handleChange}
-                              onFocus={() => setFocusedField(field.name)}
-                              onBlur={() => setFocusedField(null)}
-                              required
-                              className="w-full pl-12 pr-4 py-3.5 text-gray-900 placeholder-gray-400 bg-gray-50/80 border border-gray-200 rounded-xl focus:border-gray-400 focus:bg-white focus:ring-2 focus:ring-gray-500/20 outline-none transition-all duration-300"
-                              placeholder={field.placeholder}
-                              style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-
-                  {/* About Yourself - Textarea */}
-                  <motion.div variants={itemVariants}>
-                    <label
-                      htmlFor="aboutYourself"
-                      className={`block text-sm font-medium mb-2 transition-colors duration-300 ${
-                        focusedField === 'aboutYourself' ? 'text-gray-900' : 'text-gray-600'
-                      }`}
-                      style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
-                    >
-                      Tell Us About Yourself
-                    </label>
-                    <div className="relative group">
-                      {/* Textarea glow on focus */}
-                      <div className={`absolute -inset-0.5 bg-gradient-to-r from-gray-600 to-gray-800 rounded-xl opacity-0 blur transition-opacity duration-300 ${
-                        focusedField === 'aboutYourself' ? 'opacity-20' : 'group-hover:opacity-10'
-                      }`} />
-                      
-                      <div className="relative">
-                        <div className={`absolute left-4 top-4 transition-all duration-300 ${
-                          focusedField === 'aboutYourself' 
-                            ? 'text-gray-900 scale-110' 
-                            : 'text-gray-400 group-hover:text-gray-500'
-                        }`}>
-                          <MessageSquare className="h-[18px] w-[18px]" />
-                        </div>
-                        <textarea
-                          id="aboutYourself"
-                          name="aboutYourself"
-                          value={formData.aboutYourself}
-                          onChange={handleChange}
-                          onFocus={() => setFocusedField('aboutYourself')}
-                          onBlur={() => setFocusedField(null)}
-                          rows={3}
-                          className="w-full pl-12 pr-4 py-3.5 text-gray-900 placeholder-gray-400 bg-gray-50/80 border border-gray-200 rounded-xl focus:border-gray-400 focus:bg-white focus:ring-2 focus:ring-gray-500/20 outline-none transition-all duration-300 resize-none"
-                          placeholder="Share your interests, goals, or anything about yourself..."
-                          style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
-                </div>
-              </div>
-
-              {/* Error Message */}
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="mt-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-center gap-3"
-                  >
-                    <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
-                    <p className="text-sm text-red-700" style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}>
-                      {error}
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Submit Button */}
-              <motion.div
-                variants={itemVariants}
-                className="mt-8 flex justify-center"
+              {/* Divider label */}
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.55 }}
+                className="text-slate-400 text-sm mb-5"
+                style={{
+                  fontFamily: "var(--font-manrope), system-ui, sans-serif",
+                }}
               >
+                How would you like to continue?
+              </motion.p>
+
+              {/* Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <motion.button
-                  type="submit"
-                  disabled={isLoading || isSuccess}
+                  type="button"
+                  onClick={() => router.push("/register")}
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6, duration: 0.4 }}
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
-                  className="relative group px-10 sm:px-14 py-4 flex items-center justify-center gap-3 text-white font-semibold rounded-xl overflow-hidden disabled:cursor-not-allowed transition-all duration-300"
-                  style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
+                  className="group relative px-7 py-4 rounded-2xl bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 text-white font-semibold shadow-lg shadow-slate-900/25 overflow-hidden flex items-center justify-center gap-3 ring-1 ring-black/10"
+                  style={{
+                    fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                  }}
                 >
-                  {/* Button gradient background */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-900 to-black transition-all duration-300" />
-                  
-                  {/* Hover shine effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                  
-                  {/* Button glow */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-900 to-black blur-xl opacity-50 group-hover:opacity-70 transition-opacity duration-300" />
-                  
-                  {/* Button content */}
-                  <span className="relative z-10 flex items-center gap-2">
-                    <AnimatePresence mode="wait">
-                      {isSuccess ? (
-                        <motion.span
-                          key="success"
-                          initial={{ opacity: 0, scale: 0.5 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="flex tracking-widest items-center gap-2"
-                          style={{ fontFamily: "var(--font-vonique), system-ui, sans-serif" }}
-                        >
-                          <Check className="h-5 w-5" />
-                          Success!
-                        </motion.span>
-                      ) : isLoading ? (
-                        <motion.span
-                          key="loading"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="flex tracking-widest items-center gap-2"
-                          style={{ fontFamily: "var(--font-vonique), system-ui, sans-serif" }}
-
-                        >
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                          Processing...
-                        </motion.span>
-                      ) : (
-                        <motion.span
-                          key="default"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="flex items-center gap-2 font-thin tracking-widest text-lg"
-                          style={{ fontFamily: "var(--font-vonique), system-ui, sans-serif" }}
-
-                        >
-                          GET STARTED
-                          <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                  <UserPlus className="h-5 w-5 relative z-10" />
+                  <span className="relative z-10">New student</span>
+                  <ArrowRight className="h-4 w-4 relative z-10 opacity-70 group-hover:translate-x-0.5 group-hover:opacity-100 transition-all" />
                 </motion.button>
-              </motion.div>
-            </motion.form>
+                <motion.button
+                  type="button"
+                  onClick={() => router.push("/login")}
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.65, duration: 0.4 }}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="group relative px-7 py-4 rounded-2xl bg-white border-2 border-slate-200 text-slate-700 font-semibold hover:border-slate-400 hover:bg-slate-50/80 overflow-hidden flex items-center justify-center gap-3 transition-colors shadow-sm"
+                  style={{
+                    fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                  }}
+                >
+                  <LogIn className="h-5 w-5 text-slate-500 group-hover:text-slate-700 transition-colors" />
+                  <span>Returning student</span>
+                </motion.button>
+              </div>
 
-            {/* Footer */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className="mt-8 text-center text-sm text-gray-500"
-              style={{ fontFamily: "var(--font-space-grotesk), system-ui, sans-serif" }}
-            >
-              By signing in, you agree to our{" "}
-              <span className="text-gray-600 hover:text-gray-900 cursor-pointer transition-colors">
-                terms of service
-              </span>{" "}
-              and{" "}
-              <span className="text-gray-600 hover:text-gray-900 cursor-pointer transition-colors">
-                privacy policy
-              </span>
-            </motion.p>
+              {/* Trust line */}
+              {/* <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.85 }}
+                className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-2 text-slate-400 text-xs"
+                style={{
+                  fontFamily:
+                    "var(--font-space-grotesk), system-ui, sans-serif",
+                }}
+              >
+                <Shield className="h-3.5 w-3.5" />
+                <span>Secure sign-in</span>
+              </motion.div> */}
+            </div>
           </div>
         </motion.div>
       </div>
-
-      {/* Global styles for shimmer animation */}
-      <style jsx global>{`
-        @keyframes shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-      `}</style>
     </div>
   );
 }

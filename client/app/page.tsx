@@ -39,41 +39,41 @@ export default function WelcomePage() {
       className={`min-h-screen flex items-center justify-center relative overflow-hidden py-8 px-4 sm:px-6 ${fontVariables}`}
       style={{
         background:
-          "linear-gradient(165deg, #f8fafc 0%, #f1f5f9 35%, #e2e8f0 70%, #f1f5f9 100%)",
+          "linear-gradient(165deg, #e2e8f0 0%, #cbd5e1 30%, #94a3b8 60%, #e2e8f0 100%)",
       }}
     >
-      {/* Grid */}
+      {/* Grid - glassmorphism base */}
       <div
-        className="absolute inset-0 opacity-[0.5]"
+        className="absolute inset-0 opacity-60"
         style={{
           backgroundImage: `
-            linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px)
+            linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)
           `,
-          backgroundSize: "48px 48px",
+          backgroundSize: "40px 40px",
         }}
       />
 
-      {/* Orbs */}
+      {/* Orbs - stronger for glass bleed-through */}
       <div
-        className="absolute top-0 right-0 w-[560px] h-[560px] rounded-full blur-[120px] pointer-events-none opacity-60 -translate-y-1/4 translate-x-1/4"
+        className="absolute top-0 right-0 w-[560px] h-[560px] rounded-full blur-[140px] pointer-events-none opacity-70 -translate-y-1/4 translate-x-1/4"
         style={{
           background:
-            "radial-gradient(circle, rgba(148,163,184,0.35) 0%, transparent 70%)",
+            "radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(148,163,184,0.25) 40%, transparent 70%)",
         }}
       />
       <div
-        className="absolute bottom-0 left-0 w-[480px] h-[480px] rounded-full blur-[100px] pointer-events-none opacity-50 translate-y-1/4 -translate-x-1/4"
+        className="absolute bottom-0 left-0 w-[480px] h-[480px] rounded-full blur-[120px] pointer-events-none opacity-60 translate-y-1/4 -translate-x-1/4"
         style={{
           background:
-            "radial-gradient(circle, rgba(148,163,184,0.3) 0%, transparent 70%)",
+            "radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(148,163,184,0.2) 50%, transparent 70%)",
         }}
       />
       <div
-        className="absolute top-1/2 left-1/2 w-[640px] h-[640px] rounded-full blur-[140px] pointer-events-none opacity-30 -translate-x-1/2 -translate-y-1/2"
+        className="absolute top-1/2 left-1/2 w-[720px] h-[720px] rounded-full blur-[160px] pointer-events-none opacity-50 -translate-x-1/2 -translate-y-1/2"
         style={{
           background:
-            "radial-gradient(circle, rgba(226,232,240,0.8) 0%, transparent 65%)",
+            "radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(226,232,240,0.3) 50%, transparent 65%)",
         }}
       />
 
@@ -82,7 +82,7 @@ export default function WelcomePage() {
         {particles.map((p, i) => (
           <motion.div
             key={i}
-            className="absolute rounded-full bottom-0 bg-slate-400/50"
+            className="absolute rounded-full bottom-0 bg-white/40"
             style={{
               left: p.left,
               width: p.size,
@@ -109,23 +109,42 @@ export default function WelcomePage() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="relative"
         >
-          {/* Card glow */}
+          {/* Glass card glow / halo */}
           <div
-            className="absolute -inset-px rounded-[28px] opacity-60"
+            className="absolute -inset-1 rounded-[30px] opacity-80"
             style={{
               background:
-                "linear-gradient(135deg, rgba(148,163,184,0.4) 0%, rgba(226,232,240,0.5) 50%, rgba(148,163,184,0.4) 100%)",
-              filter: "blur(20px)",
+                "linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.4) 100%)",
+              filter: "blur(24px)",
             }}
           />
 
-          <div className="relative rounded-[26px] border border-slate-200/80 bg-white/95 backdrop-blur-2xl shadow-xl shadow-slate-400/10 text-center overflow-hidden">
-            {/* Top highlight */}
+          {/* Main glass card - improved glassmorphism */}
+          <div
+            className="relative rounded-[26px] text-center overflow-hidden isolate"
+            style={{
+              background: "rgba(255, 255, 255, 0.2)",
+              backdropFilter: "blur(24px) saturate(180%)",
+              WebkitBackdropFilter: "blur(24px) saturate(180%)",
+              border: "1px solid rgba(255, 255, 255, 0.45)",
+              boxShadow:
+                "0 8px 32px rgba(0,0,0,0.1), 0 0 0 1px rgba(255,255,255,0.1) inset, inset 0 1px 0 rgba(255,255,255,0.7)",
+            }}
+          >
+            {/* Inner glass highlight - top edge */}
             <div
-              className="absolute inset-x-0 top-0 h-px"
+              className="absolute inset-x-0 top-0 h-[1px]"
               style={{
                 background:
-                  "linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent)",
+                  "linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent)",
+              }}
+            />
+            {/* Subtle inner glow */}
+            <div
+              className="absolute inset-0 pointer-events-none rounded-[26px] opacity-40"
+              style={{
+                background:
+                  "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.5), transparent 60%)",
               }}
             />
 
@@ -157,17 +176,20 @@ export default function WelcomePage() {
                 }}
                 className="relative inline-flex mb-6"
               >
+                {/* Icon glass container */}
                 <div
-                  className="absolute -inset-3 rounded-3xl opacity-40"
+                  className="relative flex items-center justify-center rounded-2xl p-4"
                   style={{
-                    background:
-                      "radial-gradient(circle, rgba(71,85,105,0.2) 0%, transparent 70%)",
-                    filter: "blur(12px)",
+                    background: "rgba(255, 255, 255, 0.3)",
+                    backdropFilter: "blur(14px) saturate(150%)",
+                    WebkitBackdropFilter: "blur(14px) saturate(150%)",
+                    border: "1px solid rgba(255, 255, 255, 0.55)",
+                    boxShadow:
+                      "0 8px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.5)",
                   }}
-                />
-                <div className="relative flex items-center justify-center rounded-2xl bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 p-4 shadow-lg shadow-slate-900/25 ring-1 ring-white/10">
+                >
                   <GraduationCap
-                    className="h-11 w-11 text-white"
+                    className="h-11 w-11 text-slate-700"
                     strokeWidth={1.5}
                   />
                 </div>
@@ -190,7 +212,7 @@ export default function WelcomePage() {
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
-                className="text-3xl sm:text-4xl md:text-[3rem] font-semibold tracking-tight mb-3 bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 bg-clip-text text-transparent"
+                className="text-3xl sm:text-4xl md:text-[3rem] font-semibold tracking-tight mb-3 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 bg-clip-text text-transparent drop-shadow-sm"
                 style={{
                   fontFamily: "var(--font-vonique), system-ui, sans-serif",
                   letterSpacing: "0.04em",
@@ -211,20 +233,25 @@ export default function WelcomePage() {
                 courses.
               </motion.p>
 
-              {/* Divider label */}
+              {/* Divider label - glass pill */}
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.55 }}
-                className="text-slate-400 text-sm mb-5"
+                className="text-slate-600 text-sm mb-5 inline-block px-4 py-2 rounded-full"
                 style={{
                   fontFamily: "var(--font-manrope), system-ui, sans-serif",
+                  background: "rgba(255, 255, 255, 0.4)",
+                  backdropFilter: "blur(12px) saturate(140%)",
+                  WebkitBackdropFilter: "blur(12px) saturate(140%)",
+                  border: "1px solid rgba(255, 255, 255, 0.55)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
                 }}
               >
                 How would you like to continue?
               </motion.p>
 
-              {/* Buttons */}
+              {/* Buttons - glass style */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <motion.button
                   type="button"
@@ -234,12 +261,18 @@ export default function WelcomePage() {
                   transition={{ delay: 0.6, duration: 0.4 }}
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
-                  className="group relative px-7 py-4 rounded-2xl bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 text-white font-semibold shadow-lg shadow-slate-900/25 overflow-hidden flex items-center justify-center gap-3 ring-1 ring-black/10"
+                  className="group relative px-7 py-4 rounded-2xl text-white font-semibold overflow-hidden flex items-center justify-center gap-3"
                   style={{
                     fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                    background: "rgba(51, 65, 85, 0.7)",
+                    backdropFilter: "blur(14px) saturate(150%)",
+                    WebkitBackdropFilter: "blur(14px) saturate(150%)",
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                    boxShadow:
+                      "0 8px 28px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.15)",
                   }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                   <UserPlus className="h-5 w-5 relative z-10" />
                   <span className="relative z-10">New student</span>
                   <ArrowRight className="h-4 w-4 relative z-10 opacity-70 group-hover:translate-x-0.5 group-hover:opacity-100 transition-all" />
@@ -252,12 +285,18 @@ export default function WelcomePage() {
                   transition={{ delay: 0.65, duration: 0.4 }}
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
-                  className="group relative px-7 py-4 rounded-2xl bg-white border-2 border-slate-200 text-slate-700 font-semibold hover:border-slate-400 hover:bg-slate-50/80 overflow-hidden flex items-center justify-center gap-3 transition-colors shadow-sm"
+                  className="group relative px-7 py-4 rounded-2xl text-slate-700 font-semibold overflow-hidden flex items-center justify-center gap-3 transition-all"
                   style={{
                     fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                    background: "rgba(255, 255, 255, 0.4)",
+                    backdropFilter: "blur(14px) saturate(150%)",
+                    WebkitBackdropFilter: "blur(14px) saturate(150%)",
+                    border: "1px solid rgba(255, 255, 255, 0.55)",
+                    boxShadow:
+                      "0 4px 20px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.65)",
                   }}
                 >
-                  <LogIn className="h-5 w-5 text-slate-500 group-hover:text-slate-700 transition-colors" />
+                  <LogIn className="h-5 w-5 text-slate-600 group-hover:text-slate-800 transition-colors" />
                   <span>Returning student</span>
                 </motion.button>
               </div>

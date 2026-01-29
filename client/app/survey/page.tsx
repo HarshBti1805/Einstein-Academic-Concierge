@@ -239,12 +239,16 @@ export default function SurveyPage() {
   if (!mounted) {
     return (
       <div
-        className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100 flex items-center justify-center ${fontVariables}`}
+        className={`min-h-screen flex items-center justify-center ${fontVariables}`}
+        style={{
+          background:
+            "linear-gradient(165deg, #e2e8f0 0%, #cbd5e1 30%, #94a3b8 60%, #e2e8f0 100%)",
+        }}
       >
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="h-10 w-10 border-2 border-gray-200 border-t-gray-800 rounded-full"
+          className="h-10 w-10 rounded-full border-2 border-white/40 border-t-slate-600"
         />
       </div>
     );
@@ -262,28 +266,50 @@ export default function SurveyPage() {
 
   return (
     <div
-      className={`min-h-screen flex items-center justify-center relative overflow-hidden py-8 px-4 sm:px-6 bg-gradient-to-br from-slate-50 via-white to-gray-100 ${fontVariables}`}
+      className={`min-h-screen flex items-center justify-center relative overflow-hidden py-8 px-4 sm:px-6 ${fontVariables}`}
+      style={{
+        background:
+          "linear-gradient(165deg, #e2e8f0 0%, #cbd5e1 30%, #94a3b8 60%, #e2e8f0 100%)",
+      }}
     >
       <div className="absolute inset-0 overflow-hidden">
         <div
-          className="absolute inset-0 opacity-[0.4]"
+          className="absolute inset-0 opacity-60"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px)
+              linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)
             `,
-            backgroundSize: "60px 60px",
+            backgroundSize: "40px 40px",
           }}
         />
       </div>
-      <div className="orb-1 absolute top-1/4 -left-32 w-[500px] h-[500px] bg-gray-200/40 rounded-full blur-[120px] pointer-events-none" />
-      <div className="orb-2 absolute bottom-1/4 -right-32 w-[400px] h-[400px] bg-gray-300/40 rounded-full blur-[100px] pointer-events-none" />
-      <div className="orb-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gray-100/50 rounded-full blur-[150px] pointer-events-none" />
+      <div
+        className="orb-1 absolute top-1/4 -left-32 w-[560px] h-[560px] rounded-full blur-[140px] pointer-events-none opacity-70"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(148,163,184,0.25) 40%, transparent 70%)",
+        }}
+      />
+      <div
+        className="orb-2 absolute bottom-1/4 -right-32 w-[480px] h-[480px] rounded-full blur-[120px] pointer-events-none opacity-60"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(148,163,184,0.2) 50%, transparent 70%)",
+        }}
+      />
+      <div
+        className="orb-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[720px] h-[720px] rounded-full blur-[160px] pointer-events-none opacity-50"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(226,232,240,0.3) 50%, transparent 65%)",
+        }}
+      />
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {particles.map((p, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-gray-400/40 rounded-full bottom-0"
+            className="absolute w-1 h-1 bg-white/40 rounded-full bottom-0"
             style={{ left: p.left }}
             animate={{ y: "-100vh", opacity: [0, 0.5, 0] }}
             transition={{
@@ -303,13 +329,42 @@ export default function SurveyPage() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="relative"
         >
-          <div className="absolute -inset-1 bg-gradient-to-r from-gray-200/50 via-gray-300/50 to-gray-200/50 rounded-[28px] blur-xl opacity-70" />
+          <div
+            className="absolute -inset-1 rounded-[30px] opacity-80"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.4) 100%)",
+              filter: "blur(24px)",
+            }}
+          />
           <div
             ref={cardRef}
-            className="relative bg-white/90 backdrop-blur-2xl rounded-[26px] p-6 sm:p-8 md:p-10 border border-gray-200/60 shadow-xl shadow-gray-500/5"
+            className="relative rounded-[26px] p-6 sm:p-8 md:p-10 overflow-hidden isolate"
+            style={{
+              background: "rgba(255, 255, 255, 0.2)",
+              backdropFilter: "blur(24px) saturate(180%)",
+              WebkitBackdropFilter: "blur(24px) saturate(180%)",
+              border: "1px solid rgba(255, 255, 255, 0.45)",
+              boxShadow:
+                "0 8px 32px rgba(0,0,0,0.1), 0 0 0 1px rgba(255,255,255,0.1) inset, inset 0 1px 0 rgba(255,255,255,0.7)",
+            }}
           >
+            <div
+              className="absolute inset-x-0 top-0 h-[1px] pointer-events-none"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent)",
+              }}
+            />
+            <div
+              className="absolute inset-0 pointer-events-none rounded-[26px] opacity-40"
+              style={{
+                background:
+                  "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.5), transparent 60%)",
+              }}
+            />
             {/* Header – registration-style */}
-            <div className="text-center mb-8">
+            <div className="text-center mb-8 relative">
               <motion.div
                 initial={{ scale: 0, rotate: -180, opacity: 0 }}
                 animate={{ scale: 1, rotate: 0, opacity: 1 }}
@@ -320,13 +375,20 @@ export default function SurveyPage() {
                   delay: 0.1,
                   opacity: { duration: 0.3, delay: 0.1 },
                 }}
-                className="float-icon inline-flex items-center justify-center rounded-2xl bg-gradient-to-br from-gray-800 via-gray-900 to-black shadow-lg shadow-gray-900/30 mb-5 p-3.5 relative"
+                className="float-icon inline-flex items-center justify-center rounded-2xl mb-5 p-3.5 relative"
+                style={{
+                  background: "rgba(255, 255, 255, 0.3)",
+                  backdropFilter: "blur(14px) saturate(150%)",
+                  WebkitBackdropFilter: "blur(14px) saturate(150%)",
+                  border: "1px solid rgba(255, 255, 255, 0.55)",
+                  boxShadow:
+                    "0 8px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.5)",
+                }}
               >
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent" />
-                <GraduationCap className="h-9 w-9 text-white relative z-10" />
+                <GraduationCap className="h-9 w-9 text-slate-700 relative z-10" />
               </motion.div>
               <h1
-                className="text-2xl sm:text-3xl mb-2 bg-gradient-to-r from-gray-800 via-gray-900 to-black bg-clip-text text-transparent"
+                className="text-2xl sm:text-3xl mb-2 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 bg-clip-text text-transparent"
                 style={{
                   fontFamily: "var(--font-vonique), system-ui, sans-serif",
                 }}
@@ -334,31 +396,39 @@ export default function SurveyPage() {
                 COURSE PREFERENCES
               </h1>
               <p
-                className="text-gray-500 text-base flex items-center justify-center gap-2"
+                className="text-slate-600 text-base flex items-center justify-center gap-2"
                 style={{
                   fontFamily:
                     "var(--font-space-grotesk), system-ui, sans-serif",
                 }}
               >
-                <Sparkles className="h-4 w-4 text-gray-600" />
+                <Sparkles className="h-4 w-4 text-slate-600" />
                 Helps our AI suggest the right courses for you
               </p>
-              {/* Progress – 7 steps */}
+              {/* Progress – 7 steps (glass style) */}
               <div className="flex justify-center gap-1 sm:gap-1.5 mt-5 flex-wrap">
                 {[...Array(TOTAL_STEPS).keys()].map((i) => (
                   <div
                     key={i}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i <= step ? "bg-gray-800" : "bg-gray-200"
-                    }`}
+                    className="h-1.5 rounded-full transition-all duration-300"
                     style={{
                       width: i === step ? 24 : i < step ? 20 : 12,
+                      background:
+                        i <= step
+                          ? "rgba(51, 65, 85, 0.8)"
+                          : "rgba(255, 255, 255, 0.5)",
+                      backdropFilter: "blur(6px)",
+                      border:
+                        i <= step
+                          ? "1px solid rgba(255,255,255,0.2)"
+                          : "1px solid rgba(255,255,255,0.4)",
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.2)",
                     }}
                   />
                 ))}
               </div>
               <p
-                className="text-xs text-gray-400 mt-2"
+                className="text-xs text-slate-500 mt-2"
                 style={{
                   fontFamily: "var(--font-bogita-mono), system-ui, sans-serif",
                 }}
@@ -407,14 +477,25 @@ export default function SurveyPage() {
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => toggle(setInterests, opt)}
-                        className={`px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                        className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                           interests.includes(opt)
-                            ? "bg-gray-800 text-white border-gray-800"
-                            : "bg-gray-50/80 border-gray-200 text-gray-700 hover:border-gray-400 focus:ring-2 focus:ring-gray-500/20"
+                            ? "text-white"
+                            : "text-slate-700"
                         }`}
                         style={{
                           fontFamily:
                             "var(--font-manrope), system-ui, sans-serif",
+                          background: interests.includes(opt)
+                            ? "rgba(51, 65, 85, 0.7)"
+                            : "rgba(255, 255, 255, 0.35)",
+                          backdropFilter: "blur(10px)",
+                          WebkitBackdropFilter: "blur(10px)",
+                          border: interests.includes(opt)
+                            ? "1px solid rgba(255, 255, 255, 0.2)"
+                            : "1px solid rgba(255, 255, 255, 0.5)",
+                          boxShadow: interests.includes(opt)
+                            ? "inset 0 1px 0 rgba(255,255,255,0.1)"
+                            : "inset 0 1px 0 rgba(255,255,255,0.4)",
                         }}
                       >
                         {opt}
@@ -462,25 +543,41 @@ export default function SurveyPage() {
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                         onClick={() => setLearningStyle(ls.id)}
-                        className={`flex items-center gap-4 p-4 rounded-xl border text-left transition-all ${
+                        className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all ${
                           learningStyle === ls.id
-                            ? "bg-gray-800 text-white border-gray-800 ring-2 ring-gray-600/30"
-                            : "bg-gray-50/80 border-gray-200 hover:border-gray-400"
+                            ? "text-white ring-2 ring-white/30"
+                            : "text-slate-700"
                         }`}
+                        style={{
+                          background:
+                            learningStyle === ls.id
+                              ? "rgba(51, 65, 85, 0.7)"
+                              : "rgba(255, 255, 255, 0.35)",
+                          backdropFilter: "blur(10px)",
+                          WebkitBackdropFilter: "blur(10px)",
+                          border:
+                            learningStyle === ls.id
+                              ? "1px solid rgba(255, 255, 255, 0.2)"
+                              : "1px solid rgba(255, 255, 255, 0.5)",
+                          boxShadow:
+                            learningStyle === ls.id
+                              ? "inset 0 1px 0 rgba(255,255,255,0.1)"
+                              : "inset 0 1px 0 rgba(255,255,255,0.4)",
+                        }}
                       >
                         <Lightbulb
                           className={`h-5 w-5 shrink-0 ${
                             learningStyle === ls.id
-                              ? "text-gray-200"
-                              : "text-gray-600"
+                              ? "text-slate-200"
+                              : "text-slate-600"
                           }`}
                         />
                         <div className="flex-1">
                           <div
                             className={`font-medium ${
                               learningStyle === ls.id
-                                ? "text-gray-200"
-                                : "text-gray-500"
+                                ? "text-slate-200"
+                                : "text-slate-500"
                             }`}
                             style={{
                               fontFamily:
@@ -492,8 +589,8 @@ export default function SurveyPage() {
                           <div
                             className={`text-sm ${
                               learningStyle === ls.id
-                                ? "text-gray-200"
-                                : "text-gray-500"
+                                ? "text-slate-200"
+                                : "text-slate-500"
                             }`}
                           >
                             {ls.desc}
@@ -547,14 +644,23 @@ export default function SurveyPage() {
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => toggle(setGoals, opt)}
-                        className={`px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
-                          goals.includes(opt)
-                            ? "bg-gray-800 text-white border-gray-800"
-                            : "bg-gray-50/80 border-gray-200 text-gray-700 hover:border-gray-400"
+                        className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                          goals.includes(opt) ? "text-white" : "text-slate-700"
                         }`}
                         style={{
                           fontFamily:
                             "var(--font-manrope), system-ui, sans-serif",
+                          background: goals.includes(opt)
+                            ? "rgba(51, 65, 85, 0.7)"
+                            : "rgba(255, 255, 255, 0.35)",
+                          backdropFilter: "blur(10px)",
+                          WebkitBackdropFilter: "blur(10px)",
+                          border: goals.includes(opt)
+                            ? "1px solid rgba(255, 255, 255, 0.2)"
+                            : "1px solid rgba(255, 255, 255, 0.5)",
+                          boxShadow: goals.includes(opt)
+                            ? "inset 0 1px 0 rgba(255,255,255,0.1)"
+                            : "inset 0 1px 0 rgba(255,255,255,0.4)",
                         }}
                       >
                         {opt}
@@ -578,10 +684,15 @@ export default function SurveyPage() {
                       value={extraGoals}
                       onChange={(e) => setExtraGoals(e.target.value)}
                       placeholder="e.g. Participate in hackathons"
-                      className="w-full pl-4 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50/80 text-gray-900 placeholder-gray-400 focus:border-gray-400 focus:bg-white focus:ring-2 focus:ring-gray-500/20 outline-none transition-all"
+                      className="w-full pl-4 pr-4 py-3 rounded-xl text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-white/30 outline-none transition-all"
                       style={{
                         fontFamily:
                           "var(--font-manrope), system-ui, sans-serif",
+                        background: "rgba(255, 255, 255, 0.35)",
+                        backdropFilter: "blur(10px)",
+                        WebkitBackdropFilter: "blur(10px)",
+                        border: "1px solid rgba(255, 255, 255, 0.5)",
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4)",
                       }}
                     />
                   </div>
@@ -629,21 +740,34 @@ export default function SurveyPage() {
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           onClick={() => toggle(setPreferredTimes, t.id)}
-                          className={`flex items-center gap-4 p-4 rounded-xl border text-left transition-all ${
+                          className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all ${
                             selected
-                              ? "bg-gray-800 text-white border-gray-800 ring-2 ring-gray-600/30"
-                              : "bg-gray-50/80 border-gray-200 hover:border-gray-400"
+                              ? "text-white ring-2 ring-white/30"
+                              : "text-slate-700"
                           }`}
+                          style={{
+                            background: selected
+                              ? "rgba(51, 65, 85, 0.7)"
+                              : "rgba(255, 255, 255, 0.35)",
+                            backdropFilter: "blur(10px)",
+                            WebkitBackdropFilter: "blur(10px)",
+                            border: selected
+                              ? "1px solid rgba(255, 255, 255, 0.2)"
+                              : "1px solid rgba(255, 255, 255, 0.5)",
+                            boxShadow: selected
+                              ? "inset 0 1px 0 rgba(255,255,255,0.1)"
+                              : "inset 0 1px 0 rgba(255,255,255,0.4)",
+                          }}
                         >
                           <Icon
                             className={`h-5 w-5 shrink-0 ${
-                              selected ? "text-gray-200" : "text-gray-600"
+                              selected ? "text-slate-200" : "text-slate-600"
                             }`}
                           />
                           <div className="flex-1">
                             <div
                               className={`font-medium ${
-                                selected ? "text-gray-200" : "text-gray-500"
+                                selected ? "text-slate-200" : "text-slate-500"
                               }`}
                               style={{
                                 fontFamily:
@@ -654,7 +778,7 @@ export default function SurveyPage() {
                             </div>
                             <div
                               className={`text-sm ${
-                                selected ? "text-gray-200" : "text-gray-500"
+                                selected ? "text-slate-200" : "text-slate-500"
                               }`}
                             >
                               {t.desc}
@@ -706,18 +830,34 @@ export default function SurveyPage() {
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                         onClick={() => setCourseLoad(opt.id)}
-                        className={`flex items-center gap-4 p-4 rounded-xl border text-left transition-all ${
+                        className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all ${
                           courseLoad === opt.id
-                            ? "bg-gray-800 text-white border-gray-800 ring-2 ring-gray-600/30"
-                            : "bg-gray-50/80 border-gray-200 hover:border-gray-400"
+                            ? "text-white ring-2 ring-white/30"
+                            : "text-slate-700"
                         }`}
+                        style={{
+                          background:
+                            courseLoad === opt.id
+                              ? "rgba(51, 65, 85, 0.7)"
+                              : "rgba(255, 255, 255, 0.35)",
+                          backdropFilter: "blur(10px)",
+                          WebkitBackdropFilter: "blur(10px)",
+                          border:
+                            courseLoad === opt.id
+                              ? "1px solid rgba(255, 255, 255, 0.2)"
+                              : "1px solid rgba(255, 255, 255, 0.5)",
+                          boxShadow:
+                            courseLoad === opt.id
+                              ? "inset 0 1px 0 rgba(255,255,255,0.1)"
+                              : "inset 0 1px 0 rgba(255,255,255,0.4)",
+                        }}
                       >
                         <div className="flex-1">
                           <div
                             className={`font-medium ${
                               courseLoad === opt.id
-                                ? "text-gray-200"
-                                : "text-gray-500"
+                                ? "text-slate-200"
+                                : "text-slate-600"
                             }`}
                             style={{
                               fontFamily:
@@ -729,8 +869,8 @@ export default function SurveyPage() {
                           <div
                             className={`text-sm ${
                               courseLoad === opt.id
-                                ? "text-gray-200"
-                                : "text-gray-500"
+                                ? "text-slate-200"
+                                : "text-slate-500"
                             }`}
                           >
                             {opt.desc}
@@ -783,18 +923,34 @@ export default function SurveyPage() {
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                         onClick={() => setGraduationTimeline(opt.id)}
-                        className={`flex items-center gap-4 p-4 rounded-xl border text-left transition-all ${
+                        className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all ${
                           graduationTimeline === opt.id
-                            ? "bg-gray-800 text-white border-gray-800 ring-2 ring-gray-600/30"
-                            : "bg-gray-50/80 border-gray-200 hover:border-gray-400"
+                            ? "text-white ring-2 ring-white/30"
+                            : "text-slate-700"
                         }`}
+                        style={{
+                          background:
+                            graduationTimeline === opt.id
+                              ? "rgba(51, 65, 85, 0.7)"
+                              : "rgba(255, 255, 255, 0.35)",
+                          backdropFilter: "blur(10px)",
+                          WebkitBackdropFilter: "blur(10px)",
+                          border:
+                            graduationTimeline === opt.id
+                              ? "1px solid rgba(255, 255, 255, 0.2)"
+                              : "1px solid rgba(255, 255, 255, 0.5)",
+                          boxShadow:
+                            graduationTimeline === opt.id
+                              ? "inset 0 1px 0 rgba(255,255,255,0.1)"
+                              : "inset 0 1px 0 rgba(255,255,255,0.4)",
+                        }}
                       >
                         <div className="flex-1">
                           <div
                             className={`font-medium ${
                               graduationTimeline === opt.id
-                                ? "text-gray-200"
-                                : "text-gray-500"
+                                ? "text-slate-200"
+                                : "text-slate-600"
                             }`}
                             style={{
                               fontFamily:
@@ -806,8 +962,8 @@ export default function SurveyPage() {
                           <div
                             className={`text-sm ${
                               graduationTimeline === opt.id
-                                ? "text-gray-200"
-                                : "text-gray-500"
+                                ? "text-slate-200"
+                                : "text-slate-500"
                             }`}
                           >
                             {opt.desc}
@@ -862,21 +1018,34 @@ export default function SurveyPage() {
                           whileHover={{ scale: 1.01 }}
                           whileTap={{ scale: 0.99 }}
                           onClick={() => toggle(setConstraints, c.id)}
-                          className={`flex items-start gap-3 p-4 rounded-xl border text-left transition-all ${
+                          className={`flex items-start gap-3 p-4 rounded-xl text-left transition-all ${
                             selected
-                              ? "bg-gray-800 text-white border-gray-800 ring-2 ring-gray-600/30"
-                              : "bg-gray-50/80 border-gray-200 hover:border-gray-400"
+                              ? "text-white ring-2 ring-white/30"
+                              : "text-slate-700"
                           }`}
+                          style={{
+                            background: selected
+                              ? "rgba(51, 65, 85, 0.7)"
+                              : "rgba(255, 255, 255, 0.35)",
+                            backdropFilter: "blur(10px)",
+                            WebkitBackdropFilter: "blur(10px)",
+                            border: selected
+                              ? "1px solid rgba(255, 255, 255, 0.2)"
+                              : "1px solid rgba(255, 255, 255, 0.5)",
+                            boxShadow: selected
+                              ? "inset 0 1px 0 rgba(255,255,255,0.1)"
+                              : "inset 0 1px 0 rgba(255,255,255,0.4)",
+                          }}
                         >
                           <Monitor
                             className={`h-5 w-5 shrink-0 mt-0.5 ${
-                              selected ? "text-gray-200" : "text-gray-600"
+                              selected ? "text-slate-200" : "text-slate-600"
                             }`}
                           />
                           <div className="flex-1 min-w-0">
                             <div
                               className={`font-medium text-sm ${
-                                selected ? "text-gray-200" : "text-gray-500"
+                                selected ? "text-slate-200" : "text-slate-600"
                               }`}
                               style={{
                                 fontFamily:
@@ -887,7 +1056,7 @@ export default function SurveyPage() {
                             </div>
                             <div
                               className={`text-xs mt-0.5 ${
-                                selected ? "text-gray-200" : "text-gray-500"
+                                selected ? "text-slate-200" : "text-slate-500"
                               }`}
                             >
                               {c.desc}
@@ -903,7 +1072,7 @@ export default function SurveyPage() {
                   <div>
                     <label
                       htmlFor="constraintsOther"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block text-sm font-medium text-slate-700 mb-2"
                       style={{
                         fontFamily:
                           "var(--font-bogita-mono), system-ui, sans-serif",
@@ -917,10 +1086,15 @@ export default function SurveyPage() {
                       value={constraintsOther}
                       onChange={(e) => setConstraintsOther(e.target.value)}
                       placeholder="e.g. Can’t take classes before 10 AM due to work"
-                      className="w-full pl-4 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50/80 text-gray-900 placeholder-gray-400 focus:border-gray-400 focus:bg-white focus:ring-2 focus:ring-gray-500/20 outline-none transition-all"
+                      className="w-full pl-4 pr-4 py-3 rounded-xl text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-white/30 outline-none transition-all"
                       style={{
                         fontFamily:
                           "var(--font-manrope), system-ui, sans-serif",
+                        background: "rgba(255, 255, 255, 0.35)",
+                        backdropFilter: "blur(10px)",
+                        WebkitBackdropFilter: "blur(10px)",
+                        border: "1px solid rgba(255, 255, 255, 0.5)",
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4)",
                       }}
                     />
                   </div>
@@ -952,10 +1126,15 @@ export default function SurveyPage() {
                 className="relative group flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed transition-all text-white font-semibold"
                 style={{
                   fontFamily: "var(--font-poppins), system-ui, sans-serif",
+                  background: "rgba(51, 65, 85, 0.7)",
+                  backdropFilter: "blur(14px) saturate(150%)",
+                  WebkitBackdropFilter: "blur(14px) saturate(150%)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  boxShadow:
+                    "0 8px 28px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.15)",
                 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-900 to-black" />
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
                 <span className="relative z-10 flex items-center gap-2">
                   {isSubmitting ? (
                     <>

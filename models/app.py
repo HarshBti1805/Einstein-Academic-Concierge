@@ -10,10 +10,11 @@ Recommends courses based on:
 """
 
 import os
+import io
 import json
 from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
@@ -21,6 +22,7 @@ from langchain_pinecone import PineconeVectorStore
 from langchain_core.documents import Document
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from pinecone import Pinecone, ServerlessSpec
+from openai import OpenAI
 
 # Load environment variables
 load_dotenv()
@@ -46,6 +48,13 @@ seats_data = None
 
 # Store active advisor sessions
 advisor_sessions: Dict[str, 'UniversityCourseAdvisor'] = {}
+
+# OpenAI client for voice (Whisper + TTS)
+openai_client: Optional[OpenAI] = None
+
+# TTS voice - use "alloy" or "nova" for clear English
+TTS_VOICE = os.getenv("TTS_VOICE", "alloy")
+TTS_MODEL = os.getenv("TTS_MODEL", "tts-1")
 
 
 def load_json_data(filename: str) -> Dict[str, Any]:
@@ -594,9 +603,22 @@ EXPRESSED PREFERENCES AND INTERESTS:
         return recommendations
 
 
+def get_openai_client() -> Optional[OpenAI]:
+    """Get or create OpenAI client for voice (Whisper, TTS)."""
+    global openai_client
+    if openai_client is None and os.getenv("OPENAI_API_KEY"):
+        openai_client = OpenAI()
+    return openai_client
+
+
 def initialize_app():
     """Initialize the application with data and vector store."""
     global vectorstore, courses_data, students_data, dashboard_data, seats_data
+    
+    # Voice: ensure OpenAI client is ready when key is present
+    if os.getenv("OPENAI_API_KEY"):
+        get_openai_client()
+        print("   ✅ OpenAI client ready for voice (Whisper + TTS)")
     
     if not PINECONE_API_KEY:
         print("⚠️  Warning: PINECONE_API_KEY not set. Using mock mode.")
@@ -625,7 +647,8 @@ def health_check():
         "status": "healthy",
         "vectorstore_ready": vectorstore is not None,
         "students_loaded": students_data is not None,
-        "courses_loaded": courses_data is not None
+        "courses_loaded": courses_data is not None,
+        "voice_ready": get_openai_client() is not None,
     })
 
 
@@ -720,6 +743,72 @@ def send_message():
             "conversation_length": conversation_length,
             "can_recommend": conversation_length >= 4
         })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/chat/transcribe', methods=['POST'])
+def transcribe_audio():
+    """Transcribe audio to text using OpenAI Whisper. English only."""
+    client = get_openai_client()
+    if not client:
+        return jsonify({"error": "OpenAI API key not set. Voice mode unavailable."}), 503
+
+    if "audio" not in request.files:
+        return jsonify({"error": "No audio file in request. Use form field 'audio'."}), 400
+
+    file = request.files["audio"]
+    if file.filename == "" or not file.filename:
+        return jsonify({"error": "Empty audio file."}), 400
+
+    try:
+        # OpenAI SDK expects bytes, io.IOBase, PathLike, or (name, file_like, content_type).
+        # Werkzeug FileStorage is not accepted, so read into a bytes buffer.
+        data = file.read()
+        if not data:
+            return jsonify({"error": "Empty audio data."}), 400
+        name = file.filename or "audio.webm"
+        content_type = file.content_type or "audio/webm"
+        file_like = io.BytesIO(data)
+        # Whisper accepts webm, mp3, mp4, mpeg, mpga, m4a, wav
+        transcript = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=(name, file_like, content_type),
+            language="en",
+            response_format="text",
+        )
+        if isinstance(transcript, str):
+            text = transcript.strip()
+        else:
+            text = getattr(transcript, "text", str(transcript)).strip()
+        return jsonify({"text": text})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/chat/speak', methods=['POST'])
+def text_to_speech():
+    """Convert text to speech using OpenAI TTS. English only."""
+    client = get_openai_client()
+    if not client:
+        return jsonify({"error": "OpenAI API key not set. Voice mode unavailable."}), 503
+
+    data = request.json or {}
+    text = (data.get("text") or "").strip()
+    if not text:
+        return jsonify({"error": "Missing or empty 'text' in request body."}), 400
+
+    try:
+        speech = client.audio.speech.create(
+            model=TTS_MODEL,
+            voice=TTS_VOICE,
+            input=text,
+        )
+        return Response(
+            speech.content,
+            mimetype="audio/mpeg",
+            headers={"Content-Disposition": "inline; filename=speech.mp3"},
+        )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

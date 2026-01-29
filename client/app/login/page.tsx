@@ -122,27 +122,50 @@ export default function LoginPage() {
 
   return (
     <div
-      className={`min-h-screen flex items-center justify-center relative overflow-hidden py-8 bg-gradient-to-br from-slate-50 via-white to-gray-100 ${fontVariables}`}
+      className={`min-h-screen flex items-center justify-center relative overflow-hidden py-8 px-4 sm:px-6 ${fontVariables}`}
+      style={{
+        background:
+          "linear-gradient(165deg, #e2e8f0 0%, #cbd5e1 30%, #94a3b8 60%, #e2e8f0 100%)",
+      }}
     >
       <div className="absolute inset-0 overflow-hidden">
         <div
-          className="absolute inset-0 opacity-[0.4]"
+          className="absolute inset-0 opacity-60"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px)
+              linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)
             `,
-            backgroundSize: "60px 60px",
+            backgroundSize: "40px 40px",
           }}
         />
       </div>
-      <div className="orb-1 absolute top-1/4 -left-32 w-[500px] h-[500px] bg-gray-200/40 rounded-full blur-[120px] pointer-events-none" />
-      <div className="orb-2 absolute bottom-1/4 -right-32 w-[400px] h-[400px] bg-gray-300/40 rounded-full blur-[100px] pointer-events-none" />
+      <div
+        className="orb-1 absolute top-1/4 -left-32 w-[560px] h-[560px] rounded-full blur-[140px] pointer-events-none opacity-70"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(148,163,184,0.25) 40%, transparent 70%)",
+        }}
+      />
+      <div
+        className="orb-2 absolute bottom-1/4 -right-32 w-[480px] h-[480px] rounded-full blur-[120px] pointer-events-none opacity-60"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(148,163,184,0.2) 50%, transparent 70%)",
+        }}
+      />
+      <div
+        className="absolute top-1/2 left-1/2 w-[720px] h-[720px] rounded-full blur-[160px] pointer-events-none opacity-50 -translate-x-1/2 -translate-y-1/2"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(226,232,240,0.3) 50%, transparent 65%)",
+        }}
+      />
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {particles.map((p, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-gray-400/40 rounded-full bottom-0"
+            className="absolute w-1 h-1 bg-white/40 rounded-full bottom-0"
             style={{ left: p.left }}
             animate={{ y: "-100vh", opacity: [0, 0.5, 0] }}
             transition={{
@@ -162,12 +185,41 @@ export default function LoginPage() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="relative"
         >
-          <div className="absolute -inset-1 bg-gradient-to-r from-gray-200/50 via-gray-300/50 to-gray-200/50 rounded-[28px] blur-xl opacity-70" />
+          <div
+            className="absolute -inset-1 rounded-[30px] opacity-80"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.4) 100%)",
+              filter: "blur(24px)",
+            }}
+          />
           <div
             ref={cardRef}
-            className="relative bg-white/90 backdrop-blur-2xl rounded-[26px] p-6 sm:p-8 border border-gray-200/60 shadow-xl shadow-gray-500/5"
+            className="relative rounded-[26px] p-6 sm:p-8 overflow-hidden isolate"
+            style={{
+              background: "rgba(255, 255, 255, 0.2)",
+              backdropFilter: "blur(24px) saturate(180%)",
+              WebkitBackdropFilter: "blur(24px) saturate(180%)",
+              border: "1px solid rgba(255, 255, 255, 0.45)",
+              boxShadow:
+                "0 8px 32px rgba(0,0,0,0.1), 0 0 0 1px rgba(255,255,255,0.1) inset, inset 0 1px 0 rgba(255,255,255,0.7)",
+            }}
           >
-            <div className="text-center mb-8">
+            <div
+              className="absolute inset-x-0 top-0 h-[1px] pointer-events-none"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent)",
+              }}
+            />
+            <div
+              className="absolute inset-0 pointer-events-none rounded-[26px] opacity-40"
+              style={{
+                background:
+                  "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.5), transparent 60%)",
+              }}
+            />
+            <div className="text-center mb-8 relative">
               <motion.div
                 initial={{ scale: 0, rotate: -180, opacity: 0 }}
                 animate={{ scale: 1, rotate: 0, opacity: 1 }}
@@ -177,15 +229,23 @@ export default function LoginPage() {
                   damping: 15,
                   delay: 0.1,
                 }}
-                className="float-icon inline-flex items-center justify-center rounded-2xl bg-gradient-to-br from-gray-800 via-gray-900 to-black shadow-lg shadow-gray-900/30 mb-4 p-3"
+                className="float-icon inline-flex items-center justify-center rounded-2xl mb-4 p-3"
+                style={{
+                  background: "rgba(255, 255, 255, 0.3)",
+                  backdropFilter: "blur(14px) saturate(150%)",
+                  WebkitBackdropFilter: "blur(14px) saturate(150%)",
+                  border: "1px solid rgba(255, 255, 255, 0.55)",
+                  boxShadow:
+                    "0 8px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.5)",
+                }}
               >
-                <GraduationCap className="h-9 w-9 text-white" />
+                <GraduationCap className="h-9 w-9 text-slate-700" />
               </motion.div>
               <motion.h1
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-2xl sm:text-3xl mb-2 bg-gradient-to-r from-gray-800 via-gray-900 to-black bg-clip-text text-transparent"
+                className="text-2xl sm:text-3xl mb-2 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 bg-clip-text text-transparent"
                 style={{
                   fontFamily: "var(--font-vonique), system-ui, sans-serif",
                 }}
@@ -196,7 +256,7 @@ export default function LoginPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="text-gray-500 flex items-center justify-center gap-2"
+                className="text-slate-600 flex items-center justify-center gap-2"
                 style={{
                   fontFamily:
                     "var(--font-space-grotesk), system-ui, sans-serif",
@@ -251,10 +311,15 @@ export default function LoginPage() {
                       onBlur={() => setFocused(null)}
                       required
                       placeholder="Metropolitan State University"
-                      className="w-full pl-12 pr-4 py-3.5 text-gray-900 placeholder-gray-400 bg-gray-50/80 border border-gray-200 rounded-xl focus:border-gray-400 focus:bg-white focus:ring-2 focus:ring-gray-500/20 outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-3.5 text-gray-900 placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-white/30 outline-none transition-all"
                       style={{
                         fontFamily:
                           "var(--font-bogita-mono), system-ui, sans-serif",
+                        background: "rgba(255, 255, 255, 0.35)",
+                        backdropFilter: "blur(10px)",
+                        WebkitBackdropFilter: "blur(10px)",
+                        border: "1px solid rgba(255, 255, 255, 0.5)",
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4)",
                       }}
                     />
                   </div>
@@ -300,10 +365,15 @@ export default function LoginPage() {
                       onBlur={() => setFocused(null)}
                       required
                       placeholder="you@university.edu"
-                      className="w-full pl-12 pr-4 py-3.5 text-gray-900 placeholder-gray-400 bg-gray-50/80 border border-gray-200 rounded-xl focus:border-gray-400 focus:bg-white focus:ring-2 focus:ring-gray-500/20 outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-3.5 text-gray-900 placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-white/30 outline-none transition-all"
                       style={{
                         fontFamily:
                           "var(--font-bogita-mono), system-ui, sans-serif",
+                        background: "rgba(255, 255, 255, 0.35)",
+                        backdropFilter: "blur(10px)",
+                        WebkitBackdropFilter: "blur(10px)",
+                        border: "1px solid rgba(255, 255, 255, 0.5)",
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4)",
                       }}
                     />
                   </div>
@@ -349,10 +419,15 @@ export default function LoginPage() {
                       onBlur={() => setFocused(null)}
                       required
                       placeholder="CS2024-001"
-                      className="w-full pl-12 pr-4 py-3.5 text-gray-900 placeholder-gray-400 bg-gray-50/80 border border-gray-200 rounded-xl focus:border-gray-400 focus:bg-white focus:ring-2 focus:ring-gray-500/20 outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-3.5 text-gray-900 placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-white/30 outline-none transition-all"
                       style={{
                         fontFamily:
                           "var(--font-bogita-mono), system-ui, sans-serif",
+                        background: "rgba(255, 255, 255, 0.35)",
+                        backdropFilter: "blur(10px)",
+                        WebkitBackdropFilter: "blur(10px)",
+                        border: "1px solid rgba(255, 255, 255, 0.5)",
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4)",
                       }}
                     />
                   </div>
@@ -365,7 +440,14 @@ export default function LoginPage() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="p-4 rounded-xl bg-red-50 border border-red-200 flex items-center gap-3"
+                    className="p-4 rounded-xl flex items-center gap-3"
+                    style={{
+                      background: "rgba(254, 226, 226, 0.5)",
+                      backdropFilter: "blur(10px)",
+                      WebkitBackdropFilter: "blur(10px)",
+                      border: "1px solid rgba(248, 113, 113, 0.4)",
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3)",
+                    }}
                   >
                     <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
                     <p
@@ -389,9 +471,14 @@ export default function LoginPage() {
                 className="relative group w-full px-8 py-4 flex items-center justify-center gap-3 text-white font-thin text-lg rounded-xl overflow-hidden disabled:cursor-not-allowed transition-all"
                 style={{
                   fontFamily: "var(--font-poppins), system-ui, sans-serif",
+                  background: "rgba(51, 65, 85, 0.7)",
+                  backdropFilter: "blur(14px) saturate(150%)",
+                  WebkitBackdropFilter: "blur(14px) saturate(150%)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  boxShadow:
+                    "0 8px 28px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.15)",
                 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-900 to-black" />
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                 <span
                   className="relative z-10 flex items-center gap-2"
@@ -420,7 +507,7 @@ export default function LoginPage() {
             </motion.form>
 
             <p
-              className="mt-6 text-center text-sm text-gray-500"
+              className="mt-6 text-center text-sm text-slate-600 relative"
               style={{
                 fontFamily: "var(--font-space-grotesk), system-ui, sans-serif",
               }}
@@ -428,12 +515,12 @@ export default function LoginPage() {
               New here?{" "}
               <Link
                 href="/register"
-                className="text-gray-800 font-medium hover:underline"
+                className="text-slate-700 font-medium hover:underline"
               >
                 Register
               </Link>
               {" · "}
-              <Link href="/" className="text-gray-600 hover:underline">
+              <Link href="/" className="text-slate-600 hover:underline">
                 Back
               </Link>
             </p>

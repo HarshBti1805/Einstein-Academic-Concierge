@@ -925,12 +925,23 @@ export default function AssistantPage() {
   if (!mounted) {
     return (
       <div
-        className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100 flex items-center justify-center ${fontVariables}`}
+        className={`min-h-screen flex items-center justify-center relative overflow-hidden ${fontVariables}`}
+        style={{
+          background:
+            "linear-gradient(165deg, #e2e8f0 0%, #cbd5e1 30%, #94a3b8 60%, #e2e8f0 100%)",
+        }}
       >
+        <div
+          className="absolute inset-0 opacity-60"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)`,
+            backgroundSize: "40px 40px",
+          }}
+        />
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="h-10 w-10 border-2 border-gray-200 border-t-gray-800 rounded-full"
+          className="h-10 w-10 border-2 border-white/50 border-t-slate-700 rounded-full relative z-10"
         />
       </div>
     );
@@ -938,34 +949,74 @@ export default function AssistantPage() {
 
   return (
     <div
-      className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100 flex flex-col ${fontVariables}`}
+      className={`min-h-screen flex flex-col relative overflow-hidden ${fontVariables}`}
+      style={{
+        background:
+          "linear-gradient(165deg, #e2e8f0 0%, #cbd5e1 30%, #94a3b8 60%, #e2e8f0 100%)",
+      }}
     >
-      {/* Background Elements - Fixed */}
+      {/* Grid - glassmorphism base */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div
-          className="absolute inset-0 opacity-[0.6]"
+          className="absolute inset-0 opacity-60"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px)
+              linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)
             `,
-            backgroundSize: "60px 60px",
+            backgroundSize: "40px 40px",
           }}
         />
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gray-200/30 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gray-300/30 rounded-full blur-[120px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gray-100/30 rounded-full blur-[180px]" />
       </div>
 
-      {/* Header - Fixed */}
+      {/* Orbs - glassmorphism glow */}
+      <div
+        className="fixed top-1/4 -left-32 w-[560px] h-[560px] rounded-full blur-[140px] pointer-events-none opacity-70"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(148,163,184,0.25) 40%, transparent 70%)",
+        }}
+      />
+      <div
+        className="fixed bottom-1/4 -right-32 w-[480px] h-[480px] rounded-full blur-[120px] pointer-events-none opacity-60"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(148,163,184,0.2) 50%, transparent 70%)",
+        }}
+      />
+      <div
+        className="fixed top-1/2 left-1/2 w-[720px] h-[720px] rounded-full blur-[160px] pointer-events-none opacity-50 -translate-x-1/2 -translate-y-1/2"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(226,232,240,0.3) 50%, transparent 65%)",
+        }}
+      />
+
+      {/* Header - glass */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="sticky top-0 z-50 flex-shrink-0"
       >
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-2xl" />
-        <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-gray-300/50 to-transparent" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "rgba(255, 255, 255, 0.2)",
+            backdropFilter: "blur(24px) saturate(180%)",
+            WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.45)",
+            boxShadow:
+              "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)",
+          }}
+        />
+        <div
+          className="absolute inset-x-0 top-0 h-[1px] pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent)",
+          }}
+        />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -975,7 +1026,12 @@ export default function AssistantPage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => router.push("/dashboard")}
-                className="p-2.5 rounded-xl bg-gray-50 border border-gray-200/60 hover:bg-gray-100 hover:border-gray-300 transition-all"
+                className="p-2.5 rounded-xl border transition-all"
+                style={{
+                  background: "rgba(255, 255, 255, 0.35)",
+                  backdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255, 255, 255, 0.5)",
+                }}
               >
                 <ArrowLeft className="h-4 w-4 text-gray-600" />
               </motion.button>
@@ -1006,7 +1062,12 @@ export default function AssistantPage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative p-2.5 rounded-xl bg-gray-50 border border-gray-200/60 hover:bg-gray-100 hover:border-gray-300 transition-all"
+                className="relative p-2.5 rounded-xl border transition-all"
+                style={{
+                  background: "rgba(255, 255, 255, 0.35)",
+                  backdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255, 255, 255, 0.5)",
+                }}
               >
                 <Bell className="h-4 w-4 text-gray-600" />
                 <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-gray-700 rounded-full animate-pulse" />
@@ -1052,7 +1113,13 @@ export default function AssistantPage() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute right-0 mt-2 w-48 rounded-xl bg-white backdrop-blur-xl border border-gray-200 shadow-2xl shadow-gray-200/50 overflow-hidden z-50"
+                        className="absolute right-0 mt-2 w-48 rounded-xl overflow-hidden z-50"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.9)",
+                          backdropFilter: "blur(24px)",
+                          border: "1px solid rgba(255, 255, 255, 0.6)",
+                          boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                        }}
                       >
                         <div className="p-2">
                           {[
@@ -1115,7 +1182,17 @@ export default function AssistantPage() {
             {/* Quick Actions Sidebar */}
             <div className="lg:col-span-1 hidden lg:block">
               <div className="sticky top-6">
-                <div className="relative rounded-2xl bg-white backdrop-blur-xl border border-gray-200/60 p-5 overflow-hidden shadow-sm">
+                <div
+                  className="relative rounded-2xl p-5 overflow-hidden"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.2)",
+                    backdropFilter: "blur(24px) saturate(180%)",
+                    WebkitBackdropFilter: "blur(24px) saturate(180%)",
+                    border: "1px solid rgba(255, 255, 255, 0.45)",
+                    boxShadow:
+                      "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5)",
+                  }}
+                >
                   <div className="relative z-10">
                     <div className="mb-4">
                       <h3
@@ -1230,7 +1307,17 @@ export default function AssistantPage() {
 
             {/* Chat Area */}
             <div className="lg:col-span-3">
-              <div className="relative rounded-2xl bg-white backdrop-blur-xl border border-gray-200/60 overflow-hidden shadow-sm">
+              <div
+                className="relative rounded-2xl overflow-hidden"
+                style={{
+                  background: "rgba(255, 255, 255, 0.2)",
+                  backdropFilter: "blur(24px) saturate(180%)",
+                  WebkitBackdropFilter: "blur(24px) saturate(180%)",
+                  border: "1px solid rgba(255, 255, 255, 0.45)",
+                  boxShadow:
+                    "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5)",
+                }}
+              >
                 {/* Chat Header */}
                 <div className="relative z-10 flex items-center justify-between gap-3 p-5 border-b border-gray-100">
                   <div className="flex items-center gap-3">
@@ -1894,7 +1981,17 @@ export default function AssistantPage() {
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 className="mt-6"
               >
-                <div className="relative rounded-2xl bg-white backdrop-blur-xl border border-gray-200 overflow-hidden shadow-sm">
+                <div
+                  className="relative rounded-2xl overflow-hidden"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.2)",
+                    backdropFilter: "blur(24px) saturate(180%)",
+                    WebkitBackdropFilter: "blur(24px) saturate(180%)",
+                    border: "1px solid rgba(255, 255, 255, 0.45)",
+                    boxShadow:
+                      "0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.5)",
+                  }}
+                >
                   <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 via-transparent to-gray-100/50" />
 
                   <div className="relative z-10">

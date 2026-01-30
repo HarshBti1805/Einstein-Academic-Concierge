@@ -38,6 +38,7 @@ import {
   FileText,
   ArrowUpRight,
   ArrowDownRight,
+  ArrowLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -353,13 +354,25 @@ const AnimatedCard = ({
       transition={{ delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       whileHover={hover ? { y: -4, transition: { duration: 0.2 } } : undefined}
       className={cn(
-        "relative group rounded-2xl bg-white backdrop-blur-xl border border-gray-200/60 p-6 shadow-sm",
-        "before:absolute before:inset-0 before:rounded-2xl before:bg-gradient-to-br before:from-gray-500/5 before:to-transparent before:opacity-0 before:transition-opacity before:duration-300",
-        "hover:before:opacity-100 hover:border-gray-400/40 hover:shadow-lg hover:shadow-gray-500/5",
-        "transition-all duration-300",
+        "relative group rounded-2xl p-6 transition-all duration-300",
         className,
       )}
+      style={{
+        background: "rgba(255, 255, 255, 0.3)",
+        backdropFilter: "blur(24px) saturate(180%)",
+        WebkitBackdropFilter: "blur(24px) saturate(180%)",
+        border: "1px solid rgba(255, 255, 255, 0.5)",
+        boxShadow:
+          "0 8px 32px rgba(0,0,0,0.08), 0 0 0 1px rgba(255,255,255,0.15) inset, inset 0 1px 0 rgba(255,255,255,0.6)",
+      }}
     >
+      <div
+        className="absolute inset-x-0 top-0 h-px rounded-t-2xl pointer-events-none opacity-80"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent)",
+        }}
+      />
       <div className="relative z-10">{children}</div>
     </motion.div>
   );
@@ -381,9 +394,17 @@ const GradientCard = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "relative group rounded-2xl overflow-hidden bg-white border border-gray-200/60 shadow-sm hover:shadow-lg hover:shadow-gray-500/5 transition-all duration-300",
+        "relative group rounded-2xl overflow-hidden transition-all duration-300",
         className,
       )}
+      style={{
+        background: "rgba(255, 255, 255, 0.3)",
+        backdropFilter: "blur(24px) saturate(180%)",
+        WebkitBackdropFilter: "blur(24px) saturate(180%)",
+        border: "1px solid rgba(255, 255, 255, 0.5)",
+        boxShadow:
+          "0 8px 32px rgba(0,0,0,0.08), 0 0 0 1px rgba(255,255,255,0.15) inset, inset 0 1px 0 rgba(255,255,255,0.6)",
+      }}
     >
       <div className="relative z-10 p-6">{children}</div>
     </motion.div>
@@ -667,14 +688,34 @@ export default function Dashboard() {
 
   if (!mounted || !studentInfo || !currentStudent || !currentDashboardData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
+      <div
+        className={`min-h-screen flex items-center justify-center relative overflow-hidden ${fontVariables}`}
+        style={{
+          background:
+            "linear-gradient(165deg, #e2e8f0 0%, #cbd5e1 30%, #94a3b8 60%, #e2e8f0 100%)",
+        }}
+      >
+        <div
+          className="absolute inset-0 opacity-60"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)`,
+            backgroundSize: "40px 40px",
+          }}
+        />
+        <div className="relative z-10 flex flex-col items-center gap-4">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="h-10 w-10 border-2 border-gray-200 border-t-gray-800 rounded-full"
+            className="h-10 w-10 border-2 border-white/50 border-t-slate-700 rounded-full"
           />
-          <span className="text-gray-500 text-sm">Loading dashboard...</span>
+          <span
+            className="text-slate-600 text-sm"
+            style={{
+              fontFamily: "var(--font-space-grotesk), system-ui, sans-serif",
+            }}
+          >
+            Loading dashboard...
+          </span>
         </div>
       </div>
     );
@@ -859,86 +900,120 @@ export default function Dashboard() {
 
   return (
     <div
-      className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100 relative overflow-x-hidden ${fontVariables}`}
+      className={`min-h-screen relative overflow-x-hidden  ${fontVariables}`}
+      style={{
+        background:
+          "linear-gradient(165deg, #e2e8f0 0%, #cbd5e1 30%, #94a3b8 60%, #e2e8f0 100%)",
+      }}
     >
-      {/* Background Elements */}
-      <div className="fixed inset-0 pointer-events-none">
+      {/* Grid - glassmorphism base */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute inset-0 opacity-[0.6]"
+          className="absolute inset-0 opacity-60"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px)
+              linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)
             `,
-            backgroundSize: "60px 60px",
+            backgroundSize: "40px 40px",
           }}
         />
-
-        <div className="orb-1 absolute top-0 right-0 w-[600px] h-[600px] bg-gray-200/30 rounded-full blur-[150px]" />
-        <div className="orb-2 absolute bottom-0 left-0 w-[500px] h-[500px] bg-gray-300/30 rounded-full blur-[120px]" />
-        <div className="orb-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gray-100/40 rounded-full blur-[180px]" />
       </div>
+
+      {/* Orbs - glassmorphism glow */}
+      <div
+        className="orb-1 fixed top-1/4 -left-32 w-[560px] h-[560px] rounded-full blur-[140px] pointer-events-none opacity-70"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(148,163,184,0.25) 40%, transparent 70%)",
+        }}
+      />
+      <div
+        className="orb-2 fixed bottom-1/4 -right-32 w-[480px] h-[480px] rounded-full blur-[120px] pointer-events-none opacity-60"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(148,163,184,0.2) 50%, transparent 70%)",
+        }}
+      />
+      <div
+        className="orb-3 fixed top-1/2 left-1/2 w-[720px] h-[720px] rounded-full blur-[160px] pointer-events-none opacity-50 -translate-x-1/2 -translate-y-1/2"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(226,232,240,0.3) 50%, transparent 65%)",
+        }}
+      />
 
       {/* Floating particles */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {particles.map((particle, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-gray-400/30 rounded-full"
-            initial={{
-              x: particle.x,
-              y: particle.y,
-            }}
-            animate={{
-              y: -10,
-              opacity: [0, 0.4, 0],
-            }}
+            className="absolute w-1 h-1 bg-white/40 rounded-full bottom-0"
+            initial={{ x: particle.x, y: particle.y }}
+            animate={{ y: "-100vh", opacity: [0, 0.5, 0] }}
             transition={{
               duration: particle.duration,
               repeat: Infinity,
               delay: particle.delay,
               ease: "linear",
             }}
-            style={{
-              left: particle.left,
-            }}
+            style={{ left: particle.left }}
           />
         ))}
       </div>
 
-      {/* Header */}
+      {/* Header - glass */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="sticky top-0 z-50"
       >
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-2xl" />
-        <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-gray-300/50 to-transparent" />
-
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-20 left-1/4 w-60 h-20 bg-gray-200/20 rounded-full blur-3xl" />
-          <div className="absolute -top-20 right-1/3 w-40 h-20 bg-gray-300/20 rounded-full blur-3xl" />
-        </div>
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "rgba(255, 255, 255, 0.35)",
+            backdropFilter: "blur(24px) saturate(180%)",
+            WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.5)",
+            boxShadow:
+              "0 4px 24px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)",
+          }}
+        />
+        <div
+          className="absolute inset-x-0 top-0 h-[1px] pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent)",
+          }}
+        />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between min-h-[72px] py-3">
-            <div className="flex items-center gap-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-4">
               <motion.button
                 type="button"
-                onClick={() => scrollToSection("section-hero", "dashboard")}
-                className="flex items-center gap-3 cursor-pointer group border-0 bg-transparent p-0 text-left"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                aria-label="Go to dashboard home"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => router.push("/")}
+                className="p-2.5 rounded-xl border transition-all"
+                style={{
+                  background: "rgba(255, 255, 255, 0.35)",
+                  backdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255, 255, 255, 0.5)",
+                }}
+                aria-label="Back to home"
               >
+                <ArrowLeft className="h-4 w-4 text-gray-600" />
+              </motion.button>
+              <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-gray-700 to-gray-900 rounded-xl blur opacity-40 group-hover:opacity-70 transition-opacity" />
-                  <div className="relative p-3 rounded-xl bg-gradient-to-br from-gray-700 via-gray-800 to-black shadow-lg">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-gray-700 to-gray-900 rounded-xl blur opacity-30" />
+                  <div className="relative p-2.5 rounded-xl bg-gradient-to-br from-gray-700 via-gray-800 to-black shadow-lg">
                     <GraduationCap className="h-5 w-5 text-white" />
                   </div>
                 </div>
-                <div className="hidden sm:block">
+                <div>
                   <h1
                     className="text-2xl font-bold text-gray-900 tracking-tight"
                     style={{
@@ -948,23 +1023,20 @@ export default function Dashboard() {
                   >
                     Dashboard
                   </h1>
-                  <div className="flex items-center gap-1.5">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                    </span>
-                    <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">
-                      Online
-                    </p>
-                  </div>
                 </div>
-              </motion.button>
+              </div>
 
-              <nav className="hidden lg:flex items-center" aria-label="Main">
+              <nav
+                className="hidden lg:flex items-center ml-4"
+                aria-label="Main"
+              >
                 <div
-                  className="flex items-center gap-1 p-1 rounded-xl bg-gray-100/80 border border-gray-200/60"
+                  className="flex items-center gap-1 p-1 rounded-xl"
                   style={{
                     fontFamily: "var(--font-montserrat), system-ui, sans-serif",
+                    background: "rgba(255, 255, 255, 0.35)",
+                    backdropFilter: "blur(12px)",
+                    border: "1px solid rgba(255, 255, 255, 0.5)",
                   }}
                 >
                   {[
@@ -1002,8 +1074,9 @@ export default function Dashboard() {
                       className={cn(
                         "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
                         activeNav === item.key
-                          ? "bg-white text-gray-900 border border-gray-300/60 shadow-sm"
-                          : "text-gray-600 hover:text-gray-900 hover:bg-white/60",
+                          ? "text-gray-900 shadow-sm"
+                          : "text-gray-600 hover:text-gray-900",
+                        activeNav === item.key && "bg-white/60",
                       )}
                     >
                       <item.icon
@@ -1018,109 +1091,107 @@ export default function Dashboard() {
                 </div>
               </nav>
             </div>
-
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="flex items-center gap-1">
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => router.push("/assistant")}
+                className="p-2.5 rounded-xl border transition-all group"
+                style={{
+                  background: "rgba(255, 255, 255, 0.35)",
+                  backdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255, 255, 255, 0.5)",
+                }}
+                aria-label="Open course assistant"
+              >
+                <Sparkles className="h-4 w-4 text-gray-700 group-hover:text-gray-900 transition-colors" />
+              </motion.button>
+
+              <div className="relative">
                 <motion.button
                   type="button"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => router.push("/assistant")}
-                  className="relative p-2.5 rounded-xl bg-gray-100 border border-gray-200/60 hover:border-gray-400 transition-all group"
-                  aria-label="Open course assistant"
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    setShowNotifications((prev) => !prev);
+                  }}
+                  className="relative p-2.5 rounded-xl border transition-all"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.35)",
+                    backdropFilter: "blur(12px)",
+                    border: "1px solid rgba(255, 255, 255, 0.5)",
+                  }}
+                  aria-label="Notifications"
+                  aria-expanded={showNotifications}
                 >
-                  <Sparkles className="h-4 w-4 text-gray-700 group-hover:text-gray-900 transition-colors" />
-                  <div className="absolute inset-0 rounded-xl bg-gray-200/30 blur-md opacity-0 group-hover:opacity-100 transition-opacity -z-10" />
+                  <Bell className="h-4 w-4 text-gray-600" />
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-gray-700 rounded-full animate-pulse" />
                 </motion.button>
-
-                <div className="relative">
-                  <motion.button
-                    type="button"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      setShowUserMenu(false);
-                      setShowNotifications((prev) => !prev);
-                    }}
-                    className={cn(
-                      "relative p-2.5 rounded-xl border transition-all group",
-                      showNotifications
-                        ? "bg-gray-100 border-gray-300"
-                        : "bg-gray-50 border-gray-200/60 hover:bg-gray-100 hover:border-gray-300",
-                    )}
-                    aria-label="Notifications"
-                    title="Notifications"
-                    aria-expanded={showNotifications}
-                  >
-                    <Bell className="h-4 w-4 text-gray-600 group-hover:text-gray-900 transition-colors" />
-                    <span
-                      className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center"
-                      aria-hidden
-                    >
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gray-500 opacity-40"></span>
-                      <span className="relative inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-gradient-to-br from-gray-700 to-gray-900 text-[9px] font-bold text-white shadow-lg">
-                        3
-                      </span>
-                    </span>
-                  </motion.button>
-                  <AnimatePresence>
-                    {showNotifications && (
-                      <>
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="fixed inset-0 z-40"
-                          onClick={() => setShowNotifications(false)}
-                          aria-hidden
-                        />
-                        <motion.div
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          transition={{
-                            duration: 0.2,
-                            ease: [0.16, 1, 0.3, 1],
-                          }}
-                          className="absolute right-0 mt-2 w-80 rounded-2xl bg-white border border-gray-200 shadow-2xl shadow-gray-200/50 overflow-hidden z-50 p-4"
-                          role="menu"
-                          aria-label="Notifications"
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-semibold text-gray-900">
-                              Notifications
-                            </span>
+                <AnimatePresence>
+                  {showNotifications && (
+                    <>
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowNotifications(false)}
+                        aria-hidden
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{
+                          duration: 0.2,
+                          ease: [0.16, 1, 0.3, 1],
+                        }}
+                        className="absolute right-0 mt-2 w-80 rounded-2xl overflow-hidden z-50 p-4"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.9)",
+                          backdropFilter: "blur(24px)",
+                          border: "1px solid rgba(255, 255, 255, 0.6)",
+                          boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                        }}
+                        role="menu"
+                        aria-label="Notifications"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm font-semibold text-gray-900">
+                            Notifications
+                          </span>
+                        </div>
+                        {upcomingDeadlines.length === 0 ? (
+                          <div className="text-sm text-gray-500 py-4 text-center">
+                            No new notifications
                           </div>
-                          {upcomingDeadlines.length === 0 ? (
-                            <div className="text-sm text-gray-500 py-4 text-center">
-                              No new notifications
-                            </div>
-                          ) : (
-                            <div className="space-y-2">
-                              {upcomingDeadlines.slice(0, 3).map((d) => (
-                                <div
-                                  key={d.id}
-                                  className="py-2 px-3 rounded-lg bg-gray-50 border border-gray-100 text-left"
-                                >
-                                  <p className="text-xs font-medium text-gray-900 truncate">
-                                    {d.title}
-                                  </p>
-                                  <p className="text-[11px] text-gray-500">
-                                    {d.course} ·{" "}
-                                    {new Date(d.dueDate).toLocaleDateString(
-                                      "en-US",
-                                      { month: "short", day: "numeric" },
-                                    )}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </motion.div>
-                      </>
-                    )}
-                  </AnimatePresence>
-                </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {upcomingDeadlines.slice(0, 3).map((d) => (
+                              <div
+                                key={d.id}
+                                className="py-2 px-3 rounded-lg bg-gray-50 border border-gray-100 text-left"
+                              >
+                                <p className="text-xs font-medium text-gray-900 truncate">
+                                  {d.title}
+                                </p>
+                                <p className="text-[11px] text-gray-500">
+                                  {d.course} ·{" "}
+                                  {new Date(d.dueDate).toLocaleDateString(
+                                    "en-US",
+                                    { month: "short", day: "numeric" },
+                                  )}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
               </div>
 
               <div className="hidden sm:block w-[1px] h-8 bg-gradient-to-b from-transparent via-gray-300 to-transparent mx-1" />
@@ -1140,31 +1211,18 @@ export default function Dashboard() {
                     "hover:bg-gray-100 hover:border-gray-300",
                     showUserMenu && "bg-gray-100 border-gray-300",
                   )}
+                  aria-label="User menu"
+                  aria-expanded={showUserMenu}
                 >
-                  <div className="relative">
-                    <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-gray-700 via-gray-800 to-black flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-gray-500/20">
-                      {studentInfo.name.charAt(0)}
-                    </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-white flex items-center justify-center">
-                      <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50" />
-                    </div>
+                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-semibold text-sm">
+                    {studentInfo.name.charAt(0)}
                   </div>
-
                   <div className="hidden sm:block text-left">
-                    <p
-                      className="text-sm font-semibold text-gray-900 leading-tight"
-                      style={{
-                        fontFamily:
-                          "var(--font-manrope), system-ui, sans-serif",
-                      }}
-                    >
+                    <p className="text-sm font-medium text-gray-900">
                       {studentInfo.name.split(" ")[0]}
                     </p>
-                    <p className="text-[10px] text-gray-600 font-medium">
-                      Student
-                    </p>
+                    <p className="text-xs text-gray-500">Student</p>
                   </div>
-
                   <ChevronDown
                     className={cn(
                       "hidden sm:block h-4 w-4 text-gray-400 transition-transform duration-300",
@@ -1189,9 +1247,18 @@ export default function Dashboard() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                        className="absolute right-0 mt-2 w-72 rounded-2xl bg-white backdrop-blur-2xl border border-gray-200 shadow-2xl shadow-gray-200/50 overflow-hidden z-50"
+                        className="absolute right-0 mt-2 w-72 rounded-2xl overflow-hidden z-50"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.9)",
+                          backdropFilter: "blur(24px)",
+                          border: "1px solid rgba(255, 255, 255, 0.6)",
+                          boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                        }}
                       >
-                        <div className="p-4 bg-gradient-to-br from-gray-100 to-transparent">
+                        <div
+                          className="p-4"
+                          style={{ background: "rgba(248, 250, 252, 0.6)" }}
+                        >
                           <div className="flex items-center gap-3">
                             <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-gray-700 via-gray-800 to-black flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-gray-500/30">
                               {studentInfo.name.charAt(0)}
@@ -1326,51 +1393,29 @@ export default function Dashboard() {
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              style={{
+                background: "rgba(255, 255, 255, 0.35)",
+                backdropFilter: "blur(24px) saturate(180%)",
+                WebkitBackdropFilter: "blur(24px) saturate(180%)",
+                border: "1px solid rgba(255, 255, 255, 0.5)",
+                boxShadow:
+                  "0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6)",
+              }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-black" />
-
-              <div className="absolute inset-0 overflow-hidden">
-                <motion.div
-                  className="absolute top-0 right-0 w-[600px] h-[600px] bg-gray-400/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3"
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.15, 0.25, 0.15],
-                  }}
-                  transition={{
-                    duration: 8,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
-                <motion.div
-                  className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gray-500/25 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/3"
-                  animate={{
-                    scale: [1, 1.15, 1],
-                    opacity: [0.2, 0.3, 0.2],
-                  }}
-                  transition={{
-                    duration: 6,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 1,
-                  }}
-                />
-
-                <div
-                  className="absolute inset-0 opacity-[0.1]"
-                  style={{
-                    backgroundImage: `
-                      linear-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(255, 255, 255, 0.3) 1px, transparent 1px)
-                    `,
-                    backgroundSize: "50px 50px",
-                    maskImage:
-                      "radial-gradient(ellipse at center, black 30%, transparent 80%)",
-                    WebkitMaskImage:
-                      "radial-gradient(ellipse at center, black 30%, transparent 80%)",
-                  }}
-                />
-              </div>
+              <div
+                className="absolute inset-x-0 top-0 h-px pointer-events-none opacity-80"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent)",
+                }}
+              />
+              <div
+                className="absolute inset-0 pointer-events-none rounded-3xl opacity-50"
+                style={{
+                  background:
+                    "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.6), transparent 70%)",
+                }}
+              />
 
               <div className="relative z-10 p-8 md:p-12">
                 <div className="flex flex-col lg:flex-row items-center justify-between gap-10">
@@ -1383,13 +1428,18 @@ export default function Dashboard() {
                         type: "spring",
                         stiffness: 100,
                       }}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/20 text-white/90 text-sm mb-5"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-5 text-slate-600 text-sm border"
+                      style={{
+                        background: "rgba(255, 255, 255, 0.5)",
+                        backdropFilter: "blur(12px)",
+                        border: "1px solid rgba(255, 255, 255, 0.6)",
+                      }}
                     >
                       <motion.div
                         animate={{ scale: [1, 1.2, 1] }}
                         transition={{ duration: 1.5, repeat: Infinity }}
                       >
-                        <Flame className="h-4 w-4 text-amber-300" />
+                        <Flame className="h-4 w-4 text-amber-500" />
                       </motion.div>
                       <span
                         style={{
@@ -1409,7 +1459,7 @@ export default function Dashboard() {
                         duration: 0.6,
                         ease: [0.16, 1, 0.3, 1],
                       }}
-                      className="text-3xl lg:text-5xl font-bold text-white mb-4"
+                      className="text-3xl lg:text-5xl font-bold text-slate-800 mb-4"
                       style={{
                         fontFamily:
                           "var(--font-vonique), system-ui, sans-serif",
@@ -1424,7 +1474,7 @@ export default function Dashboard() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.4, duration: 0.5 }}
-                      className="text-white/80 text-lg mb-8 max-w-md"
+                      className="text-slate-600 text-lg mb-8 max-w-md"
                       style={{
                         fontFamily:
                           "var(--font-vonique), system-ui, sans-serif",
@@ -1440,18 +1490,18 @@ export default function Dashboard() {
                       whileHover={{ scale: 1.05, y: -3 }}
                       whileTap={{ scale: 0.97 }}
                       onClick={() => router.push("/assistant")}
-                      className="group relative inline-flex items-center gap-3 px-6 py-4 bg-white text-gray-900 font-bold rounded-2xl shadow-2xl shadow-gray-900/30 hover:shadow-gray-800/40 transition-all duration-300 overflow-hidden"
+                      className="group relative inline-flex items-center gap-3 px-6 py-4 text-white font-bold rounded-2xl overflow-hidden"
                       style={{
                         fontFamily:
                           "var(--font-bogita-mono), system-ui, sans-serif",
+                        background: "rgba(51, 65, 85, 0.85)",
+                        backdropFilter: "blur(14px)",
+                        border: "1px solid rgba(255, 255, 255, 0.25)",
+                        boxShadow:
+                          "0 8px 28px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.15)",
                       }}
                     >
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-200/50 to-transparent -skew-x-12"
-                        initial={{ x: "-100%" }}
-                        whileHover={{ x: "100%" }}
-                        transition={{ duration: 0.6 }}
-                      />
+                      <motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                       <Sparkles className="h-5 w-5 relative z-10" />
                       <span className="relative z-10">BOOK COURSES</span>
                       <ChevronRight className="h-5 w-5 relative z-10 group-hover:translate-x-1 transition-transform duration-300" />
@@ -1469,11 +1519,16 @@ export default function Dashboard() {
                         damping: 12,
                       }}
                       whileHover={{ y: -6, scale: 1.03 }}
-                      className="relative bg-white/15 backdrop-blur-xl rounded-2xl p-6 text-center min-w-[140px] border border-white/20 overflow-hidden group"
+                      className="relative rounded-2xl p-6 text-center min-w-[140px] overflow-hidden group"
+                      style={{
+                        background: "rgba(255, 255, 255, 0.4)",
+                        backdropFilter: "blur(16px)",
+                        border: "1px solid rgba(255, 255, 255, 0.55)",
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
+                      }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-br from-gray-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <motion.div
-                        className="text-4xl font-bold text-white mb-2 relative z-10"
+                        className="text-4xl font-bold text-slate-800 mb-2 relative z-10"
                         style={{
                           fontFamily:
                             "var(--font-raleway), system-ui, sans-serif",
@@ -1489,7 +1544,7 @@ export default function Dashboard() {
                         {academicStats.currentGPA}
                       </motion.div>
                       <div
-                        className="text-white/70 text-sm relative z-10"
+                        className="text-slate-600 text-sm relative z-10"
                         style={{
                           fontFamily:
                             "var(--font-raleway), system-ui, sans-serif",
@@ -1509,11 +1564,16 @@ export default function Dashboard() {
                         damping: 12,
                       }}
                       whileHover={{ y: -6, scale: 1.03 }}
-                      className="relative bg-white/15 backdrop-blur-xl rounded-2xl p-6 text-center min-w-[140px] border border-white/20 overflow-hidden group"
+                      className="relative rounded-2xl p-6 text-center min-w-[140px] overflow-hidden group"
+                      style={{
+                        background: "rgba(255, 255, 255, 0.4)",
+                        backdropFilter: "blur(16px)",
+                        border: "1px solid rgba(255, 255, 255, 0.55)",
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
+                      }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-br from-gray-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <motion.div
-                        className="text-4xl font-bold text-white mb-2 relative z-10"
+                        className="text-4xl font-bold text-slate-800 mb-2 relative z-10"
                         style={{
                           fontFamily:
                             "var(--font-raleway), system-ui, sans-serif",
@@ -1529,7 +1589,7 @@ export default function Dashboard() {
                         {academicStats.overallAttendance}%
                       </motion.div>
                       <div
-                        className="text-white/70 text-sm relative z-10"
+                        className="text-slate-600 text-sm relative z-10"
                         style={{
                           fontFamily:
                             "var(--font-raleway), system-ui, sans-serif",

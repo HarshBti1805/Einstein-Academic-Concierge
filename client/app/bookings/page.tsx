@@ -37,8 +37,14 @@ import { cn } from "@/lib/utils";
 
 // Import WebSocket hook and Registration API
 import { useRegistrationSocket } from "@/hooks/useRegistrationSocket";
-import { registrationAPI, ClassroomState, SeatInfo } from "@/services/registrationAPI";
-import NotificationModal, { NotificationType } from "@/components/ui/NotificationModal";
+import {
+  registrationAPI,
+  ClassroomState,
+  SeatInfo,
+} from "@/services/registrationAPI";
+import NotificationModal, {
+  NotificationType,
+} from "@/components/ui/NotificationModal";
 
 // Import test data as fallback
 import seatsDataFallback from "@/lib/test-data/seats_data.json";
@@ -74,19 +80,31 @@ export default function BookingsPage() {
   const [mounted, setMounted] = useState(false);
   const [studentName, setStudentName] = useState("");
   const [studentId, setStudentId] = useState("");
-  const [recommendedCourses, setRecommendedCourses] = useState<RecommendedCourse[]>([]);
-  const [selectedCourse, setSelectedCourse] = useState<SelectedCourse | null>(null);
+  const [recommendedCourses, setRecommendedCourses] = useState<
+    RecommendedCourse[]
+  >([]);
+  const [selectedCourse, setSelectedCourse] = useState<SelectedCourse | null>(
+    null,
+  );
   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
-  const [autoRegistration, setAutoRegistration] = useState<Record<string, boolean>>({});
+  const [autoRegistration, setAutoRegistration] = useState<
+    Record<string, boolean>
+  >({});
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [seatsData, setSeatsData] = useState<{ courses: Record<string, CourseSeats> }>({ courses: {} });
+  const [seatsData, setSeatsData] = useState<{
+    courses: Record<string, CourseSeats>;
+  }>({ courses: {} });
   const [isBooking, setIsBooking] = useState(false);
-  const [classroomState, setClassroomState] = useState<ClassroomState | null>(null);
+  const [classroomState, setClassroomState] = useState<ClassroomState | null>(
+    null,
+  );
   const seatGridRef = useRef<HTMLDivElement>(null);
-  const [enrolledCourses, setEnrolledCourses] = useState<Set<string>>(new Set());
+  const [enrolledCourses, setEnrolledCourses] = useState<Set<string>>(
+    new Set(),
+  );
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
-  
+
   // Modal state for notifications
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -106,23 +124,26 @@ export default function BookingsPage() {
     message: "",
   });
 
-  const showNotification = useCallback((
-    type: NotificationType,
-    title: string,
-    message: string,
-    details?: typeof modalState.details
-  ) => {
-    setModalState({
-      isOpen: true,
-      type,
-      title,
-      message,
-      details,
-    });
-  }, []);
+  const showNotification = useCallback(
+    (
+      type: NotificationType,
+      title: string,
+      message: string,
+      details?: typeof modalState.details,
+    ) => {
+      setModalState({
+        isOpen: true,
+        type,
+        title,
+        message,
+        details,
+      });
+    },
+    [],
+  );
 
   const closeNotification = useCallback(() => {
-    setModalState(prev => ({ ...prev, isOpen: false }));
+    setModalState((prev) => ({ ...prev, isOpen: false }));
   }, []);
 
   // WebSocket connection for real-time updates
@@ -139,55 +160,77 @@ export default function BookingsPage() {
   });
 
   // Handle seat booked events from WebSocket
-  const handleSeatBooked = useCallback((event: { seatNumber: string; studentId: string; studentName: string }, courseId: string) => {
-    console.log("Real-time seat booked:", event, courseId);
-    // Update local state to reflect the booking
-    if (selectedCourse && classroomState) {
-      // Parse seat number to get numeric position
-      const match = event.seatNumber.match(/^([A-Z]+)(\d+)$/i);
-      if (match) {
-        const row = match[1].charCodeAt(0) - 65; // A=0, B=1, etc.
-        const col = parseInt(match[2], 10);
-        const seatIndex = row * 10 + col; // Assuming 10 seats per row
-        
-        setClassroomState(prev => {
+  const handleSeatBooked = useCallback(
+    (
+      event: { seatNumber: string; studentId: string; studentName: string },
+      courseId: string,
+    ) => {
+      console.log("Real-time seat booked:", event, courseId);
+      // Update local state to reflect the booking
+      if (selectedCourse && classroomState) {
+        // Parse seat number to get numeric position
+        const match = event.seatNumber.match(/^([A-Z]+)(\d+)$/i);
+        if (match) {
+          const row = match[1].charCodeAt(0) - 65; // A=0, B=1, etc.
+          const col = parseInt(match[2], 10);
+          const seatIndex = row * 10 + col; // Assuming 10 seats per row
+
+          setClassroomState((prev) => {
+            if (!prev) return prev;
+            const updatedSeats = prev.seats.map((seat) =>
+              seat.seatNumber === event.seatNumber
+                ? {
+                    ...seat,
+                    isOccupied: true,
+                    studentId: event.studentId,
+                    studentName: event.studentName,
+                  }
+                : seat,
+            );
+            return {
+              ...prev,
+              seats: updatedSeats,
+              occupiedSeats: prev.occupiedSeats + 1,
+              availableSeats: prev.availableSeats - 1,
+            };
+          });
+        }
+      }
+    },
+    [selectedCourse, classroomState],
+  );
+
+  // Handle seat released events from WebSocket
+  const handleSeatReleased = useCallback(
+    (
+      event: { seatNumber: string; previousStudentId: string },
+      courseId: string,
+    ) => {
+      console.log("Real-time seat released:", event, courseId);
+      if (classroomState) {
+        setClassroomState((prev) => {
           if (!prev) return prev;
-          const updatedSeats = prev.seats.map(seat => 
-            seat.seatNumber === event.seatNumber 
-              ? { ...seat, isOccupied: true, studentId: event.studentId, studentName: event.studentName }
-              : seat
+          const updatedSeats = prev.seats.map((seat) =>
+            seat.seatNumber === event.seatNumber
+              ? {
+                  ...seat,
+                  isOccupied: false,
+                  studentId: undefined,
+                  studentName: undefined,
+                }
+              : seat,
           );
           return {
             ...prev,
             seats: updatedSeats,
-            occupiedSeats: prev.occupiedSeats + 1,
-            availableSeats: prev.availableSeats - 1,
+            occupiedSeats: prev.occupiedSeats - 1,
+            availableSeats: prev.availableSeats + 1,
           };
         });
       }
-    }
-  }, [selectedCourse, classroomState]);
-
-  // Handle seat released events from WebSocket
-  const handleSeatReleased = useCallback((event: { seatNumber: string; previousStudentId: string }, courseId: string) => {
-    console.log("Real-time seat released:", event, courseId);
-    if (classroomState) {
-      setClassroomState(prev => {
-        if (!prev) return prev;
-        const updatedSeats = prev.seats.map(seat => 
-          seat.seatNumber === event.seatNumber 
-            ? { ...seat, isOccupied: false, studentId: undefined, studentName: undefined }
-            : seat
-        );
-        return {
-          ...prev,
-          seats: updatedSeats,
-          occupiedSeats: prev.occupiedSeats - 1,
-          availableSeats: prev.availableSeats + 1,
-        };
-      });
-    }
-  }, [classroomState]);
+    },
+    [classroomState],
+  );
 
   // Set up WebSocket event handlers
   useEffect(() => {
@@ -199,7 +242,7 @@ export default function BookingsPage() {
     const initializePage = async () => {
       const token = sessionStorage.getItem("authToken");
       const data = sessionStorage.getItem("studentData");
-      
+
       if (!token || !data) {
         router.push("/");
         return;
@@ -232,32 +275,38 @@ export default function BookingsPage() {
       try {
         const response = await fetch(`${API_BASE_URL}/api/seats`, {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.courses) {
             setSeatsData({ courses: data.courses });
           } else {
             // Fallback to local data
-            setSeatsData(seatsDataFallback as { courses: Record<string, CourseSeats> });
+            setSeatsData(
+              seatsDataFallback as { courses: Record<string, CourseSeats> },
+            );
           }
         } else {
           // Fallback to local data
-          setSeatsData(seatsDataFallback as { courses: Record<string, CourseSeats> });
+          setSeatsData(
+            seatsDataFallback as { courses: Record<string, CourseSeats> },
+          );
         }
       } catch {
         // Fallback to local data
         console.log("Using fallback seat data");
-        setSeatsData(seatsDataFallback as { courses: Record<string, CourseSeats> });
+        setSeatsData(
+          seatsDataFallback as { courses: Record<string, CourseSeats> },
+        );
       }
 
       setMounted(true);
     };
-    
+
     const timer = setTimeout(initializePage, 0);
     return () => clearTimeout(timer);
   }, [router]);
@@ -273,7 +322,7 @@ export default function BookingsPage() {
           duration: 0.3,
           stagger: 0.05,
           ease: "power2.out",
-        }
+        },
       );
     }
   }, [selectedCourse]);
@@ -286,14 +335,14 @@ export default function BookingsPage() {
       // Use the new registration API to get classroom state
       const state = await registrationAPI.getClassroomState(course.code);
       setClassroomState(state);
-      
+
       // Subscribe to real-time updates for this course
       subscribeToCourse(course.code);
-      
+
       // Convert classroom state to legacy format for compatibility
       const occupiedSeatNumbers = state.seats
-        .filter(s => s.isOccupied)
-        .map(s => {
+        .filter((s) => s.isOccupied)
+        .map((s) => {
           const match = s.seatNumber.match(/^([A-Z]+)(\d+)$/i);
           if (match) {
             const row = match[1].charCodeAt(0) - 65;
@@ -302,31 +351,34 @@ export default function BookingsPage() {
           }
           return 0;
         });
-      
+
       seatData = {
         totalSeats: state.totalSeats,
         occupiedSeats: occupiedSeatNumbers,
-        bookingStatus: state.bookingStatus.toLowerCase()
+        bookingStatus: state.bookingStatus.toLowerCase(),
       };
     } catch (error) {
       console.log("Using fallback seat data:", error);
       // Fallback to legacy API
       try {
         const token = sessionStorage.getItem("authToken");
-        const response = await fetch(`${API_BASE_URL}/api/seats/course/${course.code}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
+        const response = await fetch(
+          `${API_BASE_URL}/api/seats/course/${course.code}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
             seatData = {
               totalSeats: data.totalSeats,
               occupiedSeats: data.occupiedSeats,
-              bookingStatus: data.bookingStatus
+              bookingStatus: data.bookingStatus,
             };
           }
         }
@@ -339,7 +391,7 @@ export default function BookingsPage() {
     if (!seatData) {
       seatData = seatsData.courses[course.code];
     }
-    
+
     if (!seatData) return;
 
     if (course.bookingStatus === "closed") {
@@ -353,7 +405,8 @@ export default function BookingsPage() {
   const handleSeatClick = (seatNumber: number) => {
     if (!selectedCourse) return;
 
-    const isOccupied = selectedCourse.seatData.occupiedSeats.includes(seatNumber);
+    const isOccupied =
+      selectedCourse.seatData.occupiedSeats.includes(seatNumber);
     if (isOccupied) return;
 
     setSelectedSeats((prev) => {
@@ -371,7 +424,7 @@ export default function BookingsPage() {
 
     try {
       // Convert numeric seat positions to seat numbers (e.g., "A5", "B3")
-      const seatNumbers = selectedSeats.map(seatNum => {
+      const seatNumbers = selectedSeats.map((seatNum) => {
         const row = Math.floor((seatNum - 1) / 10);
         const col = ((seatNum - 1) % 10) + 1;
         return `${String.fromCharCode(65 + row)}${col}`;
@@ -380,32 +433,38 @@ export default function BookingsPage() {
       // Use registration API to book seats
       const bookedSeats: string[] = [];
       for (const seatNumber of seatNumbers) {
-        const result = await registrationAPI.bookSeat(studentId, selectedCourse.code, seatNumber);
-        
+        const result = await registrationAPI.bookSeat(
+          studentId,
+          selectedCourse.code,
+          seatNumber,
+        );
+
         if (!result.success) {
           // Check if user was added to waitlist instead
-          if (result.status === 'WAITLISTED') {
+          if (result.status === "WAITLISTED") {
             showNotification(
               "waitlist",
               "Added to Waitlist",
-              result.message || "The course is full. You have been added to the waitlist.",
+              result.message ||
+                "The course is full. You have been added to the waitlist.",
               {
                 courseName: selectedCourse.name,
                 waitlistPosition: result.waitlistPosition,
                 score: result.score,
-              }
+              },
             );
             setIsBooking(false);
             setSelectedCourse(null);
             setSelectedSeats([]);
             return;
           }
-          
+
           showNotification(
             "error",
             "Booking Failed",
-            result.message || `Failed to book seat ${seatNumber}. Please try again.`,
-            { courseName: selectedCourse.name }
+            result.message ||
+              `Failed to book seat ${seatNumber}. Please try again.`,
+            { courseName: selectedCourse.name },
           );
           setIsBooking(false);
           return;
@@ -414,14 +473,17 @@ export default function BookingsPage() {
       }
 
       // Update local seat data
-      setSeatsData(prev => ({
+      setSeatsData((prev) => ({
         courses: {
           ...prev.courses,
           [selectedCourse.code]: {
             ...prev.courses[selectedCourse.code],
-            occupiedSeats: [...(prev.courses[selectedCourse.code]?.occupiedSeats || []), ...selectedSeats]
-          }
-        }
+            occupiedSeats: [
+              ...(prev.courses[selectedCourse.code]?.occupiedSeats || []),
+              ...selectedSeats,
+            ],
+          },
+        },
       }));
 
       // Unsubscribe from WebSocket updates for this course
@@ -434,7 +496,7 @@ export default function BookingsPage() {
         {
           courseName: selectedCourse.name,
           seatNumber: bookedSeats.join(", "),
-        }
+        },
       );
       setSelectedCourse(null);
       setSelectedSeats([]);
@@ -444,36 +506,39 @@ export default function BookingsPage() {
       // Fallback to legacy API
       try {
         const token = sessionStorage.getItem("authToken");
-        const response = await fetch(`${API_BASE_URL}/api/seats/${selectedCourse.code}/book`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+        const response = await fetch(
+          `${API_BASE_URL}/api/seats/${selectedCourse.code}/book`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              seatNumbers: selectedSeats,
+              studentId: studentId,
+            }),
           },
-          body: JSON.stringify({
-            seatNumbers: selectedSeats,
-            studentId: studentId
-          })
-        });
+        );
 
         const data = await response.json();
 
         if (response.ok && data.success) {
-          setSeatsData(prev => ({
+          setSeatsData((prev) => ({
             courses: {
               ...prev.courses,
               [selectedCourse.code]: {
                 ...prev.courses[selectedCourse.code],
-                occupiedSeats: data.updatedConfig.occupiedSeats
-              }
-            }
+                occupiedSeats: data.updatedConfig.occupiedSeats,
+              },
+            },
           }));
 
           showNotification(
             "success",
             "Booking Confirmed!",
             `You have successfully booked ${selectedSeats.length} seat(s) for ${selectedCourse.name}.`,
-            { courseName: selectedCourse.name }
+            { courseName: selectedCourse.name },
           );
           setSelectedCourse(null);
           setSelectedSeats([]);
@@ -482,7 +547,7 @@ export default function BookingsPage() {
             "error",
             "Booking Failed",
             data.message || "Failed to book seats. Please try again.",
-            { courseName: selectedCourse.name }
+            { courseName: selectedCourse.name },
           );
         }
       } catch {
@@ -491,7 +556,7 @@ export default function BookingsPage() {
           "error",
           "Connection Error",
           "Unable to connect to the server. Please check your connection and try again.",
-          { courseName: selectedCourse.name }
+          { courseName: selectedCourse.name },
         );
       }
     } finally {
@@ -501,8 +566,8 @@ export default function BookingsPage() {
 
   const handleToggleAutoRegistration = async (courseCode: string) => {
     const newState = !autoRegistration[courseCode];
-    const course = recommendedCourses.find(c => c.code === courseCode);
-    
+    const course = recommendedCourses.find((c) => c.code === courseCode);
+
     setAutoRegistration((prev) => ({
       ...prev,
       [courseCode]: newState,
@@ -511,16 +576,18 @@ export default function BookingsPage() {
     // If enabling auto-registration, add to waitlist
     if (newState) {
       try {
-        const result = await registrationAPI.apply(studentId, courseCode, { autoRegister: true });
+        const result = await registrationAPI.apply(studentId, courseCode, {
+          autoRegister: true,
+        });
         console.log("Auto-registration result:", result);
-        
+
         if (result.success) {
-          if (result.status === 'ENROLLED' && result.seatNumber) {
+          if (result.status === "ENROLLED" && result.seatNumber) {
             // Student was immediately enrolled (seat available)
-            setEnrolledCourses(prev => new Set([...prev, courseCode]));
-            
+            setEnrolledCourses((prev) => new Set([...prev, courseCode]));
+
             // Update seat data to reflect the booking
-            setSeatsData(prev => {
+            setSeatsData((prev) => {
               const currentData = prev.courses[courseCode];
               if (currentData) {
                 // Parse seat number to get position (e.g., "A5" -> 5)
@@ -534,15 +601,18 @@ export default function BookingsPage() {
                       ...prev.courses,
                       [courseCode]: {
                         ...currentData,
-                        occupiedSeats: [...(currentData.occupiedSeats || []), seatNum]
-                      }
-                    }
+                        occupiedSeats: [
+                          ...(currentData.occupiedSeats || []),
+                          seatNum,
+                        ],
+                      },
+                    },
                   };
                 }
               }
               return prev;
             });
-            
+
             showNotification(
               "success",
               "Registered Successfully!",
@@ -550,9 +620,9 @@ export default function BookingsPage() {
               {
                 courseName: course?.name,
                 seatNumber: result.seatNumber,
-              }
+              },
             );
-          } else if (result.status === 'WAITLISTED') {
+          } else if (result.status === "WAITLISTED") {
             // Added to waitlist
             showNotification(
               "waitlist",
@@ -562,22 +632,24 @@ export default function BookingsPage() {
                 courseName: course?.name,
                 waitlistPosition: result.waitlistPosition,
                 score: result.score,
-              }
+              },
             );
           } else {
             showNotification(
               "info",
               "Auto-Registration Enabled",
-              result.message || `Auto-registration is now active for ${courseCode}.`,
-              { courseName: course?.name }
+              result.message ||
+                `Auto-registration is now active for ${courseCode}.`,
+              { courseName: course?.name },
             );
           }
         } else {
           showNotification(
             "error",
             "Registration Failed",
-            result.message || "Unable to enable auto-registration. Please try again.",
-            { courseName: course?.name }
+            result.message ||
+              "Unable to enable auto-registration. Please try again.",
+            { courseName: course?.name },
           );
           // Revert the toggle on failure
           setAutoRegistration((prev) => ({
@@ -591,7 +663,7 @@ export default function BookingsPage() {
           "error",
           "Connection Error",
           "Unable to connect to the server. Please try again.",
-          { courseName: course?.name }
+          { courseName: course?.name },
         );
         // Revert the toggle on failure
         setAutoRegistration((prev) => ({
@@ -605,45 +677,45 @@ export default function BookingsPage() {
         "info",
         "Auto-Registration Disabled",
         `Auto-registration has been disabled for ${course?.name || courseCode}.`,
-        { courseName: course?.name }
+        { courseName: course?.name },
       );
     }
   };
 
   // Drop/Leave a course
   const handleDropCourse = async (courseCode: string) => {
-    const course = recommendedCourses.find(c => c.code === courseCode);
+    const course = recommendedCourses.find((c) => c.code === courseCode);
     setIsProcessing(courseCode);
-    
+
     try {
       const result = await registrationAPI.dropCourse(studentId, courseCode);
-      
+
       if (result.success) {
         // Remove from enrolled courses
-        setEnrolledCourses(prev => {
+        setEnrolledCourses((prev) => {
           const newSet = new Set(prev);
           newSet.delete(courseCode);
           return newSet;
         });
-        
+
         // Disable auto-registration
-        setAutoRegistration(prev => ({
+        setAutoRegistration((prev) => ({
           ...prev,
           [courseCode]: false,
         }));
-        
+
         showNotification(
           "success",
           "Course Dropped",
           `You have successfully dropped ${course?.name || courseCode}.`,
-          { courseName: course?.name }
+          { courseName: course?.name },
         );
       } else {
         showNotification(
           "error",
           "Drop Failed",
           result.message || "Unable to drop the course. Please try again.",
-          { courseName: course?.name }
+          { courseName: course?.name },
         );
       }
     } catch (error) {
@@ -652,7 +724,7 @@ export default function BookingsPage() {
         "error",
         "Connection Error",
         "Unable to connect to the server. Please try again.",
-        { courseName: course?.name }
+        { courseName: course?.name },
       );
     } finally {
       setIsProcessing(null);
@@ -666,16 +738,16 @@ export default function BookingsPage() {
       console.log(`Opening booking for ${courseCode}...`);
       const success = await registrationAPI.openBooking(courseCode);
       console.log(`Open booking result: ${success}`);
-      
+
       if (success) {
         // Wait a moment for server to process waitlist
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
         // Refresh seat data to show updated state
         try {
           const state = await registrationAPI.getClassroomState(courseCode);
           console.log("New classroom state:", state);
-          
+
           // Convert seat info to numeric positions
           const occupiedPositions: number[] = [];
           state.seats.forEach((seat) => {
@@ -688,33 +760,41 @@ export default function BookingsPage() {
               }
             }
           });
-          
-          setSeatsData(prev => ({
+
+          setSeatsData((prev) => ({
             courses: {
               ...prev.courses,
               [courseCode]: {
                 totalSeats: state.totalSeats,
                 occupiedSeats: occupiedPositions,
-                bookingStatus: state.bookingStatus
-              }
-            }
+                bookingStatus: state.bookingStatus,
+              },
+            },
           }));
         } catch (err) {
           console.error("Failed to refresh seat data:", err);
         }
-        
+
         showNotification(
           "success",
           "Booking Opened",
           `Booking is now open for ${courseCode}. Waitlisted students have been auto-enrolled.`,
-          { courseName: courseCode }
+          { courseName: courseCode },
         );
       } else {
-        showNotification("error", "Failed", "Could not open booking. Check server logs.");
+        showNotification(
+          "error",
+          "Failed",
+          "Could not open booking. Check server logs.",
+        );
       }
     } catch (error) {
       console.error("Failed to open booking:", error);
-      showNotification("error", "Error", "Failed to open booking. Check console for details.");
+      showNotification(
+        "error",
+        "Error",
+        "Failed to open booking. Check console for details.",
+      );
     } finally {
       setIsProcessing(null);
     }
@@ -727,12 +807,12 @@ export default function BookingsPage() {
       console.log(`Closing booking for ${courseCode}...`);
       const success = await registrationAPI.closeBooking(courseCode);
       console.log(`Close booking result: ${success}`);
-      
+
       if (success) {
         // Refresh seat data
         try {
           const state = await registrationAPI.getClassroomState(courseCode);
-          
+
           // Convert seat info to numeric positions
           const occupiedPositions: number[] = [];
           state.seats.forEach((seat) => {
@@ -745,33 +825,41 @@ export default function BookingsPage() {
               }
             }
           });
-          
-          setSeatsData(prev => ({
+
+          setSeatsData((prev) => ({
             courses: {
               ...prev.courses,
               [courseCode]: {
                 totalSeats: state.totalSeats,
                 occupiedSeats: occupiedPositions,
-                bookingStatus: state.bookingStatus
-              }
-            }
+                bookingStatus: state.bookingStatus,
+              },
+            },
           }));
         } catch (err) {
           console.error("Failed to refresh seat data:", err);
         }
-        
+
         showNotification(
           "info",
           "Bookings Not Yet Open",
           `Bookings have not been opened yet for ${courseCode}. New students will be added to waitlist.`,
-          { courseName: courseCode }
+          { courseName: courseCode },
         );
       } else {
-        showNotification("error", "Failed", "Could not close booking. Check server logs.");
+        showNotification(
+          "error",
+          "Failed",
+          "Could not close booking. Check server logs.",
+        );
       }
     } catch (error) {
       console.error("Failed to close booking:", error);
-      showNotification("error", "Error", "Failed to close booking. Check console for details.");
+      showNotification(
+        "error",
+        "Error",
+        "Failed to close booking. Check console for details.",
+      );
     } finally {
       setIsProcessing(null);
     }
@@ -791,64 +879,136 @@ export default function BookingsPage() {
       if (available === 0) {
         return { status: "Full - Waitlist", available: 0, color: "yellow" };
       }
-      return { status: `${available} seats available`, available, color: "green" };
+      return {
+        status: `${available} seats available`,
+        available,
+        color: "green",
+      };
     }
 
-    const occupiedCount = Array.isArray(seatData.occupiedSeats) ? seatData.occupiedSeats.length : 0;
+    const occupiedCount = Array.isArray(seatData.occupiedSeats)
+      ? seatData.occupiedSeats.length
+      : 0;
     const available = seatData.totalSeats - occupiedCount;
 
-    if (seatData.bookingStatus === "closed" || course.bookingStatus === "closed") {
+    if (
+      seatData.bookingStatus === "closed" ||
+      course.bookingStatus === "closed"
+    ) {
       return { status: "Not Yet Open", available: 0, color: "red" };
     }
-    if (seatData.bookingStatus === "not_started" || course.bookingStatus === "not_started") {
+    if (
+      seatData.bookingStatus === "not_started" ||
+      course.bookingStatus === "not_started"
+    ) {
       return { status: "Coming Soon", available, color: "blue" };
     }
     if (available === 0) {
       return { status: "Full - Waitlist", available: 0, color: "yellow" };
     }
-    return { status: `${available} seats available`, available, color: "green" };
+    return {
+      status: `${available} seats available`,
+      available,
+      color: "green",
+    };
   };
 
   if (!mounted) {
     return (
-      <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100 flex items-center justify-center ${fontVariables}`}>
+      <div
+        className={`min-h-screen flex items-center justify-center relative overflow-hidden ${fontVariables}`}
+        style={{
+          background:
+            "linear-gradient(165deg, #e2e8f0 0%, #cbd5e1 30%, #94a3b8 60%, #e2e8f0 100%)",
+        }}
+      >
+        <div
+          className="absolute inset-0 opacity-60"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)`,
+            backgroundSize: "40px 40px",
+          }}
+        />
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="h-10 w-10 border-2 border-gray-200 border-t-gray-800 rounded-full"
+          className="h-10 w-10 border-2 border-white/50 border-t-slate-700 rounded-full relative z-10"
         />
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100 relative overflow-x-hidden ${fontVariables}`}>
-      {/* Background Elements */}
+    <div
+      className={`min-h-screen relative overflow-x-hidden ${fontVariables}`}
+      style={{
+        background:
+          "linear-gradient(165deg, #e2e8f0 0%, #cbd5e1 30%, #94a3b8 60%, #e2e8f0 100%)",
+      }}
+    >
+      {/* Grid - glassmorphism base */}
       <div className="fixed inset-0 pointer-events-none">
         <div
-          className="absolute inset-0 opacity-[0.6]"
+          className="absolute inset-0 opacity-60"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px)
+              linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)
             `,
-            backgroundSize: "60px 60px",
+            backgroundSize: "40px 40px",
           }}
         />
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gray-200/30 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gray-300/30 rounded-full blur-[120px]" />
       </div>
 
-      {/* Header */}
+      {/* Orbs - glassmorphism glow */}
+      <div
+        className="fixed top-1/4 -left-32 w-[560px] h-[560px] rounded-full blur-[140px] pointer-events-none opacity-70"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(148,163,184,0.25) 40%, transparent 70%)",
+        }}
+      />
+      <div
+        className="fixed bottom-1/4 -right-32 w-[480px] h-[480px] rounded-full blur-[120px] pointer-events-none opacity-60"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(148,163,184,0.2) 50%, transparent 70%)",
+        }}
+      />
+      <div
+        className="fixed top-1/2 left-1/2 w-[720px] h-[720px] rounded-full blur-[160px] pointer-events-none opacity-50 -translate-x-1/2 -translate-y-1/2"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(226,232,240,0.3) 50%, transparent 65%)",
+        }}
+      />
+
+      {/* Header - glass */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="sticky top-0 z-50"
       >
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-2xl" />
-        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gray-300/50 to-transparent" />
-        
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "rgba(255, 255, 255, 0.2)",
+            backdropFilter: "blur(24px) saturate(180%)",
+            WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.45)",
+            boxShadow:
+              "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)",
+          }}
+        />
+        <div
+          className="absolute inset-x-0 top-0 h-[1px] pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent)",
+          }}
+        />
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-18 py-3">
             {/* Left Section */}
@@ -857,7 +1017,12 @@ export default function BookingsPage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => router.push("/assistant")}
-                className="p-2.5 rounded-xl bg-gray-50 border border-gray-200/60 hover:bg-gray-100 hover:border-gray-300 transition-all"
+                className="p-2.5 rounded-xl border transition-all"
+                style={{
+                  background: "rgba(255, 255, 255, 0.35)",
+                  backdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255, 255, 255, 0.5)",
+                }}
               >
                 <ArrowLeft className="h-4 w-4 text-gray-600" />
               </motion.button>
@@ -872,13 +1037,18 @@ export default function BookingsPage() {
                 <div>
                   <h1
                     className="text-xl font-bold text-gray-900 tracking-tight"
-                    style={{ fontFamily: "var(--font-space-mono), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily:
+                        "var(--font-space-mono), system-ui, sans-serif",
+                    }}
                   >
                     COURSE BOOKINGS
                   </h1>
-                  <p 
+                  <p
                     className="text-[10px] text-gray-500 font-medium uppercase tracking-wider"
-                    style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                    }}
                   >
                     Select your seats for registration
                   </p>
@@ -889,15 +1059,20 @@ export default function BookingsPage() {
             {/* Right Section */}
             <div className="flex items-center gap-2 sm:gap-3">
               {/* WebSocket Connection Status */}
-              <div className={cn(
-                "hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border",
-                isConnected 
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                  : "bg-amber-50 text-amber-700 border-amber-200"
-              )}>
+              <div
+                className={cn(
+                  "hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border",
+                  isConnected
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-amber-50 text-amber-700 border-amber-200",
+                )}
+              >
                 {isConnected ? (
                   <>
-                    <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
                       <Wifi className="h-3 w-3" />
                     </motion.div>
                     <span>Live</span>
@@ -913,7 +1088,12 @@ export default function BookingsPage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative p-2.5 rounded-xl bg-gray-50 border border-gray-200/60 hover:bg-gray-100 hover:border-gray-300 transition-all group"
+                className="relative p-2.5 rounded-xl border transition-all group"
+                style={{
+                  background: "rgba(255, 255, 255, 0.35)",
+                  backdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255, 255, 255, 0.5)",
+                }}
               >
                 <Bell className="h-4 w-4 text-gray-600 group-hover:text-gray-900 transition-colors" />
                 <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center">
@@ -935,7 +1115,7 @@ export default function BookingsPage() {
                     "flex items-center gap-3 p-1.5 pr-3 rounded-xl transition-all",
                     "bg-gray-50 border border-gray-200/60",
                     "hover:bg-gray-100 hover:border-gray-300",
-                    showUserMenu && "bg-gray-100 border-gray-300"
+                    showUserMenu && "bg-gray-100 border-gray-300",
                   )}
                 >
                   <div className="relative">
@@ -947,13 +1127,18 @@ export default function BookingsPage() {
                     </div>
                   </div>
                   <div className="hidden sm:block text-left">
-                    <p 
+                    <p
                       className="text-sm font-semibold text-gray-900 leading-tight"
-                      style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-manrope), system-ui, sans-serif",
+                      }}
                     >
-                      {studentName.split(' ')[0]}
+                      {studentName.split(" ")[0]}
                     </p>
-                    <p className="text-[10px] text-gray-600 font-medium">Student</p>
+                    <p className="text-[10px] text-gray-600 font-medium">
+                      Student
+                    </p>
                   </div>
                 </motion.button>
 
@@ -972,7 +1157,13 @@ export default function BookingsPage() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                        className="absolute right-0 mt-2 w-72 rounded-2xl bg-white backdrop-blur-2xl border border-gray-200 shadow-2xl shadow-gray-200/50 overflow-hidden z-50"
+                        className="absolute right-0 mt-2 w-72 rounded-2xl overflow-hidden z-50"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.9)",
+                          backdropFilter: "blur(24px)",
+                          border: "1px solid rgba(255, 255, 255, 0.6)",
+                          boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                        }}
                       >
                         <div className="p-4 bg-gradient-to-br from-gray-100 to-transparent">
                           <div className="flex items-center gap-3">
@@ -980,21 +1171,36 @@ export default function BookingsPage() {
                               {studentName.charAt(0)}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p 
+                              <p
                                 className="text-base font-bold text-gray-900 truncate"
-                                style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                                style={{
+                                  fontFamily:
+                                    "var(--font-syne), system-ui, sans-serif",
+                                }}
                               >
                                 {studentName}
                               </p>
-                              <p className="text-xs text-gray-500 truncate">Course Bookings</p>
+                              <p className="text-xs text-gray-500 truncate">
+                                Course Bookings
+                              </p>
                             </div>
                           </div>
                         </div>
 
                         <div className="p-2">
                           {[
-                            { icon: User, label: "My Profile", description: "View and edit profile", action: () => {} },
-                            { icon: Settings, label: "Settings", description: "Preferences & privacy", action: () => {} },
+                            {
+                              icon: User,
+                              label: "My Profile",
+                              description: "View and edit profile",
+                              action: () => {},
+                            },
+                            {
+                              icon: Settings,
+                              label: "Settings",
+                              description: "Preferences & privacy",
+                              action: () => {},
+                            },
                           ].map((item, index) => (
                             <motion.button
                               key={item.label}
@@ -1009,8 +1215,12 @@ export default function BookingsPage() {
                                 <item.icon className="h-4 w-4 text-gray-500 group-hover:text-gray-900 transition-colors" />
                               </div>
                               <div>
-                                <p className="text-sm font-medium text-gray-900">{item.label}</p>
-                                <p className="text-xs text-gray-500">{item.description}</p>
+                                <p className="text-sm font-medium text-gray-900">
+                                  {item.label}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {item.description}
+                                </p>
                               </div>
                             </motion.button>
                           ))}
@@ -1033,8 +1243,12 @@ export default function BookingsPage() {
                               <LogOut className="h-4 w-4 text-gray-500 group-hover:text-red-600 transition-colors" />
                             </div>
                             <div>
-                              <p className="text-sm font-medium text-gray-700 group-hover:text-red-600 transition-colors">Sign Out</p>
-                              <p className="text-xs text-gray-500">End your session</p>
+                              <p className="text-sm font-medium text-gray-700 group-hover:text-red-600 transition-colors">
+                                Sign Out
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                End your session
+                              </p>
                             </div>
                           </motion.button>
                         </div>
@@ -1053,27 +1267,56 @@ export default function BookingsPage() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 relative rounded-2xl bg-white backdrop-blur-xl border border-gray-200/60 p-5 shadow-sm overflow-hidden"
+          className="mb-6 relative rounded-2xl p-5 overflow-hidden"
+          style={{
+            background: "rgba(255, 255, 255, 0.2)",
+            backdropFilter: "blur(24px) saturate(180%)",
+            WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            border: "1px solid rgba(255, 255, 255, 0.45)",
+            boxShadow:
+              "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5)",
+          }}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 via-transparent to-gray-100/50 pointer-events-none" />
+          <div
+            className="absolute inset-0 pointer-events-none opacity-60"
+            style={{
+              background:
+                "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.3), transparent 60%)",
+            }}
+          />
           <div className="relative z-10 flex items-start gap-4">
             <div className="p-3 rounded-xl bg-gray-100 border border-gray-200">
               <Info className="h-5 w-5 text-gray-700 flex-shrink-0" />
             </div>
             <div>
-              <h3 
+              <h3
                 className="text-base font-bold text-gray-900 mb-1"
-                style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                style={{
+                  fontFamily: "var(--font-syne), system-ui, sans-serif",
+                }}
               >
                 How to Book
               </h3>
-              <ul 
+              <ul
                 className="text-xs text-gray-600 space-y-1.5 font-medium"
-                style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                style={{
+                  fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                }}
               >
-                <li>• Click on a course to view available desks and select your preferred position</li>
-                <li>• For full courses or courses with booking not started, enable <span className="font-bold text-gray-900 underline decoration-gray-300">Auto-Registration Agent</span></li>
-                <li>• Green desks are available, red desks are occupied, selected desks glow dark gray</li>
+                <li>
+                  • Click on a course to view available desks and select your
+                  preferred position
+                </li>
+                <li>
+                  • For full courses or courses with booking not started, enable{" "}
+                  <span className="font-bold text-gray-900 underline decoration-gray-300">
+                    Auto-Registration Agent
+                  </span>
+                </li>
+                <li>
+                  • Green desks are available, red desks are occupied, selected
+                  desks glow dark gray
+                </li>
               </ul>
             </div>
           </div>
@@ -1090,11 +1333,17 @@ export default function BookingsPage() {
             whileTap={{ scale: 0.98 }}
             onClick={() => setShowAdminPanel(!showAdminPanel)}
             className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-br from-gray-700 via-gray-800 to-black text-white text-sm shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40 transition-all"
-            style={{ fontFamily: "var(--font-bogita-mono), system-ui, sans-serif" }}
+            style={{
+              fontFamily: "var(--font-bogita-mono), system-ui, sans-serif",
+            }}
           >
             <Shield className="h-4 w-4" />
             Admin Controls (Testing)
-            {showAdminPanel ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {showAdminPanel ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
           </motion.button>
         </motion.div>
 
@@ -1108,26 +1357,42 @@ export default function BookingsPage() {
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               className="mb-6 overflow-hidden"
             >
-              <div className="relative rounded-2xl bg-white backdrop-blur-xl border border-gray-200/60 p-6 shadow-sm overflow-hidden">
+              <div
+                className="relative rounded-2xl p-6 overflow-hidden"
+                style={{
+                  background: "rgba(255, 255, 255, 0.2)",
+                  backdropFilter: "blur(24px) saturate(180%)",
+                  WebkitBackdropFilter: "blur(24px) saturate(180%)",
+                  border: "1px solid rgba(255, 255, 255, 0.45)",
+                  boxShadow:
+                    "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5)",
+                }}
+              >
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 via-transparent to-gray-100/50 pointer-events-none" />
-                
+
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2.5 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300">
                       <Shield className="h-5 w-5 text-gray-700" />
                     </div>
                     <div>
-                      <h3 
+                      <h3
                         className="text-base font-bold text-gray-900"
-                        style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                        style={{
+                          fontFamily: "var(--font-syne), system-ui, sans-serif",
+                        }}
                       >
                         Booking Status Controls
                       </h3>
-                      <p 
+                      <p
                         className="text-xs text-gray-500 font-medium"
-                        style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                        style={{
+                          fontFamily:
+                            "var(--font-raleway), system-ui, sans-serif",
+                        }}
                       >
-                        Use these controls to open/close bookings for testing waitlist auto-allocation
+                        Use these controls to open/close bookings for testing
+                        waitlist auto-allocation
                       </p>
                     </div>
                   </div>
@@ -1135,29 +1400,45 @@ export default function BookingsPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {recommendedCourses.map((course) => {
                       const statusInfo = getStatusInfo(course);
-                      const isOpen = statusInfo.status !== "Not Yet Open" && statusInfo.status !== "Coming Soon";
-                      
+                      const isOpen =
+                        statusInfo.status !== "Not Yet Open" &&
+                        statusInfo.status !== "Coming Soon";
+
                       return (
-                        <div 
+                        <div
                           key={`admin-${course.code}`}
                           className="p-4 rounded-xl bg-gray-50/50 border border-gray-200 shadow-sm backdrop-blur-sm group hover:border-gray-300 transition-all"
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex-1 min-w-0">
-                              <p 
+                              <p
                                 className="font-bold text-gray-900 text-sm"
-                                style={{ fontFamily: "var(--font-space-mono), system-ui, sans-serif" }}
+                                style={{
+                                  fontFamily:
+                                    "var(--font-space-mono), system-ui, sans-serif",
+                                }}
                               >
                                 {course.code}
                               </p>
-                              <p className="text-[10px] text-gray-500 font-medium truncate mb-2">{course.name}</p>
-                              <span className={cn(
-                                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                                isOpen 
-                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
-                                  : "bg-red-50 text-red-700 border border-red-200"
-                              )}>
-                                <span className={cn("h-1.5 w-1.5 rounded-full", isOpen ? "bg-emerald-500 animate-pulse" : "bg-red-500")} />
+                              <p className="text-[10px] text-gray-500 font-medium truncate mb-2">
+                                {course.name}
+                              </p>
+                              <span
+                                className={cn(
+                                  "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                                  isOpen
+                                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                    : "bg-red-50 text-red-700 border border-red-200",
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    "h-1.5 w-1.5 rounded-full",
+                                    isOpen
+                                      ? "bg-emerald-500 animate-pulse"
+                                      : "bg-red-500",
+                                  )}
+                                />
                                 {isOpen ? "Open" : "Closed"}
                               </span>
                             </div>
@@ -1166,19 +1447,25 @@ export default function BookingsPage() {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleOpenBooking(course.code)}
-                                disabled={isProcessing === course.code || isOpen}
+                                disabled={
+                                  isProcessing === course.code || isOpen
+                                }
                                 className={cn(
                                   "p-2.5 rounded-xl transition-all border",
                                   isOpen || isProcessing === course.code
                                     ? "bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed"
-                                    : "bg-white text-emerald-600 hover:bg-emerald-50 border-emerald-200 shadow-sm"
+                                    : "bg-white text-emerald-600 hover:bg-emerald-50 border-emerald-200 shadow-sm",
                                 )}
                                 title="Open Booking"
                               >
                                 {isProcessing === course.code ? (
                                   <motion.div
                                     animate={{ rotate: 360 }}
-                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                    transition={{
+                                      duration: 1,
+                                      repeat: Infinity,
+                                      ease: "linear",
+                                    }}
                                     className="h-4 w-4 border-2 border-emerald-300 border-t-emerald-600 rounded-full"
                                   />
                                 ) : (
@@ -1189,12 +1476,14 @@ export default function BookingsPage() {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleCloseBooking(course.code)}
-                                disabled={isProcessing === course.code || !isOpen}
+                                disabled={
+                                  isProcessing === course.code || !isOpen
+                                }
                                 className={cn(
                                   "p-2.5 rounded-xl transition-all border",
                                   !isOpen || isProcessing === course.code
                                     ? "bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed"
-                                    : "bg-white text-red-600 hover:bg-red-50 border-red-200 shadow-sm"
+                                    : "bg-white text-red-600 hover:bg-red-50 border-red-200 shadow-sm",
                                 )}
                                 title="Close Booking"
                               >
@@ -1226,8 +1515,18 @@ export default function BookingsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                              >
-                                <div className="relative rounded-2xl bg-white backdrop-blur-xl border border-gray-200/60 p-6 overflow-hidden shadow-sm hover:shadow-md transition-all">
+              >
+                <div
+                  className="relative rounded-2xl p-6 overflow-hidden transition-all"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.2)",
+                    backdropFilter: "blur(24px) saturate(180%)",
+                    WebkitBackdropFilter: "blur(24px) saturate(180%)",
+                    border: "1px solid rgba(255, 255, 255, 0.45)",
+                    boxShadow:
+                      "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5)",
+                  }}
+                >
                   <div className="relative z-10">
                     <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                       {/* Course Info */}
@@ -1237,15 +1536,21 @@ export default function BookingsPage() {
                             {course.priority}
                           </div>
                           <div>
-                            <h3 
+                            <h3
                               className="text-lg font-semibold text-gray-900"
-                              style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                              style={{
+                                fontFamily:
+                                  "var(--font-syne), system-ui, sans-serif",
+                              }}
                             >
                               {course.code}
                             </h3>
-                            <p 
+                            <p
                               className="text-sm text-gray-500"
-                              style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                              style={{
+                                fontFamily:
+                                  "var(--font-raleway), system-ui, sans-serif",
+                              }}
                             >
                               {course.name}
                             </p>
@@ -1253,19 +1558,26 @@ export default function BookingsPage() {
                           <span
                             className={cn(
                               "ml-auto lg:ml-4 px-3 py-1 rounded-full text-xs font-semibold border",
-                              statusInfo.color === "green" && "bg-emerald-50 text-emerald-700 border-emerald-200",
-                              statusInfo.color === "yellow" && "bg-amber-50 text-amber-700 border-amber-200",
-                              statusInfo.color === "blue" && "bg-blue-50 text-blue-700 border-blue-200",
-                              statusInfo.color === "red" && "bg-red-50 text-red-700 border-red-200"
+                              statusInfo.color === "green" &&
+                                "bg-emerald-50 text-emerald-700 border-emerald-200",
+                              statusInfo.color === "yellow" &&
+                                "bg-amber-50 text-amber-700 border-amber-200",
+                              statusInfo.color === "blue" &&
+                                "bg-blue-50 text-blue-700 border-blue-200",
+                              statusInfo.color === "red" &&
+                                "bg-red-50 text-red-700 border-red-200",
                             )}
                           >
                             {statusInfo.status}
                           </span>
                         </div>
 
-                        <div 
+                        <div
                           className="flex flex-wrap items-center gap-4 text-sm text-gray-500 ml-13"
-                          style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                          style={{
+                            fontFamily:
+                              "var(--font-manrope), system-ui, sans-serif",
+                          }}
                         >
                           <div className="flex items-center gap-1.5">
                             <BookOpen className="h-4 w-4" />
@@ -1294,7 +1606,10 @@ export default function BookingsPage() {
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleCourseClick(course)}
                             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-gray-800 to-black text-white font-medium shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40 transition-all"
-                            style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                            style={{
+                              fontFamily:
+                                "var(--font-syne), system-ui, sans-serif",
+                            }}
                           >
                             <Calendar className="h-4 w-4" />
                             Select Desk
@@ -1313,9 +1628,14 @@ export default function BookingsPage() {
                         <motion.button
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          onClick={() => router.push(`/liveview?course=${course.code}`)}
+                          onClick={() =>
+                            router.push(`/liveview?course=${course.code}`)
+                          }
                           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all"
-                          style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                          style={{
+                            fontFamily:
+                              "var(--font-syne), system-ui, sans-serif",
+                          }}
                         >
                           <Eye className="h-4 w-4" />
                           <span className="hidden sm:inline">Live View</span>
@@ -1325,42 +1645,59 @@ export default function BookingsPage() {
                         <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200">
                           <div className="flex items-center gap-2">
                             <Bot className="h-4 w-4 text-gray-700" />
-                            <span 
+                            <span
                               className="text-xs text-gray-600 hidden sm:inline"
-                              style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                              style={{
+                                fontFamily:
+                                  "var(--font-syne), system-ui, sans-serif",
+                              }}
                             >
                               Auto-Register
                             </span>
                           </div>
                           <button
-                            onClick={() => handleToggleAutoRegistration(course.code)}
+                            onClick={() =>
+                              handleToggleAutoRegistration(course.code)
+                            }
                             className={cn(
                               "relative h-6 w-11 rounded-full transition-colors",
-                              isAutoEnabled ? "bg-emerald-500" : "bg-gray-300"
+                              isAutoEnabled ? "bg-emerald-500" : "bg-gray-300",
                             )}
                           >
                             <motion.div
                               className="absolute top-1 h-4 w-4 rounded-full bg-white shadow-lg"
                               animate={{ left: isAutoEnabled ? 24 : 4 }}
-                              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 500,
+                                damping: 30,
+                              }}
                             />
                           </button>
                         </div>
 
                         {/* Drop Course Button */}
-                        {(isAutoEnabled || enrolledCourses.has(course.code)) && (
+                        {(isAutoEnabled ||
+                          enrolledCourses.has(course.code)) && (
                           <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleDropCourse(course.code)}
                             disabled={isProcessing === course.code}
                             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-all disabled:opacity-50"
-                            style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
+                            style={{
+                              fontFamily:
+                                "var(--font-poppins), system-ui, sans-serif",
+                            }}
                           >
                             {isProcessing === course.code ? (
                               <motion.div
                                 animate={{ rotate: 360 }}
-                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                transition={{
+                                  duration: 1,
+                                  repeat: Infinity,
+                                  ease: "linear",
+                                }}
                                 className="h-4 w-4 border-2 border-red-300 border-t-red-600 rounded-full"
                               />
                             ) : (
@@ -1384,12 +1721,23 @@ export default function BookingsPage() {
                           <div className="flex items-center gap-2 text-sm text-gray-700">
                             <motion.div
                               animate={{ rotate: 360 }}
-                              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                                                          >
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: "linear",
+                              }}
+                            >
                               <Sparkles className="h-4 w-4" />
                             </motion.div>
-                            <span                               style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}>
-                              Auto-registration agent is monitoring this course. You&apos;ll be registered automatically when a desk becomes available.
+                            <span
+                              style={{
+                                fontFamily:
+                                  "var(--font-raleway), system-ui, sans-serif",
+                              }}
+                            >
+                              Auto-registration agent is monitoring this course.
+                              You&apos;ll be registered automatically when a
+                              desk becomes available.
                             </span>
                           </div>
                         </motion.div>
@@ -1409,12 +1757,30 @@ export default function BookingsPage() {
           transition={{ delay: 0.5 }}
           className="mt-8"
         >
-          <div className="relative rounded-2xl bg-white backdrop-blur-xl border border-gray-200 group hover:border-gray-400 p-6 overflow-hidden shadow-sm transition-all">
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 via-transparent to-gray-100/50 pointer-events-none" />
+          <div
+            className="relative rounded-2xl p-6 overflow-hidden transition-all group"
+            style={{
+              background: "rgba(255, 255, 255, 0.2)",
+              backdropFilter: "blur(24px) saturate(180%)",
+              WebkitBackdropFilter: "blur(24px) saturate(180%)",
+              border: "1px solid rgba(255, 255, 255, 0.45)",
+              boxShadow:
+                "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5)",
+            }}
+          >
+            <div
+              className="absolute inset-0 pointer-events-none opacity-40"
+              style={{
+                background:
+                  "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.4), transparent 60%)",
+              }}
+            />
             <div className="relative z-10">
-              <h3 
+              <h3
                 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2"
-                style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                style={{
+                  fontFamily: "var(--font-syne), system-ui, sans-serif",
+                }}
               >
                 <div className="p-1.5 rounded-lg bg-gray-100">
                   <Bot className="h-4 w-4 text-gray-700" />
@@ -1423,43 +1789,64 @@ export default function BookingsPage() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-5 rounded-2xl bg-gray-50 border border-gray-200 shadow-sm backdrop-blur-sm">
-                  <div 
+                  <div
                     className="text-3xl font-bold text-gray-900 mb-1"
-                    style={{ fontFamily: "var(--font-space-mono), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily:
+                        "var(--font-space-mono), system-ui, sans-serif",
+                    }}
                   >
                     {recommendedCourses.length}
                   </div>
-                  <div 
+                  <div
                     className="text-xs font-bold text-gray-500 uppercase tracking-wider"
-                    style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                    }}
                   >
                     Matched Courses
                   </div>
                 </div>
                 <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-100 shadow-sm backdrop-blur-sm">
-                  <div 
+                  <div
                     className="text-3xl font-bold text-emerald-700 mb-1"
-                    style={{ fontFamily: "var(--font-space-mono), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily:
+                        "var(--font-space-mono), system-ui, sans-serif",
+                    }}
                   >
-                    {recommendedCourses.filter((c) => c.bookingStatus === "open" && getStatusInfo(c).available > 0).length}
+                    {
+                      recommendedCourses.filter(
+                        (c) =>
+                          c.bookingStatus === "open" &&
+                          getStatusInfo(c).available > 0,
+                      ).length
+                    }
                   </div>
-                  <div 
+                  <div
                     className="text-xs font-bold text-emerald-600 uppercase tracking-wider"
-                    style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                    }}
                   >
                     Directly Available
                   </div>
                 </div>
                 <div className="p-5 rounded-2xl bg-gray-900 text-white border border-gray-800 shadow-lg backdrop-blur-sm">
-                  <div 
+                  <div
                     className="text-3xl font-bold text-white mb-1"
-                    style={{ fontFamily: "var(--font-space-mono), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily:
+                        "var(--font-space-mono), system-ui, sans-serif",
+                    }}
                   >
                     {Object.values(autoRegistration).filter(Boolean).length}
                   </div>
-                  <div 
+                  <div
                     className="text-xs font-bold text-gray-400 uppercase tracking-wider"
-                    style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                    }}
                   >
                     Agents Active
                   </div>
@@ -1488,20 +1875,30 @@ export default function BookingsPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-2xl"
+              className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl"
+              style={{
+                background: "rgba(255, 255, 255, 0.95)",
+                backdropFilter: "blur(24px)",
+                border: "1px solid rgba(255, 255, 255, 0.6)",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
+              }}
             >
               {/* Modal Header */}
               <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white">
                 <div>
-                  <h2 
+                  <h2
                     className="text-xl font-bold text-gray-900"
-                    style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily: "var(--font-syne), system-ui, sans-serif",
+                    }}
                   >
                     Select Your Desk
                   </h2>
-                  <p 
+                  <p
                     className="text-sm text-gray-500"
-                    style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily: "var(--font-raleway), system-ui, sans-serif",
+                    }}
                   >
                     {selectedCourse.code} - {selectedCourse.name}
                   </p>
@@ -1523,9 +1920,12 @@ export default function BookingsPage() {
                 <div className="mb-8">
                   <div className="relative mx-auto w-3/4 h-12 rounded-lg bg-gradient-to-b from-gray-600 to-gray-700 border-2 border-gray-500 shadow-lg">
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span 
+                      <span
                         className="text-xs text-gray-300 font-medium tracking-wider"
-                        style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                        style={{
+                          fontFamily:
+                            "var(--font-manrope), system-ui, sans-serif",
+                        }}
                       >
                         WHITEBOARD
                       </span>
@@ -1533,20 +1933,27 @@ export default function BookingsPage() {
                     <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-lg" />
                   </div>
                   <div className="mx-auto w-1/3 h-8 mt-2 rounded-md bg-gradient-to-b from-amber-100 to-amber-200 border border-amber-300 flex items-center justify-center shadow-sm">
-                    <span className="text-[10px] text-amber-700 font-medium">TEACHER&apos;S DESK</span>
+                    <span className="text-[10px] text-amber-700 font-medium">
+                      TEACHER&apos;S DESK
+                    </span>
                   </div>
                 </div>
 
                 {/* Classroom Desks Grid */}
-                <div ref={seatGridRef} className="flex flex-col items-center gap-4">
+                <div
+                  ref={seatGridRef}
+                  className="flex flex-col items-center gap-4"
+                >
                   {Array.from(
-                    { length: Math.ceil(selectedCourse.seatData.totalSeats / 6) },
+                    {
+                      length: Math.ceil(selectedCourse.seatData.totalSeats / 6),
+                    },
                     (_, rowIndex) => {
                       const desksPerRow = 6;
                       const startDesk = rowIndex * desksPerRow + 1;
                       const endDesk = Math.min(
                         (rowIndex + 1) * desksPerRow,
-                        selectedCourse.seatData.totalSeats
+                        selectedCourse.seatData.totalSeats,
                       );
 
                       return (
@@ -1558,89 +1965,119 @@ export default function BookingsPage() {
                             { length: endDesk - startDesk + 1 },
                             (_, colIndex) => {
                               const deskNumber = startDesk + colIndex;
-                              const isOccupied = selectedCourse.seatData.occupiedSeats.includes(deskNumber);
-                              const isSelected = selectedSeats.includes(deskNumber);
+                              const isOccupied =
+                                selectedCourse.seatData.occupiedSeats.includes(
+                                  deskNumber,
+                                );
+                              const isSelected =
+                                selectedSeats.includes(deskNumber);
                               const hasAisle = colIndex === 2;
 
                               return (
-                                <div key={deskNumber} className="flex items-center">
+                                <div
+                                  key={deskNumber}
+                                  className="flex items-center"
+                                >
                                   <motion.button
-                                    whileHover={!isOccupied ? { scale: 1.05, y: -2 } : undefined}
-                                    whileTap={!isOccupied ? { scale: 0.95 } : undefined}
+                                    whileHover={
+                                      !isOccupied
+                                        ? { scale: 1.05, y: -2 }
+                                        : undefined
+                                    }
+                                    whileTap={
+                                      !isOccupied ? { scale: 0.95 } : undefined
+                                    }
                                     onClick={() => handleSeatClick(deskNumber)}
                                     disabled={isOccupied}
                                     className={cn(
                                       "relative w-14 h-10 rounded-lg transition-all duration-200 shadow-sm",
-                                      isOccupied && "bg-gradient-to-b from-red-100 to-red-200 border-2 border-red-300 cursor-not-allowed",
-                                      isSelected && "bg-gradient-to-b from-gray-600 to-gray-700 border-2 border-gray-800 shadow-lg shadow-gray-500/40",
-                                      !isOccupied && !isSelected && "bg-gradient-to-b from-gray-100 to-gray-200 border-2 border-gray-300 hover:border-gray-500 hover:shadow-md hover:shadow-gray-500/20 cursor-pointer"
+                                      isOccupied &&
+                                        "bg-gradient-to-b from-red-100 to-red-200 border-2 border-red-300 cursor-not-allowed",
+                                      isSelected &&
+                                        "bg-gradient-to-b from-gray-600 to-gray-700 border-2 border-gray-800 shadow-lg shadow-gray-500/40",
+                                      !isOccupied &&
+                                        !isSelected &&
+                                        "bg-gradient-to-b from-gray-100 to-gray-200 border-2 border-gray-300 hover:border-gray-500 hover:shadow-md hover:shadow-gray-500/20 cursor-pointer",
                                     )}
                                   >
                                     <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/30 to-transparent" />
-                                    
-                                    <div 
+
+                                    <div
                                       className={cn(
                                         "absolute -bottom-2 left-1/2 -translate-x-1/2 w-6 h-3 rounded-b-md",
                                         isOccupied && "bg-red-200",
                                         isSelected && "bg-gray-700",
-                                        !isOccupied && !isSelected && "bg-gray-200"
+                                        !isOccupied &&
+                                          !isSelected &&
+                                          "bg-gray-200",
                                       )}
                                     />
-                                    
+
                                     {isOccupied && (
                                       <div className="absolute inset-0 flex items-center justify-center">
                                         <User className="h-4 w-4 text-red-500" />
                                       </div>
                                     )}
-                                    
+
                                     {isSelected && (
                                       <div className="absolute inset-0 flex items-center justify-center">
                                         <Check className="h-4 w-4 text-white" />
                                       </div>
                                     )}
                                   </motion.button>
-                                  
+
                                   {hasAisle && <div className="w-8" />}
                                 </div>
                               );
-                            }
+                            },
                           )}
                         </div>
                       );
-                    }
+                    },
                   )}
                 </div>
 
                 {/* Back of Classroom */}
                 <div className="mt-8 text-center">
-                  <span className="text-xs text-gray-400 font-medium tracking-wider">BACK OF CLASSROOM</span>
+                  <span className="text-xs text-gray-400 font-medium tracking-wider">
+                    BACK OF CLASSROOM
+                  </span>
                 </div>
 
                 {/* Legend */}
                 <div className="flex items-center justify-center gap-8 mt-6 text-sm">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-6 rounded bg-gradient-to-b from-gray-100 to-gray-200 border border-gray-300" />
-                    <span 
+                    <span
                       className="text-gray-600"
-                      style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-manrope), system-ui, sans-serif",
+                      }}
                     >
                       Available
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-6 rounded bg-gradient-to-b from-red-100 to-red-200 border border-red-300" />
-                    <span 
+                    <span
                       className="text-gray-600"
-                      style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-manrope), system-ui, sans-serif",
+                      }}
                     >
                       Occupied
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-6 rounded bg-gradient-to-b from-gray-600 to-gray-700 border border-gray-800" />
-                    <span 
+                    <span
                       className="text-gray-600"
-                      style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-manrope), system-ui, sans-serif",
+                      }}
                     >
                       Selected
                     </span>
@@ -1648,23 +2085,30 @@ export default function BookingsPage() {
                 </div>
 
                 {/* Stats */}
-                <div 
+                <div
                   className="flex items-center justify-center gap-6 mt-4 text-sm"
-                  style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                  style={{
+                    fontFamily: "var(--font-manrope), system-ui, sans-serif",
+                  }}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500">Total Desks:</span>
-                    <span className="font-semibold text-gray-900">{selectedCourse.seatData.totalSeats}</span>
+                    <span className="font-semibold text-gray-900">
+                      {selectedCourse.seatData.totalSeats}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500">Available:</span>
                     <span className="font-semibold text-emerald-600">
-                      {selectedCourse.seatData.totalSeats - selectedCourse.seatData.occupiedSeats.length}
+                      {selectedCourse.seatData.totalSeats -
+                        selectedCourse.seatData.occupiedSeats.length}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500">Selected:</span>
-                    <span className="font-semibold text-gray-700">{selectedSeats.length}</span>
+                    <span className="font-semibold text-gray-700">
+                      {selectedSeats.length}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1673,11 +2117,17 @@ export default function BookingsPage() {
               <div className="sticky bottom-0 px-6 py-4 border-t border-gray-100 bg-white flex items-center justify-between">
                 <div>
                   {selectedSeats.length > 0 && (
-                    <p 
+                    <p
                       className="text-sm text-gray-600"
-                      style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                      style={{
+                        fontFamily:
+                          "var(--font-manrope), system-ui, sans-serif",
+                      }}
                     >
-                      Selected: <span className="text-gray-900 font-medium">{selectedSeats.length} desk(s)</span>
+                      Selected:{" "}
+                      <span className="text-gray-900 font-medium">
+                        {selectedSeats.length} desk(s)
+                      </span>
                     </p>
                   )}
                 </div>
@@ -1688,7 +2138,9 @@ export default function BookingsPage() {
                       setSelectedSeats([]);
                     }}
                     className="px-4 py-2.5 rounded-xl bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200 transition-all"
-                    style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily: "var(--font-manrope), system-ui, sans-serif",
+                    }}
                   >
                     Cancel
                   </button>
@@ -1699,15 +2151,22 @@ export default function BookingsPage() {
                     disabled={selectedSeats.length === 0 || isBooking}
                     className={cn(
                       "flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-gray-800 to-black text-white font-medium shadow-lg shadow-gray-500/25 transition-all",
-                      (selectedSeats.length === 0 || isBooking) && "opacity-50 cursor-not-allowed"
+                      (selectedSeats.length === 0 || isBooking) &&
+                        "opacity-50 cursor-not-allowed",
                     )}
-                    style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
+                    style={{
+                      fontFamily: "var(--font-poppins), system-ui, sans-serif",
+                    }}
                   >
                     {isBooking ? (
                       <>
                         <motion.div
                           animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
                           className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full"
                         />
                         Booking...
@@ -1733,17 +2192,28 @@ export default function BookingsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8"
         >
-          <div className="inline-flex flex-col items-center w-full p-8 rounded-2xl bg-white border border-gray-200 shadow-sm">
+          <div
+            className="inline-flex flex-col items-center w-full p-8 rounded-2xl"
+            style={{
+              background: "rgba(255, 255, 255, 0.2)",
+              backdropFilter: "blur(24px)",
+              border: "1px solid rgba(255, 255, 255, 0.45)",
+              boxShadow:
+                "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5)",
+            }}
+          >
             <AlertCircle className="h-12 w-12 text-amber-500 mb-4" />
-            <h3 
+            <h3
               className="text-lg font-semibold text-gray-900 mb-2"
               style={{ fontFamily: "var(--font-syne), system-ui, sans-serif" }}
             >
               No Courses Selected
             </h3>
-            <p 
+            <p
               className="text-sm text-gray-500 mb-4 text-center"
-              style={{ fontFamily: "var(--font-raleway), system-ui, sans-serif" }}
+              style={{
+                fontFamily: "var(--font-raleway), system-ui, sans-serif",
+              }}
             >
               Please use the AI Assistant to get course recommendations first.
             </p>
@@ -1752,7 +2222,9 @@ export default function BookingsPage() {
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push("/assistant")}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-gray-800 to-black text-white font-medium shadow-lg shadow-gray-500/25"
-              style={{ fontFamily: "var(--font-poppins), system-ui, sans-serif" }}
+              style={{
+                fontFamily: "var(--font-poppins), system-ui, sans-serif",
+              }}
             >
               <Zap className="h-4 w-4" />
               Go to AI Assistant

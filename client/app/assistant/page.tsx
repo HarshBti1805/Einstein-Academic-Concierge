@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
@@ -30,13 +30,28 @@ import {
   ArrowUpRight,
   AlertCircle,
   Mic,
-  MicOff,
   MessageCircle,
+  MicOff,
+  Volume2,
+  Radio,
+  Phone,
+  PhoneOff,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { GoogleGenAI, Modality } from "@google/genai";
+import { decode, decodeAudioData, createBlob } from "@/lib/audioUtils";
+import LiveVisualizer from "@/components/LiveVisualizer";
 
 // Import test data for fallback
 import chatData from "@/lib/test-data/chat_data.json";
+
+const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY ?? "";
+
+type VoiceStatus = "idle" | "connecting" | "listening" | "speaking" | "error";
+interface VoiceTranscriptLine {
+  speaker: "user" | "agent";
+  text: string;
+}
 
 // API URLs - Express for auth/data, Flask for AI chat
 const EXPRESS_API_URL =
@@ -73,6 +88,78 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   ClipboardList,
 };
 
+// Animated voice waves component
+const VoiceWaves = ({
+  isActive,
+  intensity = "medium",
+}: {
+  isActive: boolean;
+  intensity?: "low" | "medium" | "high";
+}) => {
+  const bars = intensity === "high" ? 7 : intensity === "medium" ? 5 : 3;
+  return (
+    <div className="flex items-center justify-center gap-1 h-8">
+      {Array.from({ length: bars }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="w-1 bg-gradient-to-t from-gray-600 to-gray-400 rounded-full"
+          animate={
+            isActive
+              ? {
+                  height: [8, 20 + Math.random() * 12, 8],
+                }
+              : { height: 4 }
+          }
+          transition={{
+            duration: 0.5 + Math.random() * 0.3,
+            repeat: isActive ? Infinity : 0,
+            repeatType: "reverse",
+            delay: i * 0.1,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+// Pulsing ring animation for voice status
+const PulsingRings = ({
+  isActive,
+  color = "gray",
+}: {
+  isActive: boolean;
+  color?: string;
+}) => {
+  if (!isActive) return null;
+  return (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      {[0, 1, 2].map((i) => (
+        <motion.div
+          key={i}
+          className={cn(
+            "absolute rounded-full border-2",
+            color === "emerald"
+              ? "border-emerald-400/40"
+              : "border-gray-400/40",
+          )}
+          initial={{ width: 80, height: 80, opacity: 0.6 }}
+          animate={{
+            width: [80, 140],
+            height: [80, 140],
+            opacity: [0.6, 0],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            delay: i * 0.6,
+            ease: "easeOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
 export default function AssistantPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -93,18 +180,33 @@ export default function AssistantPage() {
   type ConversationMode = "text" | "voice";
   const [conversationMode, setConversationMode] =
     useState<ConversationMode>("text");
-  const [voiceReady, setVoiceReady] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceReady] = useState(() => !!GEMINI_API_KEY);
+  const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>("idle");
+  const [voiceTranscriptLines, setVoiceTranscriptLines] = useState<
+    VoiceTranscriptLine[]
+  >([]);
+  const [currentVoiceLine, setCurrentVoiceLine] = useState("");
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [voiceDuration, setVoiceDuration] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messageIdCounterRef = useRef<number>(1);
   const recommendationsRef = useRef<HTMLDivElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const geminiSessionRef = useRef<{
+    close: () => void;
+    sendRealtimeInput: (arg: { media: Blob }) => void;
+  } | null>(null);
+  const inputAudioContextRef = useRef<AudioContext | null>(null);
+  const outputAudioContextRef = useRef<AudioContext | null>(null);
+  const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const nextStartTimeRef = useRef<number>(0);
+  const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
+  const lastCommittedLineRef = useRef<string>("");
+  const voiceTranscriptEndRef = useRef<HTMLDivElement>(null);
+  const isCleaningUpRef = useRef<boolean>(false);
+  const voiceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check API health and initialize chat
   useEffect(() => {
@@ -131,7 +233,6 @@ export default function AssistantPage() {
             // Check if vector store is ready (AI is properly initialized)
             if (healthData.vectorstore_ready) {
               setApiConnected(true);
-              setVoiceReady(!!healthData.voice_ready);
 
               // Start chat session with Flask AI API
               const startResponse = await fetch(
@@ -208,6 +309,10 @@ export default function AssistantPage() {
   }, [showRecommendations]);
 
   useEffect(() => {
+    voiceTranscriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [voiceTranscriptLines, currentVoiceLine]);
+
+  useEffect(() => {
     if (mounted) {
       gsap.fromTo(
         ".quick-action-btn",
@@ -224,6 +329,28 @@ export default function AssistantPage() {
     }
   }, [mounted]);
 
+  // Voice duration timer
+  useEffect(() => {
+    if (voiceStatus === "listening" || voiceStatus === "speaking") {
+      voiceTimerRef.current = setInterval(() => {
+        setVoiceDuration((prev) => prev + 1);
+      }, 1000);
+    } else {
+      if (voiceTimerRef.current) {
+        clearInterval(voiceTimerRef.current);
+        voiceTimerRef.current = null;
+      }
+      if (voiceStatus === "idle") {
+        setVoiceDuration(0);
+      }
+    }
+    return () => {
+      if (voiceTimerRef.current) {
+        clearInterval(voiceTimerRef.current);
+      }
+    };
+  }, [voiceStatus]);
+
   // Format message text - strip markdown formatting for cleaner display
   const formatMessageText = (text: string): string => {
     return (
@@ -239,6 +366,13 @@ export default function AssistantPage() {
         // Clean up multiple newlines
         .replace(/\n{3,}/g, "\n\n")
     );
+  };
+
+  // Format duration for display
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   // Local fallback response generator - casual tone
@@ -500,177 +634,292 @@ export default function AssistantPage() {
     inputRef.current?.focus();
   };
 
-  // Voice: process recorded audio → transcribe → chat → TTS → play
-  // When voiceOnly is true, no text is shown; conversation continues in voice only.
-  const processVoiceInput = async (
-    audioBlob: Blob,
-    voiceOnly: boolean = false,
-  ) => {
-    if (!studentId || !voiceReady) return;
-    setVoiceError(null);
-    setIsTyping(true);
-    try {
-      const form = new FormData();
-      form.append("audio", audioBlob, "recording.webm");
-      const transcribeRes = await fetch(`${AI_API_URL}/api/chat/transcribe`, {
-        method: "POST",
-        body: form,
-      });
-      if (!transcribeRes.ok) {
-        const err = await transcribeRes.json().catch(() => ({}));
-        throw new Error(
-          (err as { error?: string }).error || "Transcription failed",
-        );
-      }
-      const { text } = (await transcribeRes.json()) as { text: string };
-      const trimmed = (text || "").trim();
-      if (!trimmed) {
-        setIsTyping(false);
-        return;
-      }
+  // Gemini Live voice: stop session and clean up audio
+  const handleVoiceStop = useCallback(() => {
+    // Prevent re-entrant cleanup
+    if (isCleaningUpRef.current) return;
+    isCleaningUpRef.current = true;
 
-      if (!voiceOnly) {
-        const userMessageId = `msg-${messageIdCounterRef.current++}`;
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: userMessageId,
-            text: trimmed,
-            sender: "user",
-            timestamp: new Date(),
-          },
-        ]);
+    if (geminiSessionRef.current) {
+      try {
+        geminiSessionRef.current.close();
+      } catch (e) {
+        console.log("Error closing session:", e);
       }
-
-      const messageRes = await fetch(`${AI_API_URL}/api/chat/message`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ student_id: studentId, message: trimmed }),
-      });
-      if (!messageRes.ok) throw new Error("Chat failed");
-      const msgData = (await messageRes.json()) as {
-        response: string;
-        can_recommend?: boolean;
-      };
-      if (msgData.can_recommend) setCanRecommend(true);
-
-      if (!voiceOnly) {
-        const agentMessageId = `msg-${messageIdCounterRef.current++}`;
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: agentMessageId,
-            text: msgData.response,
-            sender: "agent",
-            timestamp: new Date(),
-          },
-        ]);
-      }
-
-      const speakRes = await fetch(`${AI_API_URL}/api/chat/speak`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: msgData.response }),
-      });
-      if (!speakRes.ok) throw new Error("Voice synthesis failed");
-      const audioBlobResponse = await speakRes.blob();
-      const url = URL.createObjectURL(audioBlobResponse);
-      const audio = new Audio(url);
-      setIsTyping(false);
-      setIsSpeaking(true);
-      audio.onended = () => {
-        URL.revokeObjectURL(url);
-        setIsSpeaking(false);
-      };
-      audio.onerror = () => {
-        URL.revokeObjectURL(url);
-        setIsSpeaking(false);
-      };
-      await audio.play();
-    } catch (e) {
-      console.error("Voice pipeline error:", e);
-      const errMsg = e instanceof Error ? e.message : "Something went wrong";
-      if (voiceOnly) {
-        setVoiceError(errMsg);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `msg-${messageIdCounterRef.current++}`,
-            text: `Sorry, voice error: ${errMsg}. Please try again or switch to text.`,
-            sender: "agent",
-            timestamp: new Date(),
-          },
-        ]);
-      }
-      setIsTyping(false);
-      setIsSpeaking(false);
+      geminiSessionRef.current = null;
     }
-  };
-
-  const getPreferredAudioMime = (): string => {
-    const types = [
-      "audio/webm;codecs=opus",
-      "audio/webm",
-      "audio/ogg;codecs=opus",
-      "audio/mp4",
-    ];
-    for (const t of types) {
-      if (
-        typeof MediaRecorder !== "undefined" &&
-        MediaRecorder.isTypeSupported(t)
-      )
-        return t;
+    if (scriptProcessorRef.current) {
+      try {
+        scriptProcessorRef.current.disconnect();
+      } catch (e) {
+        console.log("Error disconnecting script processor:", e);
+      }
+      scriptProcessorRef.current = null;
     }
-    return "";
-  };
-
-  const handleStartRecording = async () => {
-    if (!voiceReady || isRecording || isSpeaking) return;
-    setVoiceError(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      audioChunksRef.current = [];
-      const mime = getPreferredAudioMime();
-      const mr = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
-      mediaRecorderRef.current = mr;
-      mr.ondataavailable = (e) => {
-        if (e.data.size) audioChunksRef.current.push(e.data);
-      };
-      mr.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop());
-        const mime = mr.mimeType || "audio/webm";
-        mediaRecorderRef.current = null;
-        streamRef.current = null;
-        const blob = new Blob(audioChunksRef.current, { type: mime });
-        if (blob.size > 0) processVoiceInput(blob, true);
-        setIsRecording(false);
-      };
-      mr.start(200);
-      setIsRecording(true);
-    } catch (e) {
-      console.error("Mic access error:", e);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `msg-${messageIdCounterRef.current++}`,
-          text: "Could not access the microphone. Please allow mic access or use text mode.",
-          sender: "agent",
-          timestamp: new Date(),
-        },
-      ]);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
     }
-  };
+    if (inputAudioContextRef.current) {
+      void inputAudioContextRef.current.close().catch(() => {});
+      inputAudioContextRef.current = null;
+    }
+    if (outputAudioContextRef.current) {
+      void outputAudioContextRef.current.close().catch(() => {});
+      outputAudioContextRef.current = null;
+    }
+    sourcesRef.current.forEach((s) => {
+      try {
+        s.stop();
+      } catch {
+        /* ignore */
+      }
+    });
+    sourcesRef.current.clear();
+    nextStartTimeRef.current = 0;
+    setVoiceStatus("idle");
 
-  const handleStopRecording = () => {
-    if (
-      !isRecording ||
-      !mediaRecorderRef.current ||
-      mediaRecorderRef.current.state === "inactive"
-    )
+    // Reset cleanup flag after a short delay
+    setTimeout(() => {
+      isCleaningUpRef.current = false;
+    }, 100);
+  }, []);
+
+  const handleVoiceStart = async () => {
+    if (!voiceReady || !GEMINI_API_KEY) {
+      setVoiceError(
+        "Gemini API key not set. Add NEXT_PUBLIC_GEMINI_API_KEY to .env.",
+      );
       return;
-    mediaRecorderRef.current.stop();
+    }
+
+    // Prevent starting if already in progress
+    if (voiceStatus !== "idle" && voiceStatus !== "error") {
+      return;
+    }
+
+    setVoiceError(null);
+    setVoiceStatus("connecting");
+    setVoiceTranscriptLines([]);
+    setCurrentVoiceLine("");
+    lastCommittedLineRef.current = "";
+    isCleaningUpRef.current = false;
+
+    let inputCtx: AudioContext | null = null;
+    let outputCtx: AudioContext | null = null;
+    let stream: MediaStream | null = null;
+
+    try {
+      const systemInstruction = `You are Einstein Copilot, a helpful and friendly course advising assistant for students. The student's name is ${studentName || "there"}. Help them figure out courses for next semester: interests, schedule preferences, prerequisites, workload balance. Be conversational and concise. Keep responses brief for voice. Do not use markdown or bullet points in spoken replies.`;
+
+      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
+      // Request microphone permission first
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+      streamRef.current = stream;
+
+      // Create audio contexts
+      inputCtx = new (
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext
+      )({ sampleRate: 16000 });
+      outputCtx = new (
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext
+      )({ sampleRate: 24000 });
+
+      await inputCtx.resume();
+      await outputCtx.resume();
+      inputAudioContextRef.current = inputCtx;
+      outputAudioContextRef.current = outputCtx;
+
+      // Set up audio capture BEFORE connecting to prevent session closing due to no input
+      const source = inputCtx.createMediaStreamSource(stream);
+      const scriptProcessor = inputCtx.createScriptProcessor(4096, 1, 1);
+      scriptProcessorRef.current = scriptProcessor;
+
+      // Buffer to accumulate audio data to send
+      let audioBuffer: Float32Array[] = [];
+      let sendInterval: NodeJS.Timeout | null = null;
+
+      scriptProcessor.onaudioprocess = (e) => {
+        const inputData = e.inputBuffer.getChannelData(0);
+        // Clone the data since it will be reused
+        audioBuffer.push(new Float32Array(inputData));
+      };
+
+      source.connect(scriptProcessor);
+      scriptProcessor.connect(inputCtx.destination);
+
+      // Now connect to Gemini
+      const session = await ai.live.connect({
+        model: "gemini-2.0-flash-live-001",
+        config: {
+          responseModalities: [Modality.AUDIO],
+          systemInstruction,
+          speechConfig: {
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } },
+          },
+        },
+        callbacks: {
+          onopen: () => {
+            console.log("Gemini session opened");
+            setVoiceStatus("listening");
+
+            // Start sending audio periodically
+            sendInterval = setInterval(() => {
+              if (audioBuffer.length > 0 && geminiSessionRef.current) {
+                // Concatenate all buffered audio
+                const totalLength = audioBuffer.reduce(
+                  (sum, arr) => sum + arr.length,
+                  0,
+                );
+                const combined = new Float32Array(totalLength);
+                let offset = 0;
+                for (const arr of audioBuffer) {
+                  combined.set(arr, offset);
+                  offset += arr.length;
+                }
+                audioBuffer = [];
+
+                const pcmBlob = createBlob(combined, inputCtx!.sampleRate);
+                try {
+                  geminiSessionRef.current.sendRealtimeInput({
+                    media: pcmBlob,
+                  });
+                } catch (e) {
+                  console.log("Error sending audio:", e);
+                }
+              }
+            }, 100); // Send audio every 100ms
+          },
+          onmessage: async (message: {
+            serverContent?: {
+              outputTranscription?: { text?: string };
+              modelTurn?: { parts?: Array<{ inlineData?: { data?: string } }> };
+              interrupted?: boolean;
+              turnComplete?: boolean;
+            };
+          }) => {
+            const sc = message.serverContent;
+            if (!sc) return;
+
+            if (sc.outputTranscription?.text) {
+              setCurrentVoiceLine(
+                (prev) => prev + (sc.outputTranscription!.text ?? ""),
+              );
+            }
+
+            const audioData = sc.modelTurn?.parts?.[0]?.inlineData?.data;
+            if (audioData) {
+              setVoiceStatus("speaking");
+              const outputCtx = outputAudioContextRef.current;
+              if (!outputCtx) return;
+              nextStartTimeRef.current = Math.max(
+                nextStartTimeRef.current,
+                outputCtx.currentTime,
+              );
+              const bytes =
+                typeof audioData === "string"
+                  ? decode(audioData)
+                  : new Uint8Array(audioData);
+              const buffer = await decodeAudioData(bytes, outputCtx, 24000, 1);
+              const audioSource = outputCtx.createBufferSource();
+              audioSource.buffer = buffer;
+              audioSource.connect(outputCtx.destination);
+              audioSource.onended = () => {
+                sourcesRef.current.delete(audioSource);
+                if (sourcesRef.current.size === 0) setVoiceStatus("listening");
+              };
+              audioSource.start(nextStartTimeRef.current);
+              nextStartTimeRef.current += buffer.duration;
+              sourcesRef.current.add(audioSource);
+            }
+
+            if (sc.interrupted) {
+              sourcesRef.current.forEach((s) => {
+                try {
+                  s.stop();
+                } catch {
+                  /* ignore */
+                }
+              });
+              sourcesRef.current.clear();
+              nextStartTimeRef.current = 0;
+              setVoiceStatus("listening");
+              setCurrentVoiceLine((prev) => {
+                const trimmed = prev.trim();
+                if (trimmed && trimmed !== lastCommittedLineRef.current) {
+                  lastCommittedLineRef.current = trimmed;
+                  setVoiceTranscriptLines((lines) => [
+                    ...lines.slice(-19),
+                    { speaker: "agent", text: trimmed },
+                  ]);
+                }
+                return "";
+              });
+            }
+
+            if (sc.turnComplete) {
+              setCurrentVoiceLine((prev) => {
+                const trimmed = prev.trim();
+                if (trimmed && trimmed !== lastCommittedLineRef.current) {
+                  lastCommittedLineRef.current = trimmed;
+                  setVoiceTranscriptLines((lines) => [
+                    ...lines.slice(-19),
+                    { speaker: "agent", text: trimmed },
+                  ]);
+                }
+                return "";
+              });
+            }
+          },
+          onerror: (e: { message?: string }) => {
+            console.error("Gemini Live error", e);
+            if (sendInterval) clearInterval(sendInterval);
+            setVoiceError(e?.message ?? "Connection error. Please try again.");
+            setVoiceStatus("error");
+          },
+          onclose: () => {
+            console.log("Gemini session closed");
+            if (sendInterval) clearInterval(sendInterval);
+            // Only call handleVoiceStop if we're not already cleaning up
+            if (!isCleaningUpRef.current) {
+              handleVoiceStop();
+            }
+          },
+        },
+      });
+
+      geminiSessionRef.current = session;
+    } catch (err) {
+      console.error("Voice start failed", err);
+      const msg = err instanceof Error ? err.message : "Failed to connect.";
+      setVoiceError(msg);
+      setVoiceStatus("error");
+
+      // Clean up on error
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop());
+      }
+      if (inputCtx) {
+        void inputCtx.close().catch(() => {});
+      }
+      if (outputCtx) {
+        void outputCtx.close().catch(() => {});
+      }
+      streamRef.current = null;
+      inputAudioContextRef.current = null;
+      outputAudioContextRef.current = null;
+    }
   };
 
   if (!mounted) {
@@ -748,51 +997,12 @@ export default function AssistantPage() {
                   >
                     AI Assistant
                   </h1>
-                  {/* <div className="flex items-center gap-1.5">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className={cn(
-                        "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
-                        apiConnected ? "bg-emerald-400" : "bg-amber-400"
-                      )}></span>
-                      <span className={cn(
-                        "relative inline-flex rounded-full h-1.5 w-1.5",
-                        apiConnected ? "bg-emerald-500" : "bg-amber-500"
-                      )}></span>
-                    </span>
-                    <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">
-                      {apiConnected ? "AI Powered" : "Local Mode"}
-                    </p>
-                  </div> */}
                 </div>
               </div>
             </div>
 
             {/* Right Section */}
             <div className="flex items-center gap-2 sm:gap-3">
-              {/* Get Recommendations Button */}
-              {/* {canRecommend && !showRecommendations && (
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={generateCourseRecommendations}
-                  disabled={isLoadingRecommendations}
-                  className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-gray-800 to-black text-white text-sm font-medium shadow-lg shadow-gray-500/25 hover:shadow-gray-500/40 transition-all disabled:opacity-50"
-                >
-                  {isLoadingRecommendations ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full"
-                    />
-                  ) : (
-                    <Sparkles className="h-4 w-4" />
-                  )}
-                  Get Recommendations
-                </motion.button>
-              )} */}
-
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -1062,7 +1272,15 @@ export default function AssistantPage() {
                   <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100 border border-gray-200/60">
                     <motion.button
                       type="button"
-                      onClick={() => setConversationMode("text")}
+                      onClick={() => {
+                        if (
+                          conversationMode === "voice" &&
+                          voiceStatus !== "idle"
+                        ) {
+                          handleVoiceStop();
+                        }
+                        setConversationMode("text");
+                      }}
                       className={cn(
                         "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all",
                         conversationMode === "text"
@@ -1081,8 +1299,8 @@ export default function AssistantPage() {
                       disabled={!voiceReady}
                       title={
                         voiceReady
-                          ? "Voice conversation (English)"
-                          : "Start the Flask AI API with OPENAI_API_KEY for voice"
+                          ? "Live voice chat with Gemini (English)"
+                          : "Add NEXT_PUBLIC_GEMINI_API_KEY to .env for voice"
                       }
                       className={cn(
                         "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all",
@@ -1110,111 +1328,318 @@ export default function AssistantPage() {
                   }}
                 >
                   {conversationMode === "voice" ? (
-                    <div className="h-full flex flex-col items-center justify-center p-8 text-center">
-                      <p
-                        className="text-gray-500 mb-6 max-w-sm"
-                        style={{
-                          fontFamily:
-                            "var(--font-space-grotesk), system-ui, sans-serif",
-                        }}
-                      >
-                        Voice conversation — no text. Use the mic below to talk.
-                        Everything stays in voice.
-                      </p>
-                      <AnimatePresence mode="wait">
-                        {isRecording && (
+                    <div className="h-full flex flex-col p-5">
+                      {/* Voice Mode Content */}
+                      <div className="flex-1 flex flex-col items-center justify-center">
+                        {/* Connecting State */}
+                        {voiceStatus === "connecting" && (
                           <motion.div
-                            key="recording"
-                            initial={{ opacity: 0, scale: 0.95 }}
+                            initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-red-50 border border-red-200"
+                            className="flex flex-col items-center gap-6"
                           >
-                            <span className="h-3 w-3 bg-red-500 rounded-full animate-pulse" />
-                            <span className="text-sm font-medium text-red-700">
-                              Listening...
-                            </span>
-                          </motion.div>
-                        )}
-                        {isTyping && !isRecording && (
-                          <motion.div
-                            key="typing"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white border border-gray-200 shadow-sm"
-                          >
-                            <div className="flex items-center gap-1.5">
-                              <div
-                                className="h-2 w-2 bg-gray-700 rounded-full animate-bounce"
-                                style={{ animationDelay: "0ms" }}
-                              />
-                              <div
-                                className="h-2 w-2 bg-gray-700 rounded-full animate-bounce"
-                                style={{ animationDelay: "150ms" }}
-                              />
-                              <div
-                                className="h-2 w-2 bg-gray-700 rounded-full animate-bounce"
-                                style={{ animationDelay: "300ms" }}
+                            <div className="relative">
+                              <div className="h-32 w-32 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-gray-300 flex items-center justify-center">
+                                <motion.div
+                                  animate={{ rotate: 360 }}
+                                  transition={{
+                                    duration: 2,
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                  }}
+                                  className="h-16 w-16 rounded-full border-4 border-gray-200 border-t-gray-600"
+                                />
+                              </div>
+                              <motion.div
+                                className="absolute inset-0 rounded-full border-2 border-gray-400/50"
+                                animate={{
+                                  scale: [1, 1.2, 1],
+                                  opacity: [0.5, 0, 0.5],
+                                }}
+                                transition={{ duration: 2, repeat: Infinity }}
                               />
                             </div>
-                            <span className="text-sm text-gray-600">
-                              Processing...
-                            </span>
+                            <div className="text-center">
+                              <p className="text-lg font-medium text-gray-700">
+                                Connecting...
+                              </p>
+                              <p className="text-sm text-gray-500 mt-1">
+                                Setting up voice chat
+                              </p>
+                            </div>
                           </motion.div>
                         )}
-                        {isSpeaking && !isTyping && !isRecording && (
+
+                        {/* Active Voice States */}
+                        {(voiceStatus === "listening" ||
+                          voiceStatus === "speaking") && (
                           <motion.div
-                            key="speaking"
-                            initial={{ opacity: 0, scale: 0.95 }}
+                            initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-emerald-50 border border-emerald-200"
+                            className="flex flex-col items-center gap-6"
                           >
-                            <span className="h-3 w-3 bg-emerald-500 rounded-full animate-pulse" />
-                            <span className="text-sm font-medium text-emerald-700">
-                              Speaking...
-                            </span>
+                            {/* Main Voice Orb */}
+                            <div className="relative">
+                              <PulsingRings
+                                isActive={voiceStatus === "speaking"}
+                                color={
+                                  voiceStatus === "speaking"
+                                    ? "gray"
+                                    : "emerald"
+                                }
+                              />
+                              <motion.div
+                                className={cn(
+                                  "h-32 w-32 rounded-full flex items-center justify-center transition-all duration-300",
+                                  voiceStatus === "speaking"
+                                    ? "bg-gradient-to-br from-gray-700 via-gray-800 to-black shadow-2xl shadow-gray-500/40"
+                                    : "bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-gray-300 shadow-lg",
+                                )}
+                                animate={
+                                  voiceStatus === "speaking"
+                                    ? {
+                                        scale: [1, 1.05, 1],
+                                      }
+                                    : {}
+                                }
+                                transition={{ duration: 0.8, repeat: Infinity }}
+                              >
+                                {voiceStatus === "speaking" ? (
+                                  <Volume2 className="h-12 w-12 text-white" />
+                                ) : (
+                                  <Mic className="h-12 w-12 text-gray-600" />
+                                )}
+                              </motion.div>
+
+                              {/* Status Ring */}
+                              <motion.div
+                                className={cn(
+                                  "absolute -inset-2 rounded-full border-4",
+                                  voiceStatus === "speaking"
+                                    ? "border-gray-600/30"
+                                    : "border-emerald-500/30",
+                                )}
+                                animate={{ rotate: 360 }}
+                                transition={{
+                                  duration: 8,
+                                  repeat: Infinity,
+                                  ease: "linear",
+                                }}
+                                style={{
+                                  borderTopColor:
+                                    voiceStatus === "speaking"
+                                      ? "rgba(75, 85, 99, 0.8)"
+                                      : "rgba(16, 185, 129, 0.8)",
+                                  borderRightColor: "transparent",
+                                }}
+                              />
+                            </div>
+
+                            {/* Voice Visualizer */}
+                            <div className="h-12 flex items-center">
+                              <VoiceWaves
+                                isActive={
+                                  voiceStatus === "speaking" ||
+                                  voiceStatus === "listening"
+                                }
+                                intensity={
+                                  voiceStatus === "speaking" ? "high" : "medium"
+                                }
+                              />
+                            </div>
+
+                            {/* Status Text */}
+                            <div className="text-center">
+                              <p className="text-lg font-medium text-gray-700">
+                                {voiceStatus === "speaking"
+                                  ? "Einstein is speaking"
+                                  : "Listening..."}
+                              </p>
+                              <p className="text-sm text-gray-500 mt-1">
+                                {voiceStatus === "speaking"
+                                  ? "Wait for response to complete"
+                                  : "Speak naturally, I'm listening"}
+                              </p>
+                            </div>
+
+                            {/* Duration Counter */}
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 border border-gray-200">
+                              <Radio className="h-3 w-3 text-emerald-500 animate-pulse" />
+                              <span className="text-sm font-mono text-gray-600">
+                                {formatDuration(voiceDuration)}
+                              </span>
+                            </div>
                           </motion.div>
                         )}
-                        {!isRecording &&
-                          !isTyping &&
-                          !isSpeaking &&
-                          voiceError && (
-                            <motion.div
-                              key="error"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              className="rounded-2xl bg-amber-50 border border-amber-200 px-5 py-3 max-w-md"
-                            >
-                              <p className="text-sm text-amber-800">
-                                {voiceError}
-                              </p>
-                              <p className="text-xs text-amber-600 mt-1">
-                                Try again or switch to Chat.
-                              </p>
-                            </motion.div>
-                          )}
-                        {!isRecording &&
-                          !isTyping &&
-                          !isSpeaking &&
-                          !voiceError && (
-                            <motion.div
-                              key="idle"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              className="flex flex-col items-center gap-2"
-                            >
-                              <div className="h-14 w-14 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center">
-                                <Mic className="h-7 w-7 text-gray-400" />
+
+                        {/* Idle / Error State */}
+                        {(voiceStatus === "idle" ||
+                          voiceStatus === "error") && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex flex-col items-center gap-6 max-w-md text-center"
+                          >
+                            {voiceError && (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="w-full rounded-2xl bg-red-50 border border-red-200 px-5 py-4"
+                              >
+                                <div className="flex items-start gap-3">
+                                  <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                                  <div className="text-left">
+                                    <p className="text-sm font-medium text-red-800">
+                                      Connection Error
+                                    </p>
+                                    <p className="text-sm text-red-600 mt-1">
+                                      {voiceError}
+                                    </p>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+
+                            <div className="relative">
+                              <div className="h-28 w-28 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-gray-300 flex items-center justify-center shadow-lg">
+                                <MicOff className="h-10 w-10 text-gray-400" />
                               </div>
-                              <span className="text-sm text-gray-400">
-                                Click the mic below to speak
-                              </span>
-                            </motion.div>
+                            </div>
+
+                            <div>
+                              <h3 className="text-xl font-semibold text-gray-800">
+                                Voice Chat
+                              </h3>
+                              <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                                Have a natural conversation with Einstein
+                                Copilot. Click the button below to start
+                                speaking.
+                              </p>
+                            </div>
+
+                            <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-gray-500">
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100">
+                                <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                                <span>Real-time</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100">
+                                <Volume2 className="h-3 w-3" />
+                                <span>Natural voice</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100">
+                                <Sparkles className="h-3 w-3" />
+                                <span>AI-powered</span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </div>
+
+                      {/* Transcript Section */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className={cn(
+                          "mt-4 rounded-xl border overflow-hidden transition-all",
+                          voiceTranscriptLines.length > 0 || currentVoiceLine
+                            ? "bg-white border-gray-200 shadow-sm"
+                            : "bg-gray-50/80 border-gray-100",
+                        )}
+                        style={{ maxHeight: 180 }}
+                      >
+                        <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50/80 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <ClipboardList className="h-3.5 w-3.5 text-gray-500" />
+                            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                              Live Transcript
+                            </span>
+                          </div>
+                          {voiceTranscriptLines.length > 0 && (
+                            <span className="text-[10px] text-gray-400">
+                              {voiceTranscriptLines.length} message
+                              {voiceTranscriptLines.length !== 1 ? "s" : ""}
+                            </span>
                           )}
-                      </AnimatePresence>
+                        </div>
+                        <div
+                          className="p-4 overflow-y-auto"
+                          style={{ maxHeight: 130 }}
+                        >
+                          {voiceTranscriptLines.length === 0 &&
+                            !currentVoiceLine && (
+                              <p className="text-sm text-gray-400 italic text-center py-4">
+                                Transcript will appear here as you speak...
+                              </p>
+                            )}
+                          <div className="space-y-3">
+                            {voiceTranscriptLines.map((line, i) => (
+                              <motion.div
+                                key={i}
+                                initial={{
+                                  opacity: 0,
+                                  x: line.speaker === "agent" ? -10 : 10,
+                                }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className={cn(
+                                  "flex gap-2",
+                                  line.speaker === "agent"
+                                    ? "justify-start"
+                                    : "justify-end",
+                                )}
+                              >
+                                {line.speaker === "agent" && (
+                                  <div className="h-6 w-6 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center flex-shrink-0">
+                                    <Bot className="h-3 w-3 text-white" />
+                                  </div>
+                                )}
+                                <div
+                                  className={cn(
+                                    "px-3 py-2 rounded-xl max-w-[80%]",
+                                    line.speaker === "agent"
+                                      ? "bg-gray-100 text-gray-700"
+                                      : "bg-gray-700 text-white",
+                                  )}
+                                >
+                                  <p className="text-sm leading-relaxed">
+                                    {line.text}
+                                  </p>
+                                </div>
+                                {line.speaker === "user" && (
+                                  <div className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                                    <User className="h-3 w-3 text-gray-600" />
+                                  </div>
+                                )}
+                              </motion.div>
+                            ))}
+                            {currentVoiceLine.trim() && (
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="flex gap-2 justify-start"
+                              >
+                                <div className="h-6 w-6 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center flex-shrink-0">
+                                  <Bot className="h-3 w-3 text-white" />
+                                </div>
+                                <div className="px-3 py-2 rounded-xl bg-gray-100 text-gray-700 max-w-[80%]">
+                                  <p className="text-sm leading-relaxed">
+                                    {currentVoiceLine}
+                                    <motion.span
+                                      className="inline-block w-1.5 h-4 bg-gray-500 ml-1 align-middle rounded-sm"
+                                      animate={{ opacity: [1, 0, 1] }}
+                                      transition={{
+                                        duration: 0.8,
+                                        repeat: Infinity,
+                                      }}
+                                    />
+                                  </p>
+                                </div>
+                              </motion.div>
+                            )}
+                          </div>
+                          <div ref={voiceTranscriptEndRef} />
+                        </div>
+                      </motion.div>
                     </div>
                   ) : (
                     <div className="p-5 space-y-4">
@@ -1328,59 +1753,72 @@ export default function AssistantPage() {
                 {/* Input Area: Text or Voice */}
                 <div className="relative z-10 p-5 border-t border-gray-100 bg-white">
                   {conversationMode === "voice" ? (
-                    <div className="flex flex-col items-center justify-center gap-4 py-2">
-                      <p className="text-sm text-gray-500 text-center">
-                        {voiceReady
-                          ? "Click the mic to start speaking, then click again to send. Conversations are in English."
-                          : "Voice mode requires the Flask AI API with OPENAI_API_KEY. Use Chat mode or start the API."}
+                    <div className="flex flex-col items-center gap-4">
+                      {voiceReady ? (
+                        <div className="flex items-center gap-4">
+                          {(voiceStatus === "idle" ||
+                            voiceStatus === "error") && (
+                            <motion.button
+                              type="button"
+                              onClick={handleVoiceStart}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              className="group flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-gray-800 to-black text-white font-medium shadow-xl hover:shadow-2xl hover:shadow-gray-500/30 transition-all"
+                            >
+                              <div className="relative">
+                                <Phone className="h-5 w-5" />
+                                <motion.div
+                                  className="absolute -inset-1 rounded-full bg-white/20"
+                                  animate={{
+                                    scale: [1, 1.5, 1],
+                                    opacity: [0.5, 0, 0.5],
+                                  }}
+                                  transition={{ duration: 2, repeat: Infinity }}
+                                />
+                              </div>
+                              <span>Start Voice Chat</span>
+                            </motion.button>
+                          )}
+
+                          {(voiceStatus === "listening" ||
+                            voiceStatus === "speaking" ||
+                            voiceStatus === "connecting") && (
+                            <motion.button
+                              type="button"
+                              onClick={handleVoiceStop}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              className="flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-red-50 border-2 border-red-200 text-red-700 font-medium hover:bg-red-100 hover:border-red-300 transition-all shadow-lg"
+                            >
+                              <PhoneOff className="h-5 w-5" />
+                              <span>End Call</span>
+                              <div className="flex items-center gap-1 ml-2 pl-3 border-l border-red-200">
+                                <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                                <span className="text-sm font-mono">
+                                  {formatDuration(voiceDuration)}
+                                </span>
+                              </div>
+                            </motion.button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-amber-50 border border-amber-200">
+                          <AlertCircle className="h-5 w-5 text-amber-600" />
+                          <p className="text-sm text-amber-700">
+                            Add{" "}
+                            <code className="px-1.5 py-0.5 bg-amber-100 rounded text-xs">
+                              NEXT_PUBLIC_GEMINI_API_KEY
+                            </code>{" "}
+                            to enable voice chat
+                          </p>
+                        </div>
+                      )}
+
+                      <p className="text-xs text-gray-400 text-center max-w-md">
+                        {voiceStatus === "idle" || voiceStatus === "error"
+                          ? "Use headphones for best experience. Voice chat is powered by Gemini."
+                          : "Speak naturally. The AI will respond when you pause."}
                       </p>
-                      {voiceReady && (
-                        <motion.button
-                          type="button"
-                          onClick={
-                            isRecording
-                              ? handleStopRecording
-                              : handleStartRecording
-                          }
-                          disabled={isTyping || isSpeaking}
-                          whileHover={
-                            !isTyping && !isSpeaking
-                              ? { scale: 1.05 }
-                              : undefined
-                          }
-                          whileTap={
-                            !isTyping && !isSpeaking
-                              ? { scale: 0.95 }
-                              : undefined
-                          }
-                          className={cn(
-                            "flex items-center justify-center w-20 h-20 rounded-full border-2 transition-all",
-                            isRecording
-                              ? "bg-red-50 border-red-400 text-red-600 shadow-lg shadow-red-200/50"
-                              : "bg-gray-50 border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-100",
-                            (isTyping || isSpeaking) &&
-                              "opacity-50 cursor-not-allowed",
-                          )}
-                          aria-label={
-                            isRecording ? "Stop recording" : "Start recording"
-                          }
-                        >
-                          {isRecording ? (
-                            <MicOff className="h-9 w-9" />
-                          ) : (
-                            <Mic className="h-9 w-9" />
-                          )}
-                        </motion.button>
-                      )}
-                      {(isRecording || isTyping || isSpeaking) && (
-                        <p className="text-xs text-gray-500">
-                          {isRecording
-                            ? "Listening... Click again to send."
-                            : isTyping
-                              ? "Processing..."
-                              : "Speaking..."}
-                        </p>
-                      )}
                     </div>
                   ) : (
                     <>
